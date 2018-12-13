@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "Elembuf", "Elembuf\Elembuf.visualdproj", "{86FAE870-F017-4C74-97C6-83CB2E154ECF}"
+Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "Elembuf", "Elembuf.visualdproj", "{86FAE870-F017-4C74-97C6-83CB2E154ECF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

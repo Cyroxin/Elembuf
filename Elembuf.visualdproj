@@ -864,11 +864,9 @@
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep;*.tlog</filesToClean>
  </Config>
- <Folder name="Elembuf">
-  <Folder name="benchmarks">
-   <File path="benchparse.d" />
-  </Folder>
-  <File path="buffer.d" />
-  <File path="source.d" />
+ <Folder name="benchmarks"><File path=".\benchmarks\benchparse.d" /></Folder><Folder name="src">
+
+<File path="src\buffer.d" />
+  <File path="src\source.d" />
  </Folder>
 </DProject>
