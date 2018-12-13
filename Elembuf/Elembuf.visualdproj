@@ -1,0 +1,92 @@
+<DProject>
+ <ProjectGuid>86fae870-f017-4c74-97c6-83cb2e154ecf</ProjectGuid>
+ <Config name="Debug" platform="Win32">
+  <isX86_64>0</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>1</runCv2pdb>
+  <symdebug>1</symdebug>
+  <release>0</release>
+  <mscoff>1</mscoff>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Config name="Release" platform="Win32">
+  <isX86_64>0</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>0</runCv2pdb>
+  <release>1</release>
+  <optimize>1</optimize>
+  <useInline>1</useInline>
+  <mscoff>1</mscoff>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Config name="Debug" platform="x64">
+  <isX86_64>1</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>1</runCv2pdb>
+  <symdebug>1</symdebug>
+  <release>0</release>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Config name="Release" platform="x64">
+  <isX86_64>1</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>0</runCv2pdb>
+  <release>1</release>
+  <optimize>1</optimize>
+  <useInline>1</useInline>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Config name="Debug LDC" platform="Win32">
+  <isX86_64>0</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>1</runCv2pdb>
+  <symdebug>1</symdebug>
+  <release>0</release>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Config name="Release LDC" platform="Win32">
+  <isX86_64>0</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>0</runCv2pdb>
+  <release>1</release>
+  <optimize>1</optimize>
+  <useInline>1</useInline>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Config name="Debug LDC" platform="x64">
+  <isX86_64>1</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>1</runCv2pdb>
+  <symdebug>1</symdebug>
+  <release>0</release>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Config name="Release LDC" platform="x64">
+  <isX86_64>1</isX86_64>
+  <compiler>0</compiler>
+  <runCv2pdb>0</runCv2pdb>
+  <release>1</release>
+  <optimize>1</optimize>
+  <useInline>1</useInline>
+  <lib>0</lib>
+  <subsystem>1</subsystem>
+  <exefile>$(OutDir)\$(ProjectName).exe</exefile>
+ </Config>
+ <Folder name="Elembuf">
+  <File path="Elembuf.d" />
+ </Folder>
+</DProject>
