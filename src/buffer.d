@@ -50,7 +50,7 @@ struct StaticBuffer(T = char)
 		// You would essentially check if the new pointer is equal or above the second page buffer start. Perf not checked.
 	}
 
-	//@disable this(this); // Copies can deinitiate the buffer.
+	//@disable this(this); // Copies can deinitiate the buffer. The developer is trusted not to allow this.
 
 	/// Initialises the buffer. Constructor must be used before initiation.
 	void initiate()
@@ -58,7 +58,8 @@ struct StaticBuffer(T = char)
 
 		version (Windows)
 		{
-			pragma(msg, "Windows");
+			//pragma(msg, "Windows");
+
 			import core.sys.windows.winbase : CreateFileMapping, VirtualAlloc, VirtualFree, MapViewOfFileEx, UnmapViewOfFile, CloseHandle, INVALID_HANDLE_VALUE, FILE_MAP_ALL_ACCESS;
 			import core.sys.windows.windef : MEM_RELEASE, MEM_RESERVE, PAGE_READWRITE, NULL;
 
@@ -88,7 +89,7 @@ struct StaticBuffer(T = char)
 
 		else version (CRuntime_Glibc)
 		{
-			pragma(msg, "CRuntime_Glibc");
+			//pragma(msg, "CRuntime_Glibc");
 
 			import core.sys.posix.sys.mman : mmap, PROT_NONE, PROT_READ,
 				PROT_WRITE, MAP_PRIVATE, MAP_SHARED, MAP_FIXED, MAP_FAILED,
@@ -116,7 +117,7 @@ struct StaticBuffer(T = char)
 
 		else version (Posix)
 		{
-			pragma(msg, "Posix");
+			//pragma(msg, "Posix");
 
 			import core.sys.posix.sys.mman : shm_open, shm_unlink, mmap,
 				PROT_NONE, PROT_READ, PROT_WRITE, MAP_PRIVATE, MAP_SHARED,
@@ -173,9 +174,7 @@ struct StaticBuffer(T = char)
 	/// Deinitialize the buffer so that the struct may be destroyed.
 	void deinitiate()
 	{
-		flush;
-
-		//Get base ptr from buf.ptr right shift (lin 12/win 16)
+		flush; //Set the buffer to page start.
 
 		version (Windows)
 		{
