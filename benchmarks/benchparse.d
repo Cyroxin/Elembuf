@@ -1,7 +1,6 @@
 module benchparse;
 
-static import buffer;
-import source;
+import buffer, source;
 
 import std.stdio;
 
@@ -17,19 +16,14 @@ void main()
 
 	foreach (i; 1 .. runs + 1)
 	{
-
-		//auto src = NetSource!()("ite.org");
-		auto buffer = buffer.create;
-		auto src = "192.168.1.1".NetSource!({});
-
-		scope bool alive = buffer.fill(src);
-		debug buffer.writeln;
-
-		assert(buffer.length >= 0);
-
-		scope ptrdiff_t len = void;
+		auto src = "192.168.1.1".NetSource!();
+		auto buffer = StaticBuffer!()();
+		buffer.initiate;
 
 		sw.start();
+
+		scope bool alive = buffer.fill(src);
+		scope ptrdiff_t len = void;
 
 		while (true)
 		{
@@ -46,13 +40,10 @@ void main()
 				else if (alive)
 				{
 					buffer.fill("<p>Getting more data!</p>");
-					sw.stop;
 
-					buffer.length == buffer.pagesize ? buffer.flush : { }; // Overflow
+					buffer.length == buffer.pagesize ? buffer.flush : {}; // Overflow management
 
 					alive = buffer.fill(src);
-
-					sw.start;
 				}
 				else
 					break;
@@ -61,14 +52,10 @@ void main()
 			else if (alive)
 			{
 				buffer.fill("<p>Getting more data!</p>");
-				sw.stop;
 
-				buffer.length == buffer.pagesize ? buffer.flush : {  };
+				buffer.length == buffer.pagesize ? buffer.flush : {}; // Overflow management
 
-				// If this returns true and this is a blocking source, you may assume length = buf_max
 				alive = buffer.fill(src);
-
-				sw.start;
 			}
 			else
 				break;
@@ -80,7 +67,7 @@ void main()
 		if (bestDur > sw.peek / i)
 			bestDur = sw.peek / i;
 
-		writeln(i, '-', buffer.length);
+		writeln(i);
 		if (buffer.length > 0)
 			buffer.writeln;
 

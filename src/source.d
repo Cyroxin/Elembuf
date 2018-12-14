@@ -3,7 +3,7 @@ module source;
 /// Downloads data from a specified ip address. Does not check for validity of the address.
 /// When the source blocks, a custom delegate or function will be called.
 /// Example: auto src = "127.0.0.1".NetSourceCustom!({});
-struct NetSource(alias code = {  }) if (__traits(compiles, code()))
+struct NetSource(alias code = {}) if (__traits(compiles, code()))
 {
 	import std.socket : Socket, TcpSocket, Address, getAddress,
 		wouldHaveBlocked;

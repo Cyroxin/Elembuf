@@ -1,18 +1,5 @@
 module buffer;
 
-/// Helper function for buffer creation. Doing everything manually is also possible.
-auto create(bool Static = true, Type = char)()
-{
-	static if (Static)
-	{
-		auto buffer = StaticBuffer!Type();
-		buffer.initiate();
-		return buffer;
-	}
-	else
-		static assert(0,"Dynamic buffers are not implemented yet.");
-}
-
 /// Creates a file in memory. See Linux manpages for further information. 
 version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags) nothrow @nogc; // TODO: Add to druntime
 
@@ -21,7 +8,7 @@ A fixed-length buffer that takes an advantage of system memory mirroring capabil
 Buffer size is the page size on posix systems and allocation granularity on windows.
 The buffer should be set to void or null before initialising.
 */
-struct StaticBuffer(T)
+struct StaticBuffer(T = char)
 {
 	import std.math : log2;
 
