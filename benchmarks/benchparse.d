@@ -10,15 +10,14 @@ void main()
 
 	auto sw = StopWatch();
 
-	enum runs = 5000;
+	enum runs = 5_000;
 
 	Duration bestDur = Duration.max;
 
 	foreach (i; 1 .. runs + 1)
 	{
-		auto src = "192.168.1.1".NetSource!();
 		auto buffer = StaticBuffer!()();
-		buffer.initiate;
+		auto src = "192.168.1.1".NetSource!();
 
 		sw.start();
 
@@ -39,9 +38,7 @@ void main()
 					buffer = buffer[len + 1 .. $];
 				else if (alive)
 				{
-					buffer.fill("<p>Getting more data!</p>");
-
-					buffer.length == buffer.pagesize ? buffer.flush : {}; // Overflow management
+					buffer.length == buffer.pagesize ? buffer.clear : {}; // Overflow management
 
 					alive = buffer.fill(src);
 				}
@@ -51,9 +48,7 @@ void main()
 			}
 			else if (alive)
 			{
-				buffer.fill("<p>Getting more data!</p>");
-
-				buffer.length == buffer.pagesize ? buffer.flush : {}; // Overflow management
+				buffer.length == buffer.pagesize ? buffer.clear : {}; // Overflow management
 
 				alive = buffer.fill(src);
 			}
@@ -70,9 +65,6 @@ void main()
 		writeln(i);
 		if (buffer.length > 0)
 			buffer.writeln;
-
-		buffer.deinitiate;
-		src.deinitiate;
 	}
 
 	writeln("Average Time: ", sw.peek / runs);

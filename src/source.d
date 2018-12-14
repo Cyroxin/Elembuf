@@ -29,13 +29,9 @@ struct NetSource(alias code = {}) if (__traits(compiles, code()))
 	}
 
 	/// Disconnects the connection.
-	void deinitiate()
-	in
+	~this()
 	{
 		assert(sock !is null && sock.isAlive);
-	}
-	do
-	{
 		//sock.shutdown(SocketShutdown.BOTH); // Removed for the sake of efficiency
 		sock.close;
 	}

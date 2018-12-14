@@ -6,13 +6,13 @@ version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flag
 /**
 A fixed-length buffer that takes an advantage of system memory mirroring capabillities for performance.
 Buffer size is the page size on posix systems and allocation granularity on windows.
-The buffer should be set to void or null before initialising.
 */
 struct StaticBuffer(T = char)
 {
 	import std.math : log2;
 
 	alias buf this;
+	
 
 	/// Underlying buffer which the object manages. Avoid using it directly.
 	T[] buf = void;
@@ -52,9 +52,9 @@ struct StaticBuffer(T = char)
 
 	//@disable this(this); // Copies can deinitiate the buffer. The developer is trusted not to allow this.
 
-	/// Initialises the buffer. Constructor must be used before initiation.
-	void initiate()
+	static auto opCall()
 	{
+		typeof(this) buf = void;
 
 		version (Windows)
 		{
@@ -168,13 +168,15 @@ struct StaticBuffer(T = char)
 			static assert(0, "Not supported");
 
 		assert(buf.length == 0);
-
+		return buf;
 	}
 
-	/// Deinitialize the buffer so that the struct may be destroyed.
-	void deinitiate()
+	/***********************************
+	* Deinitializes the buffer so that the struct may be destroyed.
+	*/
+	~this()
 	{
-		flush; //Set the buffer to page start.
+		clear; //Set the buffer to page start.
 
 		version (Windows)
 		{
@@ -204,10 +206,13 @@ struct StaticBuffer(T = char)
 		assert(buf.length == 0);
 	}
 
-	/// Extends the buffer with new data. Returns false if the source is empty and fill should not be called anymore unless source changed.
+	/***********************************
+	* Extends the buffer with new data. Returns true if source can be reused, false otherwise.
+	* Params:
+	*				Source	= Array source that is slicable and has a length property.
+	*/
 	bool fill(Source)(Source source)
-	{
-		static if (__traits(hasMember, Source, "read") && __traits(compiles, source.read(buf)))
+		if (__traits(hasMember, Source, "read") && __traits(compiles, source.read(buf)))
 		{
 			// Fill the empty area of the buffer. Returns 0 if an error occurs or there is no more data.
 			scope const len = source.read((buf.ptr + buf.length)[0 .. pagesize - buf.length]);
@@ -217,41 +222,77 @@ struct StaticBuffer(T = char)
 
 			buf = buf[0 .. $ + len];
 			return true;
-
 		}
-		else static if (__traits(compiles, source[0 .. $]))
-		{
-			if (source.length > pagesize - buf.length)
-			{
-				(buf.ptr + buf.length)[0 .. pagesize - buf.length] = cast(T[]) source[0
-						.. pagesize - buf.length];
 
-				buf = buf[0 .. pagesize];
+
+	/***********************************
+	* Extends the buffer with new data. Returns true if source can be reused, false otherwise.
+	* Params:
+	*	!	bool	Mutate	= Remove source array items once they have been read.
+	*				Source	= Array source that is slicable and has a length property.
+	*/
+	bool fill(Source, bool Mutate = false)(ref Source source) pure nothrow @nogc @trusted
+		if (__traits(compiles,this = source[0..$]))
+		{
+			if(avail > source.length) // Source fits to the buffer
+			{
+				(buf.ptr + buf.length)[0 .. source.length] = source;
+				buf = buf.ptr[0..buf.length+source.length];
+
+				static if(Mutate) // Mutate source option
+					source = source.ptr[0..0];
+
 				return false;
 			}
 			else
 			{
-				(buf.ptr + buf.length)[0 .. source.length] = cast(T[]) source;
+				(buf.ptr + buf.length)[0 .. avail] = source[0 .. avail];
+				buf = buf.ptr[0..buf.length+avail];
 
-				buf = buf[0 .. $ + source.length];
+				static if(Mutate) // Mutate source option
+					source = source.ptr[0..source.length-avail];
+
 				return true;
 			}
 		}
-		else
-			static assert(0, "Source type is not supported");
+
+
+	unittest 
+	{
+		auto buffer = StaticBuffer!()();
+
+		assert(buffer.fill("Hello World"));
+		assert(buffer.length == "Hello World".length);
+
+		buffer = buffer.ptr[0..pagesize - 1];
+		assert(!buffer.fill("Hello World"));
+		assert(buffer.length == pagesize);
+
+		buffer.length -= 6;
+		string a = "Hello World";
+		buffer.fill(a,true);
+		assert(a == "World");
+
+
 
 	}
 
 	/// Sets the buffer pointer to the start of the page and sets length to zero.
-	void flush()
+	void clear() pure nothrow @nogc @trusted
 	{
 		buf = (cast(T*)((cast(size_t) buf.ptr) >> pagebits << pagebits))[0 .. 0];
 	}
 
+	/// Returns how much free buffer space is available.
+	size_t avail() pure nothrow @nogc @trusted
+	{
+		return pagesize - buf.length;
+	}
+
+
 	unittest
 	{
-		scope StaticBuffer!char buffer = StaticBuffer!char();
-		buffer.initiate;
+		auto buffer = StaticBuffer!()();
 
 		assert(buffer.length == 0);
 		assert(buffer.fill("Hello World!"));
@@ -262,8 +303,6 @@ struct StaticBuffer(T = char)
 
 		buffer.flush();
 		assert(buffer.length == 0);
-
-		buffer.deinitiate();
 
 	}
 
