@@ -1,38 +1,77 @@
 module buffer;
 
-/// Creates a file in memory. See Linux manpages for further information. 
-version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags) nothrow @nogc; // TODO: Add to druntime
+@nogc:
 
-/**
-A fixed-length buffer that takes an advantage of system memory mirroring capabillities for performance.
-Buffer size is the page size on posix systems and allocation granularity on windows.
-*/
+/// Creates a file in memory. See Linux manpages for further information. 
+private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags) nothrow @nogc; // TODO: Add to druntime
+/***********************************
+	* Dynamic buffer with a maximum length of one page (pagesize).
+	* Takes an advantage of the system's memory mirroring capabillities to
+	* create a memory loop so that memory copying wont be necessary.
+	* The buffer may be manipulated normally as if it were a T[].
+	* Increasing buffer.length will reallocate using the GC,
+	* which will remove the mirroring, so use buffer.fill instead.
+	* Params:
+	*			T	= Element type which the buffer will hold. Defaults to char.
+	*/
+
 struct StaticBuffer(T = char)
 {
+
 	import std.math : log2;
 
 	alias buf this;
-	
 
-	/// Underlying buffer which the object manages. Avoid using it directly.
+	/// Underlying buffer which the object manages. Avoid using this directly.
+	/// Can be used to avoid safety overhead when removing elements using opAssign. 
 	T[] buf = void;
 
-	/// Number of bytes per page of memory. Maximum bits the buffer will use.
-	version (Windows) enum pagesize = 65_536;
+	///
+	unittest
+	{
+		import buffer, source; // @suppress(dscanner.suspicious.local_imports)
+
+		auto buf = StaticBuffer!()();
+		assert(buf[0 .. 0] == buf.buf[0 .. 0]);
+
+		buf = buf.ptr[0 .. "Hello World!".length]; // Will not use the GC.
+		buf = cast(T[]) "Hello World!";
+
+		destroy(buf);
+
+	}
+
+	/// Number of bytes per page of memory. Use max!T instead.
+	version (Windows)
+		private enum pagesize = 65_536;
 	else version (CRuntime_Glibc)
-		enum pagesize = 4096; // @suppress(dscanner.style.undocumented_declaration)
+		private enum pagesize = 4096; /// ditto
 	else version (Posix)
-		enum pagesize = 4096; // @suppress(dscanner.style.undocumented_declaration)
+		private enum pagesize = 4096; /// ditto
 	else
 		static assert(0, "System not supported!");
-
-	/// Maximum amount of items if buffer were a T[].
-	static enum max(T) = pagesize / T.sizeof;
 
 	/// Number of bits that the buffer can write to. Used for bit shifts.
 	static enum pagebits = cast(size_t) log2(pagesize);
 
-	void opAssign()(const scope T[] newbuf) pure nothrow @nogc // @suppress(dscanner.style.undocumented_declaration)
+	/// Sets the buffer pointer to the start of the page and sets length to zero.
+	void clear() pure nothrow @nogc @trusted
+	{
+		buf = (cast(T*)((cast(size_t) buf.ptr) >> pagebits << pagebits))[0 .. 0];
+	}
+
+	/// Returns how much free buffer space is available.
+	size_t avail() pure nothrow @nogc @trusted
+	{
+		return pagesize - buf.length;
+	}
+
+	/// Maximum amount of items if buffer were a T[]. 
+	/// This is very usefull if the buffer is set to be a void[] internally.
+	/// Use this instead of pagesize if possible.
+	static enum max(T) = pagesize / T.sizeof;
+
+	void opAssign()(const scope T[] newbuf) pure nothrow @nogc @trusted // @suppress(dscanner.style.undocumented_declaration)
 	{
 		if ((cast(size_t) buf.ptr & pagesize) == (cast(size_t) newbuf.ptr & pagesize)) // Cost: 8%, (~7╬╝)
 			buf = cast(T[]) newbuf;
@@ -52,20 +91,23 @@ struct StaticBuffer(T = char)
 
 	//@disable this(this); // Copies can deinitiate the buffer. The developer is trusted not to allow this.
 
-	static auto opCall()
+	static auto opCall() @nogc @trusted // @suppress(dscanner.style.undocumented_declaration)
 	{
-		typeof(this) buf = void;
+		typeof(this) buf = void; // @suppress(dscanner.suspicious.label_var_same_name)
 
 		version (Windows)
 		{
 			//pragma(msg, "Windows");
 
-			import core.sys.windows.winbase : CreateFileMapping, VirtualAlloc, VirtualFree, MapViewOfFileEx, UnmapViewOfFile, CloseHandle, INVALID_HANDLE_VALUE, FILE_MAP_ALL_ACCESS;
-			import core.sys.windows.windef : MEM_RELEASE, MEM_RESERVE, PAGE_READWRITE, NULL;
+			import core.sys.windows.winbase : CreateFileMapping, VirtualAlloc,
+				VirtualFree, MapViewOfFileEx, UnmapViewOfFile, CloseHandle,
+				INVALID_HANDLE_VALUE, FILE_MAP_ALL_ACCESS;
+			import core.sys.windows.windef : MEM_RELEASE, MEM_RESERVE,
+				PAGE_READWRITE, NULL;
 
 			// Create a file in memory, which we read using two pagesize buffers that are next to each other.
 			scope const void* memfile = CreateFileMapping(INVALID_HANDLE_VALUE,
-														  NULL, PAGE_READWRITE, 0, pagesize, NULL);
+					NULL, PAGE_READWRITE, 0, pagesize, NULL);
 
 			// Find a suitable large memory location in memory.
 			while (true)
@@ -74,19 +116,20 @@ struct StaticBuffer(T = char)
 				VirtualFree(buf.ptr, 0, MEM_RELEASE);
 
 				// Map two contiguous views to point to the memory file created earlier.
-				if (!MapViewOfFileEx(cast(void*)memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, buf.ptr))
+				if (!MapViewOfFileEx(cast(void*) memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, buf.ptr))
 					continue;
-				else if (!MapViewOfFileEx(cast(void*)memfile, FILE_MAP_ALL_ACCESS, 0, 0,
-										  0, buf.ptr + pagesize))
+				else if (!MapViewOfFileEx(cast(void*) memfile,
+						FILE_MAP_ALL_ACCESS, 0, 0, 0, buf.ptr + pagesize))
 					UnmapViewOfFile(buf.ptr);
 				else
 					break;
 			}
 
-			CloseHandle(cast(void*)memfile);
+			CloseHandle(cast(void*) memfile);
 
 		}
 
+		/*
 		else version (CRuntime_Glibc)
 		{
 			//pragma(msg, "CRuntime_Glibc");
@@ -94,27 +137,30 @@ struct StaticBuffer(T = char)
 			import core.sys.posix.sys.mman : mmap, PROT_NONE, PROT_READ,
 				PROT_WRITE, MAP_PRIVATE, MAP_SHARED, MAP_FIXED, MAP_FAILED,
 				MAP_ANON;
-			import core.sys.posix.unistd : ftruncate;
+			import core.sys.posix.unistd : ftruncate, close;
 
 			// Memfd_create file descriptors are automatically collected once references are dropped,
 			// so there is no need to have a memfile global.
+			scope const int memfile = memfd_create("elembuf", 0);
 
-			scope const int memfile = memfd_create("test", 0);
-			assert(memfile >= 0); // Errors: NoMem / MaxMemFiles
+			if (memfile == -1)
+				assert(0, "Memory file creation error!");
+
+			//assert(memfile >= 0); // Errors: NoMem / MaxMemFiles
 
 			ftruncate(memfile, pagesize);
 
 			// Create a two page size memory mapping of the file
 			buf = (cast(T*) mmap(null, 2 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0))[0
-					.. 0];
+				.. 0];
 			assert(buf.ptr != MAP_FAILED);
 
 			// Sub map it to two identical consecutive maps
 			mmap(buf.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
 			mmap(buf.ptr + pagesize, pagesize, PROT_READ | PROT_WRITE,
-				 MAP_SHARED | MAP_FIXED, memfile, 0);
+					MAP_SHARED | MAP_FIXED, memfile, 0);
 		}
-
+*/
 		else version (Posix)
 		{
 			//pragma(msg, "Posix");
@@ -132,21 +178,23 @@ struct StaticBuffer(T = char)
 
 			static assert(ubyte.sizeof == char.sizeof);
 
-			enum iname = cast(char[]) "/simpleio-";
-			char[] hname = iname ~ char.init;
-			int memfile = void;
+			enum iname = cast(char[]) "/elembuf-";
+			scope char[iname.length + 1] hname = iname;
+			scope int memfile = void;
 
-			for (; !memfile; {
-				hname[$ - 1] = hname[$ - 1]++;
-				if (hname[$ - 1] == char.max)
-				{
-					hname[$ - iname.length .. $] = char.init;
-					hname.length++;
-				}
-			}) /+ Memory allocation +/
+			static foreach (i; char.min .. char.max)
+			{
+				hname[$ - 1] = i;
 
 				// Create a memory file
 				memfile = shm_open(hname.ptr, O_RDWR | O_CREAT | O_EXCL, S_IWUSR | S_IRUSR);
+				if (memfile >= 0)
+					goto cont;
+
+			}
+			assert(0, "Memory file creation error!");
+
+			cont:
 
 			scope (exit)
 				close(memfile); // Deallocates memory once all mappings are unmapped
@@ -156,13 +204,13 @@ struct StaticBuffer(T = char)
 
 			// Create a two page size memory mapping of the file
 			buf = cast(T[]) mmap(null, 2 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0
-					.. 0];
+				.. 0];
 			assert(buf.ptr != MAP_FAILED);
 
 			// Sub map it to two identical consecutive maps
 			mmap(buf.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
 			mmap(buf.ptr + pagesize, pagesize, PROT_READ | PROT_WRITE,
-				 MAP_SHARED | MAP_FIXED, memfile, 0);
+					MAP_SHARED | MAP_FIXED, memfile, 0);
 		}
 		else
 			static assert(0, "Not supported");
@@ -171,10 +219,7 @@ struct StaticBuffer(T = char)
 		return buf;
 	}
 
-	/***********************************
-	* Deinitializes the buffer so that the struct may be destroyed.
-	*/
-	~this()
+	~this() nothrow @nogc @trusted
 	{
 		clear; //Set the buffer to page start.
 
@@ -203,107 +248,103 @@ struct StaticBuffer(T = char)
 		else
 			static assert(0, "System not supported");
 
+		destroy(buf);
+
 		assert(buf.length == 0);
 	}
 
 	/***********************************
-	* Extends the buffer with new data. Returns true if source can be reused, false otherwise.
+	* Extends the buffer with new data. This is the interface for custom sources, 
+	* where data is received from a read interface. 
 	* Params:
-	*				Source	= Array source that is slicable and has a length property.
+	*				source	= Source that implements the read interface. A source must implement 
+	* "ptrdiff_t read(void[] arr)", where arr is the free writable area of the buffer.
+	* Source should return the amount of bytes read, otherwise less than or equal to zero.
+	* For examples on how to use the read interface, see source.d from the repository.
+	* Returns:
+	*				True: Source can be reused.
+	*				False: New source should be set.
 	*/
-	bool fill(Source)(Source source)
-		if (__traits(hasMember, Source, "read") && __traits(compiles, source.read(buf)))
+	bool fill(Source)(ref Source source) @trusted // Normal sources
+	if (__traits(hasMember, Source, "read"))
+	{
+		// Fill the empty area of the buffer. Returns 0 if an error occurs or there is no more data.
+		scope const len = source.read((buf.ptr + buf.length)[0 .. pagesize - buf.length]);
+
+		if (len <= 0)
+			return false;
+
+		buf = buf.ptr[0 .. buf.length + len];
+		return true;
+	}
+
+	///
+	unittest
+	{
+		import buf = buffer, source; // @suppress(dscanner.suspicious.local_imports)
+
+		auto buffer = StaticBuffer!()();
+		scope src = "192.168.1.1".NetSource!();
+		bool alive;
+
+		while (alive)
 		{
-			// Fill the empty area of the buffer. Returns 0 if an error occurs or there is no more data.
-			scope const len = source.read((buf.ptr + buf.length)[0 .. pagesize - buf.length]);
-
-			if (len <= 0)
-				return false;
-
-			buf = buf[0 .. $ + len];
-			return true;
+			alive = buffer.fill(src);
+			buffer.clear; // Removes all elements and resets the buffer.
 		}
 
+		destroy(buffer);
+		destroy(src);
+	}
 
 	/***********************************
-	* Extends the buffer with new data. Returns true if source can be reused, false otherwise.
+	* Extends the buffer with new data. This is a method to directly write to the buffer.
+	* The developer is expected to ensure that "buffer.avail >= arr.length". 
 	* Params:
-	*	!	bool	Mutate	= Remove source array items once they have been read.
-	*				Source	= Array source that is slicable and has a length property.
+	*				arr	= Array source that is slicable and has a length property.
 	*/
-	bool fill(Source, bool Mutate = false)(ref Source source) pure nothrow @nogc @trusted
-		if (__traits(compiles,this = source[0..$]))
-		{
-			if(avail > source.length) // Source fits to the buffer
-			{
-				(buf.ptr + buf.length)[0 .. source.length] = source;
-				buf = buf.ptr[0..buf.length+source.length];
-
-				static if(Mutate) // Mutate source option
-					source = source.ptr[0..0];
-
-				return false;
-			}
-			else
-			{
-				(buf.ptr + buf.length)[0 .. avail] = source[0 .. avail];
-				buf = buf.ptr[0..buf.length+avail];
-
-				static if(Mutate) // Mutate source option
-					source = source.ptr[0..source.length-avail];
-
-				return true;
-			}
-		}
-
-
-	unittest 
+	void fill(scope const T[] arr) pure nothrow @nogc @trusted // Direct write
 	{
-		auto buffer = StaticBuffer!()();
-
-		assert(buffer.fill("Hello World"));
-		assert(buffer.length == "Hello World".length);
-
-		buffer = buffer.ptr[0..pagesize - 1];
-		assert(!buffer.fill("Hello World"));
-		assert(buffer.length == pagesize);
-
-		buffer.length -= 6;
-		string a = "Hello World";
-		buffer.fill(a,true);
-		assert(a == "World");
-
-
-
+		(buf.ptr + buf.length)[0 .. arr.length] = arr;
+		buf = buf.ptr[0 .. buf.length + arr.length];
 	}
 
-	/// Sets the buffer pointer to the start of the page and sets length to zero.
-	void clear() pure nothrow @nogc @trusted
+	///
+	unittest
 	{
-		buf = (cast(T*)((cast(size_t) buf.ptr) >> pagebits << pagebits))[0 .. 0];
-	}
+		import buffer, source; // @suppress(dscanner.suspicious.local_imports)
 
-	/// Returns how much free buffer space is available.
-	size_t avail() pure nothrow @nogc @trusted
-	{
-		return pagesize - buf.length;
-	}
+		auto buf = StaticBuffer!()();
 
+		buf.fill("Hello world!");
+		assert(buf == "Hello world!");
+
+		while (buf.avail)
+			buf.fill([char.init]); // buffer.fill only accepts arrays.
+
+		assert(buf.length == buf.max!char);
+
+		destroy(buf);
+
+	}
 
 	unittest
 	{
 		auto buffer = StaticBuffer!()();
 
 		assert(buffer.length == 0);
-		assert(buffer.fill("Hello World!"));
-		assert(buffer.length == "Hello World!".length);
+		assert(buffer.avail == pagesize);
 
-		static foreach (i; 0 .. 4)
-			assert(buffer.fill("Hello world!"));
+		buffer.fill("works");
+		assert(buffer == "works");
+		buffer.clear;
 
-		buffer.flush();
-		assert(buffer.length == 0);
+		char[] a = cast(char[]) "12345";
+		buffer.fill(a[3 .. $]);
+		buffer.fill(a[2 .. 3]);
+		assert(buffer == "453");
 
+		destroy(buffer);
 	}
 
 }
