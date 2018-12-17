@@ -864,7 +864,7 @@
   <postBuildCommand />
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep;*.tlog</filesToClean>
  </Config>
- <Folder name="benchmarks"><File path=".\benchmarks\benchparse.d" /></Folder><Folder name="src">
+ <Folder name="benchmarks"><File path=".\bench\parse.d" /></Folder><Folder name="source">
 
 <File path="src\buffer.d" />
   <File path="src\source.d" />
