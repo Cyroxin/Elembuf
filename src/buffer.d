@@ -3,7 +3,7 @@ module buffer;
 @nogc:
 
 /// Creates a file in memory. See Linux manpages for further information. 
-private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags) nothrow @nogc; // TODO: Add to druntime
+private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags); // TODO: Add to druntime
 /***********************************
 	* Dynamic buffer with a maximum length of one page (pagesize).
 	* Takes an advantage of the system's memory mirroring capabillities to
@@ -265,7 +265,7 @@ struct StaticBuffer(T = char)
 	*				True: Source can be reused.
 	*				False: New source should be set.
 	*/
-	bool fill(Source)(ref Source source) @trusted // Normal sources
+	bool fill(Source)(ref Source source) // Normal sources
 	if (__traits(hasMember, Source, "read"))
 	{
 		// Fill the empty area of the buffer. Returns 0 if an error occurs or there is no more data.
