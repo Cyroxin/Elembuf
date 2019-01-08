@@ -129,7 +129,6 @@ struct StaticBuffer(T = char)
 
 		}
 
-		/*
 		else version (CRuntime_Glibc)
 		{
 			//pragma(msg, "CRuntime_Glibc");
@@ -160,7 +159,7 @@ struct StaticBuffer(T = char)
 			mmap(buf.ptr + pagesize, pagesize, PROT_READ | PROT_WRITE,
 					MAP_SHARED | MAP_FIXED, memfile, 0);
 		}
-*/
+
 		else version (Posix)
 		{
 			//pragma(msg, "Posix");
