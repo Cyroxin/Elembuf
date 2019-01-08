@@ -285,7 +285,7 @@ struct StaticBuffer(T = char)
 
 		auto buffer = StaticBuffer!()();
 		scope src = "192.168.1.1".NetSource!();
-		bool alive;
+		bool alive = true;
 
 		while (alive)
 		{
