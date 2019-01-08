@@ -1,9 +1,7 @@
 module buffer;
 
-@nogc:
-
 /// Creates a file in memory. See Linux manpages for further information. 
-private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags); // TODO: Add to druntime
+private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags); @nogc // TODO: Add to druntime
 /***********************************
 	* Dynamic buffer with a maximum length of one page (pagesize).
 	* Takes an advantage of the system's memory mirroring capabillities to
