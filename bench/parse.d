@@ -1,25 +1,33 @@
-module benchparse;
+module parse;
 
 import buffer, source;
-
 import std.stdio;
 
-void main()
-{
-	import std.datetime.stopwatch : StopWatch, Duration;
+void main(){
+	import std.datetime.stopwatch : benchmark, Duration;
 
-	auto sw = StopWatch();
+	enum runs = 100_000;
+	auto time = benchmark!(html)(runs);
 
-	enum runs = 5000;
+	foreach(size_t i; 0..1)
+		writeln(time[i] / runs);
 
-	Duration bestDur = Duration.max;
+	readln;
 
-	foreach (i; 1 .. runs + 1)
-	{
+}
+
+
+void html(){
+		import std.range : repeat;
+		import std.array : join;
+
+		// Create the buffer
 		scope buffer = StaticBuffer!()();
-		scope src = "192.168.1.1".NetSource!();
 
-		sw.start();
+		// Create the source
+		// scope src = "192.168.1.1".NetSource!(); // Not suitable for benchmarking as contents vary and change.
+		auto src = new ArraySource!string("<html>" ~ cast(string) "<node></node>".repeat(1000).join ~ "</html>");
+
 
 		scope bool alive = buffer.fill(src);
 		scope ptrdiff_t len = void;
@@ -54,23 +62,10 @@ void main()
 			}
 			else
 				break;
-
 		}
 
-		sw.stop;
-
-		if (bestDur > sw.peek / i)
-			bestDur = sw.peek / i;
-
-		writeln(i);
 		if (buffer.length > 0)
 			buffer.writeln;
-	}
-
-	writeln("Average Time: ", sw.peek / runs);
-	writeln("Best Time: ", bestDur);
-
-	readln;
 
 }
 

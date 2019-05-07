@@ -37,7 +37,7 @@ struct NetSource(alias code = {}) if (__traits(compiles, code()))
 		// Set fakebuffer to empty every time the source blocks.
 		// A blocking source means that data has not been received yet. 
 		// It is best to do productive small tasks while waiting for data.
-		auto src = "127.0.0.1".NetSource!({fakebuffer.length = 0});
+		auto src = "127.0.0.1".NetSource!({fakebuffer.length = 0;});
 	}
 
 	~this() @trusted
@@ -83,4 +83,37 @@ struct NetSource(alias code = {}) if (__traits(compiles, code()))
 		}
 
 	}
+}
+
+
+import std.traits : isDynamicArray;
+
+/// Source that reads from an array as if it were a true source. This is best used only for debugging or testing.
+struct ArraySource(T) 
+if (isDynamicArray!T)
+{
+
+	T arr;
+
+	this(T array){
+		arr = array;
+	}
+
+	/// Will never return a negative number. Zero if empty.
+	ptrdiff_t read()(void[] buf) {
+		if (arr.length > buf.length)
+		{
+			buf[0..$] = cast(void[]) arr[0..buf.length];
+			arr = arr[buf.length .. $];
+			return buf.length;
+		}
+		else
+		{
+			buf[0..arr.length] = cast(void[]) arr[0..arr.length];
+			arr = (arr.ptr + arr.length)[0..0];
+			return arr.length;
+		}
+		return buf.length;
+	}
+
 }
