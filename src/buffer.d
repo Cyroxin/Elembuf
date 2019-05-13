@@ -1,18 +1,30 @@
 module buffer;
 
+
 /// Creates a file in memory. See Linux manpages for further information. 
-private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags); @nogc // TODO: Add to druntime
+private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags) @nogc; // TODO: Add to druntime
 /***********************************
 	* Dynamic buffer with a maximum length of one page (pagesize).
 	* Takes an advantage of the system's memory mirroring capabillities to
 	* create a memory loop so that memory copying wont be necessary.
 	* The buffer may be manipulated normally as if it were a T[].
-	* Increasing buffer.length will reallocate using the GC,
-	* which will remove the mirroring, so use buffer.fill instead.
+	* Usage:
+	*			auto buf = StaticBuffer!()();
+	*			scope(exit) destroy(buf);
+	* Note:
+	*			1. Setting the buffer to anything else than its own slice will
+	*			cause memory leaks and break the mirroring system. Use buffer.fill().
+	*			2. Buffer must be destroyed after use with "destroy(buffer)" to avoid
+	*			memory leaks.
+	*			3. (WINDOWS) Only one active (non-destroyed) buffer of this type is allowed per process.
+	*			A new buffer will overwrite the old data and break the old buffer.
+	*			Ensure that CreateFileMapping(INVALID_HANDLE_VALUE, ...) is not used elsewhere
+	*			in the application.
 	* Params:
 	*			T	= Element type which the buffer will hold. Defaults to char.
 	*/
 
+@nogc
 struct StaticBuffer(T = char)
 {
 
@@ -23,6 +35,8 @@ struct StaticBuffer(T = char)
 	/// Underlying buffer which the object manages. Avoid using this directly.
 	/// Can be used to avoid safety overhead when removing elements using opAssign. 
 	T[] buf = void;
+
+	static assert(typeof(this).sizeof == (T[]).sizeof);
 
 	///
 	unittest
@@ -53,13 +67,13 @@ struct StaticBuffer(T = char)
 	static enum pagebits = cast(size_t) log2(pagesize);
 
 	/// Sets the buffer pointer to the start of the page and sets length to zero.
-	void clear() pure nothrow @nogc @trusted
+	void clear() nothrow @nogc @trusted
 	{
 		buf = (cast(T*)((cast(size_t) buf.ptr) >> pagebits << pagebits))[0 .. 0];
 	}
 
 	/// Returns how much free buffer space is available.
-	size_t avail() pure nothrow @nogc @trusted
+	size_t avail() nothrow @nogc @trusted
 	{
 		return pagesize - buf.length;
 	}
@@ -69,8 +83,10 @@ struct StaticBuffer(T = char)
 	/// Use this instead of pagesize if possible.
 	static enum max(T) = pagesize / T.sizeof;
 
-	void opAssign()(const scope T[] newbuf) pure nothrow @nogc @trusted // @suppress(dscanner.style.undocumented_declaration)
+	void opAssign()(const scope T[] newbuf) nothrow @nogc @trusted // @suppress(dscanner.style.undocumented_declaration)
 	{
+		assert(newbuf.ptr >= buf.ptr && newbuf.ptr <= buf.ptr); // Make sure that this is a slice.
+
 		if ((cast(size_t) buf.ptr & pagesize) == (cast(size_t) newbuf.ptr & pagesize)) // Cost: 8%, (~7╬╝)
 			buf = cast(T[]) newbuf;
 		else
@@ -85,13 +101,19 @@ struct StaticBuffer(T = char)
 
 		// Another alternative would be allocating a  pointer, this was avoided to keep the struct small.
 		// You would essentially check if the new pointer is equal or above the second page buffer start. Perf not checked.
+
+		// Todo: Look into if this could be done in fill.
 	}
 
-	//@disable this(this); // Copies can deinitiate the buffer. The developer is trusted not to allow this.
+	//@disable this(this);
 
-	static auto opCall() @nogc @trusted // @suppress(dscanner.style.undocumented_declaration)
+	static typeof(this) opCall() @nogc @trusted nothrow // @suppress(dscanner.style.undocumented_declaration)
 	{
-		typeof(this) buf = void; // @suppress(dscanner.suspicious.label_var_same_name)
+		
+		scope T[] ret;
+
+		//debug import std.stdio;
+		//debug writeln("Construction");
 
 		version (Windows)
 		{
@@ -107,23 +129,28 @@ struct StaticBuffer(T = char)
 			scope const void* memfile = CreateFileMapping(INVALID_HANDLE_VALUE,
 					NULL, PAGE_READWRITE, 0, pagesize, NULL);
 
+			scope(exit) CloseHandle(cast(void*) memfile); // This will destroy the mapfile once there are no mappings
+			
+
 			// Find a suitable large memory location in memory.
 			while (true)
 			{
-				buf = cast(T[]) VirtualAlloc(NULL, pagesize * 2, MEM_RESERVE, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
-				VirtualFree(buf.ptr, 0, MEM_RELEASE);
+				ret = cast(T[]) VirtualAlloc(NULL, pagesize * 2, MEM_RESERVE, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
+
+				if (ret.ptr is NULL) // Request sent too soon
+					continue;
+
+				VirtualFree(ret.ptr, 0, MEM_RELEASE);
 
 				// Map two contiguous views to point to the memory file created earlier.
-				if (!MapViewOfFileEx(cast(void*) memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, buf.ptr))
+				if (!MapViewOfFileEx(cast(void*) memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, ret.ptr))
 					continue;
 				else if (!MapViewOfFileEx(cast(void*) memfile,
-						FILE_MAP_ALL_ACCESS, 0, 0, 0, buf.ptr + pagesize))
-					UnmapViewOfFile(buf.ptr);
+						FILE_MAP_ALL_ACCESS, 0, 0, 0, ret.ptr + pagesize))
+					UnmapViewOfFile(ret.ptr);
 				else
 					break;
 			}
-
-			CloseHandle(cast(void*) memfile);
 
 		}
 
@@ -148,13 +175,13 @@ struct StaticBuffer(T = char)
 			ftruncate(memfile, pagesize);
 
 			// Create a two page size memory mapping of the file
-			buf = (cast(T*) mmap(null, 2 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0))[0
+			ret = (cast(T*) mmap(null, 2 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0))[0
 				.. 0];
-			assert(buf.ptr != MAP_FAILED);
+			assert(ret.ptr != MAP_FAILED);
 
 			// Sub map it to two identical consecutive maps
-			mmap(buf.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-			mmap(buf.ptr + pagesize, pagesize, PROT_READ | PROT_WRITE,
+			mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+			mmap(ret.ptr + pagesize, pagesize, PROT_READ | PROT_WRITE,
 					MAP_SHARED | MAP_FIXED, memfile, 0);
 		}
 
@@ -200,32 +227,65 @@ struct StaticBuffer(T = char)
 			ftruncate(memfile, pagesize); // Sets the memory file length
 
 			// Create a two page size memory mapping of the file
-			buf = cast(T[]) mmap(null, 2 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0
+			ret = cast(T[]) mmap(null, 2 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0
 				.. 0];
-			assert(buf.ptr != MAP_FAILED);
+			assert(ret.ptr != MAP_FAILED);
 
 			// Sub map it to two identical consecutive maps
-			mmap(buf.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-			mmap(buf.ptr + pagesize, pagesize, PROT_READ | PROT_WRITE,
+			mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+			mmap(ret.ptr + pagesize, pagesize, PROT_READ | PROT_WRITE,
 					MAP_SHARED | MAP_FIXED, memfile, 0);
 		}
+		
 		else
 			static assert(0, "Not supported");
 
-		assert(buf.length == 0);
-		return buf;
+
+		/* debug
+		{
+			// Mutate buffer
+			ret = ret.ptr[0..1];
+			ret[0] = cast(T) 'a';
+
+			assert(ret[0] == 'a'); // Ensure no error/bug occurs.
+
+			// Revert changes
+			ret[0] = T.init;
+			ret = ret.ptr[0..0];
+		}*/
+		
+
+		assert(ret.ptr != NULL && ret.length == 0);
+		return *(cast(StaticBuffer!T*) &ret);
 	}
 
-	~this() nothrow @nogc @trusted
+	~this() @nogc @trusted nothrow
 	{
-		clear; //Set the buffer to page start.
+		assert(ptr !is null); // If this is hit, the destructor is called too often.
+
+		/* debug 
+		{
+			import std.stdio;
+
+			if(ptr is null){
+				debug writeln("Destruction occurred, but pointer was already null!");
+				return;
+			}
+			else
+				writeln("Destruction");
+		}*/
+
+		clear; //Set the buffer to page start so that the os unmapper will work.
 
 		version (Windows)
 		{
-			import core.sys.windows.winbase : CloseHandle, UnmapViewOfFile;
+			import core.sys.windows.winbase : UnmapViewOfFile;
 
-			UnmapViewOfFile(buf.ptr);
-			UnmapViewOfFile(buf.ptr + pagesize);
+			UnmapViewOfFile(ptr);
+			UnmapViewOfFile(ptr + pagesize);
+
+			// NOTE: There is an EX unmap with priority unmap flag, 
+			// but it lacks windows 7 compatibility
 		}
 
 		else version (CRuntime_Glibc)
@@ -245,9 +305,7 @@ struct StaticBuffer(T = char)
 		else
 			static assert(0, "System not supported");
 
-		destroy(buf);
-
-		assert(buf.length == 0);
+		assert(length == 0);
 	}
 
 	/***********************************
@@ -300,7 +358,7 @@ struct StaticBuffer(T = char)
 	* Params:
 	*				arr	= Array source that is slicable and has a length property.
 	*/
-	void fill(scope const T[] arr) pure nothrow @nogc @trusted // Direct write
+	void fill(scope const T[] arr) nothrow @nogc @trusted // Direct write
 	{
 		(buf.ptr + buf.length)[0 .. arr.length] = arr;
 		buf = buf.ptr[0 .. buf.length + arr.length];
