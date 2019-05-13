@@ -3,30 +3,37 @@ module parse;
 import buffer, source;
 import std.stdio;
 
-void main(){
+void main()
+{
 	import std.datetime.stopwatch : benchmark, Duration;
 
 	enum runs = 100_000;
-	auto time = benchmark!(html)(runs);
+	auto time = benchmark!(html,cons)(runs);
 
-	foreach(size_t i; 0..1)
-		writeln(time[i] / runs);
+	writeln("Benchmarks unrelated to eachother, used for improving the system.");
+	writeln("Bench [Overall]: ",time[0] / runs);
+	writeln("Bench [Construction]: ",time[1] / runs);
 
 	readln;
 
+	// PERSONAL NOTES!
+
 }
 
-
-void html(){
-		import std.range : repeat;
-		import std.array : join;
+/// Used for benchmarking overall performance, which includes construction and core functions.
+void html() @nogc
+{
+		static import std.range;
+		static import std.array;
 
 		// Create the buffer
-		scope buffer = StaticBuffer!()();
+		auto buffer = StaticBuffer!()();
+
+		enum data = "<html>" ~ cast(string) std.array.join(std.range.repeat("<node></node>",1000)) ~ "</html>";
 
 		// Create the source
 		// scope src = "192.168.1.1".NetSource!(); // Not suitable for benchmarking as contents vary and change.
-		auto src = new ArraySource!string("<html>" ~ cast(string) "<node></node>".repeat(1000).join ~ "</html>");
+		auto src = ArraySource!string(data);
 
 
 		scope bool alive = buffer.fill(src);
@@ -63,10 +70,12 @@ void html(){
 			else
 				break;
 		}
+}
 
-		if (buffer.length > 0)
-			buffer.writeln;
-
+/// Used for benchmarking construction.
+void cons() @nogc
+{
+	auto buffer = StaticBuffer!()();
 }
 
 /// Compile time needle occurence finder.
