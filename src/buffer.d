@@ -71,7 +71,7 @@ struct StaticBuffer(T = char)
 	static enum pagebits = cast(size_t) log2(pagesize);
 
 	/// Maximum amount of items if buffer were a T[]. 
-	/// This is very usefull if the buffer is set to be a void[] internally.
+	/// This is very useful if the buffer is set to be a void[] internally.
 	/// Use this instead of pagesize if possible.
 	static enum max = pagesize / T.sizeof;
 
