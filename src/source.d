@@ -38,6 +38,9 @@ struct NetSource(alias code = {}) if (__traits(compiles, code()))
 		// A blocking source means that data has not been received yet. 
 		// It is best to do productive small tasks while waiting for data.
 		auto src = "127.0.0.1".NetSource!({fakebuffer.length = 0;});
+
+		// If action on block is not needed, it is possible to simply state:
+		// NetSource src = "192.168.1.1".NetSource!();
 	}
 
 	~this() @trusted
@@ -48,7 +51,7 @@ struct NetSource(alias code = {}) if (__traits(compiles, code()))
 		destroy(sock);
 	}
 
-	/// Reads new data to the buffer. Returns -1 on error, 0 on empty and positive for bytes read
+	/// Reads new data to buf. Returns negative on error, zero on empty and positive for bytes read
 	ptrdiff_t read()(void[] buf) @trusted
 	in
 	{

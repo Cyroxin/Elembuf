@@ -588,7 +588,10 @@ When the source blocks, a custom delegate defined in the compile time parameter 
 </span><span class="comment">// A blocking source means that data has not been received yet. 
 </span><span class="comment">// It is best to do productive small tasks while waiting for data.
 </span><span class="keyword">auto</span> src = <span class="string_literal">"127.0.0.1"</span>.NetSource!({fakebuffer.length = 0;});
-</code></li>
+
+<span class="comment">// If action on block is not needed, it is possible to simply state:
+</span><span class="comment">// NetSource src = "192.168.1.1".NetSource!();
+</span></code></li>
       </ol>
     </div>
   </div>
@@ -624,7 +627,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Reads new data to the buffer. Returns -1 on error, 0 on empty and positive for bytes <code class="code">read</code>
+    Reads new data to <code class="code">buf</code>. Returns negative on error, zero on empty and positive for bytes <code class="code">read</code>
   </p>
 </div>
 

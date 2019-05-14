@@ -4,20 +4,21 @@ module buffer;
 /// Creates a file in memory. See Linux manpages for further information. 
 private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags) @nogc; // TODO: Add to druntime
 /***********************************
-	* Dynamic buffer with a maximum length of one page (pagesize).
+	* Dynamic buffer with a maximum length of one page ("buf.max").
 	* Takes an advantage of the system's memory mirroring capabillities to
 	* create a memory loop so that memory copying wont be necessary.
 	* The buffer may be manipulated normally as if it were a T[].
 	* Usage:
 	* ---
-	* auto buf = StaticBuffer!()(); 
+	* StaticBuffer!int buf = StaticBuffer!int(); 
 	* ---
 	* or
 	* ---
-	* StaticBuffer!char buf = StaticBuffer!char(); 
+	* auto buf = StaticBuffer!()(); // Underlying type defaults to char.
 	* ---
 	*
 	* Note:
+	*
 	*				Setting the buffer to anything else than its own slice will
 	*				cause memory leaks and break the mirroring system. Use buffer.fill() to extend the buffer.
 	*
@@ -49,14 +50,11 @@ struct StaticBuffer(T = char)
 	{
 		import buffer, source; // @suppress(dscanner.suspicious.local_imports)
 
-		auto buf = StaticBuffer!()();
-		assert(buf[0 .. 0] == buf.buf[0 .. 0]);
+		auto buffer = StaticBuffer!()();
+		assert(buffer[0..0] == buffer.buf[0..0]);
 
-		buf = buf.ptr[0 .. "Hello World!".length]; // Will not use the GC.
-		buf = cast(T[]) "Hello World!";
-
-		destroy(buf);
-
+		buffer = buffer.ptr[0 .. "Hello World!".length]; // Will not use the GC.
+		buffer.fill("Hello World!");
 	}
 
 	/// Number of bytes per page of memory. Use max!T instead.
@@ -75,7 +73,7 @@ struct StaticBuffer(T = char)
 	/// Maximum amount of items if buffer were a T[]. 
 	/// This is very usefull if the buffer is set to be a void[] internally.
 	/// Use this instead of pagesize if possible.
-	static enum max(T) = pagesize / T.sizeof;
+	static enum max = pagesize / T.sizeof;
 
 	void opAssign()(const scope T[] newbuf) nothrow @nogc @trusted // @suppress(dscanner.style.undocumented_declaration)
 	{
@@ -311,12 +309,11 @@ struct StaticBuffer(T = char)
 	* Extends the buffer with new data. This is the interface for custom sources, 
 	* where data is received from a read interface. 
 	* Params:
-	*				source	= Source that implements the read interface. A source must implement 
+	*				source	= Object that implements the read interface. A source must implement 
 	* "ptrdiff_t read(void[] arr)", where arr is the free writable area of the buffer.
-	* Source should return the amount of bytes written, otherwise less than or equal to zero.
+	* The source should return the amount of bytes written, otherwise less than or equal to zero.
 	* For examples on how to use the read interface, see 
-	* http://htmlpreview.github.io/?https//://github.com/Cyroxin/Elembuf/blob/master/doc/buffer.html
-	* from the repository.
+	* <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source.d</a></font>
 	* Returns:
 	*				True: Source can be reused.
 	*				False: New source should be set.
@@ -348,14 +345,14 @@ struct StaticBuffer(T = char)
 			alive = buffer.fill(src);
 			buffer.clear; // Removes all elements and resets the buffer.
 		}
-
-		destroy(buffer);
-		destroy(src);
 	}
 
 	/***********************************
 	* Extends the buffer with new data. This is a method to directly write to the buffer.
-	* The developer is expected to ensure that "buffer.avail >= arr.length". 
+	* The following must be true on function call:
+	* ---
+	* assert(buffer.avail >= arr.length);
+	* ---
 	* Params:
 	*				arr	= Array source that is slicable and has a length property.
 	*/
@@ -378,9 +375,7 @@ struct StaticBuffer(T = char)
 		while (buf.avail)
 			buf.fill([char.init]); // buffer.fill only accepts arrays.
 
-		assert(buf.length == buf.max!char);
-
-		destroy(buf);
+		assert(buf.length == buf.max);
 
 	}
 
@@ -399,8 +394,6 @@ struct StaticBuffer(T = char)
 		buffer.fill(a[3 .. $]);
 		buffer.fill(a[2 .. 3]);
 		assert(buffer == "453");
-
-		destroy(buffer);
 	}
 
 	/// Sets the buffer pointer to the start of the page and sets length to zero.
@@ -409,10 +402,10 @@ struct StaticBuffer(T = char)
 		buf = (cast(T*)((cast(size_t) buf.ptr) >> pagebits << pagebits))[0 .. 0];
 	}
 
-	/// Returns how much free buffer space is available.
+	/// Returns how many T's of free buffer space is available.
 	size_t avail() nothrow @nogc @trusted
 	{
-		return pagesize - buf.length;
+		return max - buf.length;
 	}
 
 }

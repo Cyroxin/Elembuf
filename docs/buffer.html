@@ -537,7 +537,7 @@
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Dynamic buffer with a maximum length of one page (pagesize).
+    Dynamic buffer with a maximum length of one page ("buf.max").
  Takes an advantage of the system's memory mirroring capabillities to
  create a memory loop so that memory copying wont be necessary.
  The buffer may be manipulated normally as if it were a T[].
@@ -552,7 +552,7 @@
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="keyword">auto</span> buf = <span class="psymbol">StaticBuffer</span>!()();
+        <li><code class="code"><span class="psymbol">StaticBuffer</span>!<span class="keyword">int</span> buf = <span class="psymbol">StaticBuffer</span>!<span class="keyword">int</span>();
 </code></li>
       </ol>
     </div>
@@ -564,8 +564,8 @@
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="psymbol">StaticBuffer</span>!<span class="keyword">char</span> buf = <span class="psymbol">StaticBuffer</span>!<span class="keyword">char</span>();
-</code></li>
+        <li><code class="code"><span class="keyword">auto</span> buf = <span class="psymbol">StaticBuffer</span>!()(); <span class="comment">// Underlying type defaults to char.
+</span></code></li>
       </ol>
     </div>
   </div>
@@ -689,7 +689,7 @@ Can be used to avoid safety overhead when popping items using slicing.
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.max"></span>enum auto <code class="code">max</code>(T);
+            <span class="ddoc_anchor" id="StaticBuffer.max"></span>enum auto <code class="code">max</code>;
 
           </code>
         </p>
@@ -753,12 +753,11 @@ Use this instead of pagesize if possible.
 <td>
   <div class="ddoc_param_desc">
     <p class="para">
-      Source that implements the read interface. A <code class="code">source</code> must implement
+      Object that implements the read interface. A <code class="code">source</code> must implement
  "ptrdiff_t read(void[] arr)", where arr is the free writable area of the buffer.
- Source should return the amount of bytes written, otherwise less than or equal to zero.
+ The <code class="code">source</code> should return the amount of bytes written, otherwise less than or equal to zero.
  For examples on how to use the read interface, see
- <a href="http://htmlpreview.github.io/?https//">http://htmlpreview.github.io/?https//</a>://github.com/Cyroxin/Elembuf/blob/master/doc/buffer.html
- from the repository.
+ <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/<code class="code">source</code>.d</a></font>
     </p>
   </div>
 </td>
@@ -805,9 +804,6 @@ New <code class="code">source</code> should be set.
 	alive = buffer.<span class="psymbol">fill</span>(src);
 	buffer.clear; <span class="comment">// Removes all elements and resets the buffer.
 </span>}
-
-destroy(buffer);
-destroy(src);
 </code></li>
       </ol>
     </div>
@@ -844,8 +840,19 @@ destroy(src);
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Extends the buffer with new data. This is a method to directly write to the buffer.
- The developer is expected to ensure that "buffer.avail &gt;= <code class="code">arr</code>.length".
+     Extends the buffer with new data. This is a method to directly write to the buffer.
+ The following must be <code class="code">true</code> on function call:
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">assert</span>(buffer.avail &gt;= <span class="param">arr</span>.length);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
 
   </p>
 </div>
@@ -889,9 +896,7 @@ buf.<span class="psymbol">fill</span>(<span class="string_literal">"Hello world!
 <span class="keyword">while</span> (buf.avail)
 	buf.<span class="psymbol">fill</span>([<span class="keyword">char</span>.init]); <span class="comment">// buffer.fill only accepts arrays.
 </span>
-<span class="keyword">assert</span>(buf.length == buf.max!<span class="keyword">char</span>);
-
-destroy(buf);
+<span class="keyword">assert</span>(buf.length == buf.max);
 </code></li>
       </ol>
     </div>
@@ -960,7 +965,7 @@ destroy(buf);
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Returns how much free buffer space is available.
+    Returns how many T's of free buffer space is available.
   </p>
 </div>
 

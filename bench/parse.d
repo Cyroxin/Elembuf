@@ -53,7 +53,7 @@ void html() @nogc
 					buffer = buffer[len + 1 .. $];
 				else if (alive)
 				{
-					buffer.length == buffer.max!char ? buffer.clear : {}; // Overflow management
+					buffer.length == buffer.max ? buffer.clear : {}; // Overflow management
 
 					alive = buffer.fill(src);
 				}
@@ -63,7 +63,7 @@ void html() @nogc
 			}
 			else if (alive)
 			{
-				buffer.length == buffer.max!char ? buffer.clear : {}; // Overflow management
+				buffer.length == buffer.max ? buffer.clear : {}; // Overflow management
 
 				alive = buffer.fill(src);
 			}
