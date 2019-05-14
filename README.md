@@ -17,20 +17,41 @@ Work on being fully compatible with C and C++ is underway.
 
 ## Getting Started
 
-To learn how to use the library, the documentation containing examples is a good place to start. Check out 
-[buffer](http://htmlpreview.github.io/?https://github.com/Cyroxin/Elembuf/blob/master/doc/buffer.html)!
 
-You may use the source files as is, regardless of what editor or IDE you use, as long as you know how to link
-them through your compiler. If you have any questions, issues or feature requests, please create an issue on this repository.
-
-#
 
 <b>Windows/Mac</b>
-You may use the solution file in the repository called "Elembuf.sln" (VS2017) with [visuald](https://github.com/dlang/visuald).
-The source files should automatically link and you may easily edit the source code and add your own code into the solution.
+You can download the repo and open the solution file in the repository called "Elembuf.sln" (VS17 & VS19) with [visuald](https://github.com/dlang/visuald) in visual studio. The source files should automatically link and you may easily edit the source code and add your own code into the solution.
 
 <b>Linux</b>
 Manual linking must be done using the instructions of your own compiler. 
+
+You may use the source files as is, regardless of what os, editor or IDE you use, as long as you know how to link
+them through your compiler. If you have any questions, issues or feature requests, please create an issue on this repository.
+
+
+#
+
+[D]
+```
+void main()
+{
+		import buffer, source;
+
+		auto buffer = StaticBuffer!()();
+		scope src = "192.168.1.1".NetSource!();
+		bool alive;
+
+		do
+		{
+			alive = buffer.fill(src);
+			buffer.clear; // Removes all elements and resets the buffer.
+		} while (alive);
+}
+```
+
+For further understanding on how to use the library, the documentation containing examples is a good place to start: 
+* [buffer](https://cyroxin.github.io/Elembuf/buffer.html) <br />
+* [source](https://cyroxin.github.io/Elembuf/source.html)
 
 ## Maintainers
 
