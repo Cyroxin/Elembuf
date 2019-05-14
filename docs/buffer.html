@@ -19,6 +19,44 @@
         vertical-align: baseline;
       }
 
+      h1 { font-size: 200%; }
+      h2 { font-size: 160%; }
+      h3 { font-size: 120%; }
+      h4 { font-size: 100%; }
+      h5 { font-size: 80%; }
+      h6 { font-size: 80%; font-weight: normal; }
+
+      ul, ol {
+        margin: 1.4em 0;
+      }
+      ul ul, ol ol, ul ol, ol ul {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+      ul, ol {
+        margin-left: 2.8em;
+      }
+
+      ol {
+        list-style: decimal;
+      }
+      ol ol {
+        list-style: lower-alpha;
+      }
+      ol ol ol {
+        list-style: lower-roman;
+      }
+      ol ol ol ol {
+        list-style: decimal;
+      }
+
+      blockquote {
+        margin: 0.1em;
+        margin-left: 1em;
+        border-left: 2px solid #cccccc;
+        padding-left: 0.7em;
+      }
+
       .color_red { color: #dc322f; }
       .color_blue { color: #268bd2; }
       .color_green { color: #859901; }
@@ -106,7 +144,7 @@
         border-radius: 5px;
       }
 
-      #ddoc_main .ddoc_decl .section h4, #ddoc_main .section.ddoc_sections h4 {
+      #ddoc_main .ddoc_decl .section h4:first-of-type, #ddoc_main .section.ddoc_sections h4:first-of-type {
         font-size: 13px;
         line-height: 1.5;
         margin-top: 21px;
@@ -411,11 +449,18 @@
         min-width: 50px;
       }
 
+      .ddoc th {
+        margin: 0;
+        max-width: 260px;
+        padding: 5px 10px 5px 10px;
+        vertical-align: bottom;
+      }
+
       .ddoc td {
         border: 1px solid rgba(233, 233, 233, 1);
         margin: 0;
         max-width: 260px;
-        padding: 5px 25px 5px 10px;
+        padding: 5px 10px 5px 10px;
         vertical-align: middle;
       }
 
@@ -496,8 +541,49 @@
  Takes an advantage of the system's memory mirroring capabillities to
  create a memory loop so that memory copying wont be necessary.
  The buffer may be manipulated normally as if it were a T[].
- Increasing buffer.length will reallocate using the GC,
- which will remove the mirroring, so use buffer.fill instead.
+
+  </p>
+</div>
+<div class="ddoc_section">
+  <p class="para">
+    <span class="ddoc_section_h">Usage:</span>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">auto</span> buf = <span class="psymbol">StaticBuffer</span>!()();
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+ or
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="psymbol">StaticBuffer</span>!<span class="keyword">char</span> buf = <span class="psymbol">StaticBuffer</span>!<span class="keyword">char</span>();
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+
+  </p>
+</div>
+<div class="ddoc_section">
+  <p class="para">
+    <span class="ddoc_section_h">Note:</span>
+Setting the buffer to anything else than its own slice will
+				cause memory leaks and break the mirroring system. Use buffer.fill() to extend the buffer.
+<br><br>
+				<font color="blue">[WINDOWS]</font> Only one active (non-destroyed) buffer of this type is allowed per process.
+				A new buffer will overwrite the old data and desync the old buffer.
+				Ensure that CreateFileMapping(INVALID_HANDLE_VALUE, ...) is not used elsewhere
+				in the application.
 
   </p>
 </div>
@@ -551,34 +637,10 @@
   <div class="ddoc_summary">
   <p class="para">
     Underlying buffer which the object manages. Avoid using this directly.
-Can be used to avoid safety overhead when removing elements using opAssign.
+Can be used to avoid safety overhead when popping items using slicing.
   </p>
 </div>
-<div class="ddoc_examples">
-  <h4>Examples</h4>
-  <p class="para">
-    
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="keyword">import</span> buffer,source; <span class="comment">// @suppress(dscanner.suspicious.local_imports)
-</span>
-<span class="keyword">auto</span> <span class="psymbol">buf</span> = StaticBuffer!()();
-<span class="keyword">assert</span>(<span class="psymbol">buf</span>[0..0] == <span class="psymbol">buf</span>.<span class="psymbol">buf</span>[0..0]);
 
-<span class="psymbol">buf</span> = <span class="psymbol">buf</span>.ptr[0..<span class="string_literal">"Hello World!"</span>.length]; <span class="comment">// Will not use the GC.
-</span><span class="psymbol">buf</span> = <span class="keyword">cast</span>(T[]) <span class="string_literal">"Hello World!"</span>;
-
-destroy(<span class="psymbol">buf</span>);
-</code></li>
-      </ol>
-    </div>
-  </div>
-</section>
-
-  </p>
-</div>
 </section>
 
 </div>
@@ -608,70 +670,6 @@ destroy(<span class="psymbol">buf</span>);
   <div class="ddoc_summary">
   <p class="para">
     Number of bits that the buffer can write to. Used for bit shifts.
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#StaticBuffer.clear" id="StaticBuffer.clear"><code class="code">clear</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.clear"></span>pure nothrow @nogc @trusted void <code class="code">clear</code>();
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Sets the buffer pointer to the start of the page and sets length to zero.
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#StaticBuffer.avail" id="StaticBuffer.avail"><code class="code">avail</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.avail"></span>pure nothrow @nogc @trusted size_t <code class="code">avail</code>();
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Returns how much free buffer space is available.
   </p>
 </div>
 
@@ -725,7 +723,7 @@ Use this instead of pagesize if possible.
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>@trusted bool <code class="code">fill</code>(Source)(ref Source <code class="code">source</code>) if (__traits(hasMember, Source, "read"));
+            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>bool <code class="code">fill</code>(Source)(ref Source <code class="code">source</code>) if (__traits(hasMember, Source, "read"));
 
           </code>
         </p>
@@ -757,8 +755,10 @@ Use this instead of pagesize if possible.
     <p class="para">
       Source that implements the read interface. A <code class="code">source</code> must implement
  "ptrdiff_t read(void[] arr)", where arr is the free writable area of the buffer.
- Source should return the amount of bytes read, otherwise less than or equal to zero.
- For examples on how to use the read interface, see <code class="code">source</code>.d from the repository.
+ Source should return the amount of bytes written, otherwise less than or equal to zero.
+ For examples on how to use the read interface, see
+ <a href="http://htmlpreview.github.io/?https//">http://htmlpreview.github.io/?https//</a>://github.com/Cyroxin/Elembuf/blob/master/doc/buffer.html
+ from the repository.
     </p>
   </div>
 </td>
@@ -794,13 +794,13 @@ New <code class="code">source</code> should be set.
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="keyword">import</span> buf = buffer,<span class="param">source</span>; <span class="comment">// @suppress(dscanner.suspicious.local_imports)
+        <li><code class="code"><span class="keyword">import</span> buf = buffer, <span class="param">source</span>; <span class="comment">// @suppress(dscanner.suspicious.local_imports)
 </span>
 <span class="keyword">auto</span> buffer = StaticBuffer!()();
 <span class="keyword">scope</span> src = <span class="string_literal">"192.168.1.1"</span>.NetSource!();
-<span class="keyword">bool</span> alive = true;
+<span class="keyword">bool</span> alive = <span class="keyword">true</span>;
 
-<span class="keyword">while</span>(alive) 
+<span class="keyword">while</span> (alive)
 {
 	alive = buffer.<span class="psymbol">fill</span>(src);
 	buffer.clear; <span class="comment">// Removes all elements and resets the buffer.
@@ -832,7 +832,7 @@ destroy(src);
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.fill.2"></span>pure nothrow @nogc @trusted void <code class="code">fill</code>(scope const T[] <code class="code">arr</code>);
+            <span class="ddoc_anchor" id="StaticBuffer.fill.2"></span>nothrow @nogc @trusted void <code class="code">fill</code>(scope const T[] <code class="code">arr</code>);
 
           </code>
         </p>
@@ -879,14 +879,14 @@ destroy(src);
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="keyword">import</span> buffer,source; <span class="comment">// @suppress(dscanner.suspicious.local_imports)
+        <li><code class="code"><span class="keyword">import</span> buffer, source; <span class="comment">// @suppress(dscanner.suspicious.local_imports)
 </span>
 <span class="keyword">auto</span> buf = StaticBuffer!()();
 
 buf.<span class="psymbol">fill</span>(<span class="string_literal">"Hello world!"</span>);
 <span class="keyword">assert</span>(buf == <span class="string_literal">"Hello world!"</span>);
 
-<span class="keyword">while</span>(buf.avail)
+<span class="keyword">while</span> (buf.avail)
 	buf.<span class="psymbol">fill</span>([<span class="keyword">char</span>.init]); <span class="comment">// buffer.fill only accepts arrays.
 </span>
 <span class="keyword">assert</span>(buf.length == buf.max!<span class="keyword">char</span>);
@@ -900,6 +900,70 @@ destroy(buf);
 
   </p>
 </div>
+</section>
+
+</div>
+
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#StaticBuffer.clear" id="StaticBuffer.clear"><code class="code">clear</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="StaticBuffer.clear"></span>nothrow @nogc @trusted void <code class="code">clear</code>();
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Sets the buffer pointer to the start of the page and sets length to zero.
+  </p>
+</div>
+
+</section>
+
+</div>
+
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#StaticBuffer.avail" id="StaticBuffer.avail"><code class="code">avail</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="StaticBuffer.avail"></span>nothrow @nogc @trusted size_t <code class="code">avail</code>();
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Returns how much free buffer space is available.
+  </p>
+</div>
+
 </section>
 
 </div>

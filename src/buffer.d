@@ -9,20 +9,26 @@ private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, u
 	* create a memory loop so that memory copying wont be necessary.
 	* The buffer may be manipulated normally as if it were a T[].
 	* Usage:
-	*			auto buf = StaticBuffer!()();
-	*			scope(exit) destroy(buf);
+	* ---
+	* auto buf = StaticBuffer!()(); 
+	* ---
+	* or
+	* ---
+	* StaticBuffer!char buf = StaticBuffer!char(); 
+	* ---
+	*
 	* Note:
-	*			1. Setting the buffer to anything else than its own slice will
-	*			cause memory leaks and break the mirroring system. Use buffer.fill().
-	*			2. Buffer must be destroyed after use with "destroy(buffer)" to avoid
-	*			memory leaks.
-	*			3. (WINDOWS) Only one active (non-destroyed) buffer of this type is allowed per process.
-	*			A new buffer will overwrite the old data and break the old buffer.
-	*			Ensure that CreateFileMapping(INVALID_HANDLE_VALUE, ...) is not used elsewhere
-	*			in the application.
+	*				Setting the buffer to anything else than its own slice will
+	*				cause memory leaks and break the mirroring system. Use buffer.fill() to extend the buffer.
+	*
+	*				<font color="blue">[WINDOWS]</font> Only one active (non-destroyed) buffer of this type is allowed per process.
+	*				A new buffer will overwrite the old data and desync the old buffer.
+	*				Ensure that CreateFileMapping(INVALID_HANDLE_VALUE, ...) is not used elsewhere
+	*				in the application.
 	* Params:
 	*			T	= Element type which the buffer will hold. Defaults to char.
 	*/
+
 
 @nogc
 struct StaticBuffer(T = char)
@@ -33,7 +39,7 @@ struct StaticBuffer(T = char)
 	alias buf this;
 
 	/// Underlying buffer which the object manages. Avoid using this directly.
-	/// Can be used to avoid safety overhead when removing elements using opAssign. 
+	/// Can be used to avoid safety overhead when popping items using slicing. 
 	T[] buf = void;
 
 	static assert(typeof(this).sizeof == (T[]).sizeof);
@@ -66,18 +72,6 @@ struct StaticBuffer(T = char)
 	/// Number of bits that the buffer can write to. Used for bit shifts.
 	static enum pagebits = cast(size_t) log2(pagesize);
 
-	/// Sets the buffer pointer to the start of the page and sets length to zero.
-	void clear() nothrow @nogc @trusted
-	{
-		buf = (cast(T*)((cast(size_t) buf.ptr) >> pagebits << pagebits))[0 .. 0];
-	}
-
-	/// Returns how much free buffer space is available.
-	size_t avail() nothrow @nogc @trusted
-	{
-		return pagesize - buf.length;
-	}
-
 	/// Maximum amount of items if buffer were a T[]. 
 	/// This is very usefull if the buffer is set to be a void[] internally.
 	/// Use this instead of pagesize if possible.
@@ -102,7 +96,7 @@ struct StaticBuffer(T = char)
 		// Another alternative would be allocating a  pointer, this was avoided to keep the struct small.
 		// You would essentially check if the new pointer is equal or above the second page buffer start. Perf not checked.
 
-		// Todo: Look into if this could be done in fill.
+		// TODO: Look into if this could be done in fill.
 	}
 
 	//@disable this(this);
@@ -261,7 +255,7 @@ struct StaticBuffer(T = char)
 
 	~this() @nogc @trusted nothrow
 	{
-		assert(ptr !is null); // If this is hit, the destructor is called too often.
+		assert(ptr !is null); // If this is hit, the destructor is called more than once.
 
 		/* debug 
 		{
@@ -285,7 +279,11 @@ struct StaticBuffer(T = char)
 			UnmapViewOfFile(ptr + pagesize);
 
 			// NOTE: There is an EX unmap with priority unmap flag, 
-			// but it lacks windows 7 compatibility
+			// but it lacks windows 7 compatibility and is thus not used.
+			// Using it in the future could mean that memory is freed
+			// more quickly and if a new buffer is created immediately
+			// after the destruction of the old one, the new mapping is less
+			// likely to have the same old memfile.
 		}
 
 		else version (CRuntime_Glibc)
@@ -308,14 +306,17 @@ struct StaticBuffer(T = char)
 		assert(length == 0);
 	}
 
+
 	/***********************************
 	* Extends the buffer with new data. This is the interface for custom sources, 
 	* where data is received from a read interface. 
 	* Params:
 	*				source	= Source that implements the read interface. A source must implement 
 	* "ptrdiff_t read(void[] arr)", where arr is the free writable area of the buffer.
-	* Source should return the amount of bytes read, otherwise less than or equal to zero.
-	* For examples on how to use the read interface, see source.d from the repository.
+	* Source should return the amount of bytes written, otherwise less than or equal to zero.
+	* For examples on how to use the read interface, see 
+	* http://htmlpreview.github.io/?https//://github.com/Cyroxin/Elembuf/blob/master/doc/buffer.html
+	* from the repository.
 	* Returns:
 	*				True: Source can be reused.
 	*				False: New source should be set.
@@ -400,6 +401,18 @@ struct StaticBuffer(T = char)
 		assert(buffer == "453");
 
 		destroy(buffer);
+	}
+
+	/// Sets the buffer pointer to the start of the page and sets length to zero.
+	void clear() nothrow @nogc @trusted
+	{
+		buf = (cast(T*)((cast(size_t) buf.ptr) >> pagebits << pagebits))[0 .. 0];
+	}
+
+	/// Returns how much free buffer space is available.
+	size_t avail() nothrow @nogc @trusted
+	{
+		return pagesize - buf.length;
 	}
 
 }
