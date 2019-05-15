@@ -29,7 +29,7 @@ void html() @nogc
 		// Create the buffer
 		auto buffer = StaticBuffer!()();
 
-		enum data = "<html>" ~ cast(string) std.array.join(std.range.repeat("<node></node>",1000)) ~ "</html>";
+		enum data = "<html>" ~ std.array.join(std.range.repeat("<node></node>",1000)) ~ "</html>";
 
 		// Create the source
 		// scope src = "192.168.1.1".NetSource!(); // Not suitable for benchmarking as contents vary and change.
