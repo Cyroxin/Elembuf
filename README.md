@@ -37,14 +37,16 @@ void main()
 {
 		import buffer, source;
 
-		auto buffer = StaticBuffer!()();
+		StaticBuffer!char buffer = "Hello World!";
+		buffer = buffer[$..$]; // Pop all elements 
+		
 		scope src = "192.168.1.1".NetSource!();
 		bool alive;
 
 		do
 		{
-			alive = buffer.fill(src);
-			buffer.clear; // Removes all elements and resets the buffer.
+			alive = (buffer << src); // Calls buffer.fill(src)
+			buffer.length = 0; // Removes all elements. O(1)
 		} while (alive);
 }
 ```
