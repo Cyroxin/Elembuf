@@ -262,3 +262,18 @@ __pycache__/
 
 # Solution Specific Filters
 **/Win32
+/trace.def
+/src-source.lst
+/src-buffer.lst
+/src/source.s
+/src/source.ll
+/src/buffer.s
+/src/buffer.ll
+/source.s
+/source.ll
+/implem.s
+/implem.ll
+/buffer.s
+/buffer.ll
+/bench-parse.lst
+/bench-implem.lst

@@ -256,7 +256,7 @@
   <verbose>0</verbose>
   <vtls>0</vtls>
   <vgc>0</vgc>
-  <symdebug>1</symdebug>
+  <symdebug>3</symdebug>
   <symdebugref>1</symdebugref>
   <optimize>0</optimize>
   <cpu>0</cpu>
@@ -274,9 +274,9 @@
   <useIn>0</useIn>
   <useOut>0</useOut>
   <useArrayBounds>0</useArrayBounds>
-  <boundscheck>0</boundscheck>
+  <boundscheck>2</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>0</useUnitTests>
+  <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
@@ -291,9 +291,9 @@
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
   <betterC>0</betterC>
-  <dip25>0</dip25>
-  <dip1000>0</dip1000>
-  <dip1008>0</dip1008>
+  <dip25>1</dip25>
+  <dip1000>1</dip1000>
+  <dip1008>1</dip1008>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -316,7 +316,7 @@
   <objname />
   <libname />
   <doDocComments>0</doDocComments>
-  <docdir />
+  <docdir>docs</docdir>
   <docname />
   <modules_ddoc />
   <ddocfiles />
@@ -343,7 +343,7 @@
   <cv2pdbNoDemangle>0</cv2pdbNoDemangle>
   <cv2pdbEnumType>0</cv2pdbEnumType>
   <cv2pdbOptions />
-  <enableMixin>0</enableMixin>
+  <enableMixin>1</enableMixin>
   <mixinPath>$(IntDir)\$(SafeProjectName).mixin</mixinPath>
   <objfiles />
   <linkswitches />
@@ -377,7 +377,7 @@
   <verbose>0</verbose>
   <vtls>0</vtls>
   <vgc>0</vgc>
-  <symdebug>0</symdebug>
+  <symdebug>3</symdebug>
   <symdebugref>1</symdebugref>
   <optimize>1</optimize>
   <cpu>0</cpu>
@@ -412,9 +412,9 @@
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
   <betterC>0</betterC>
-  <dip25>0</dip25>
-  <dip1000>0</dip1000>
-  <dip1008>0</dip1008>
+  <dip25>1</dip25>
+  <dip1000>1</dip1000>
+  <dip1008>1</dip1008>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -437,7 +437,7 @@
   <objname />
   <libname />
   <doDocComments>0</doDocComments>
-  <docdir />
+  <docdir>docs</docdir>
   <docname />
   <modules_ddoc />
   <ddocfiles />
@@ -758,9 +758,9 @@
   <useIn>0</useIn>
   <useOut>0</useOut>
   <useArrayBounds>0</useArrayBounds>
-  <boundscheck>0</boundscheck>
+  <boundscheck>2</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>0</useUnitTests>
+  <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
@@ -775,9 +775,9 @@
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
   <betterC>0</betterC>
-  <dip25>0</dip25>
-  <dip1000>0</dip1000>
-  <dip1008>0</dip1008>
+  <dip25>1</dip25>
+  <dip1000>1</dip1000>
+  <dip1008>1</dip1008>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -800,7 +800,7 @@
   <objname />
   <libname />
   <doDocComments>0</doDocComments>
-  <docdir />
+  <docdir>docs</docdir>
   <docname />
   <modules_ddoc />
   <ddocfiles />
@@ -859,10 +859,10 @@
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
-  <vtls>0</vtls>
+  <vtls>1</vtls>
   <vgc>0</vgc>
-  <symdebug>0</symdebug>
-  <symdebugref>1</symdebugref>
+  <symdebug>3</symdebug>
+  <symdebugref>0</symdebugref>
   <optimize>1</optimize>
   <cpu>0</cpu>
   <isX86_64>1</isX86_64>
@@ -879,9 +879,9 @@
   <useIn>0</useIn>
   <useOut>0</useOut>
   <useArrayBounds>0</useArrayBounds>
-  <boundscheck>0</boundscheck>
+  <boundscheck>2</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>0</useUnitTests>
+  <useUnitTests>1</useUnitTests>
   <useInline>1</useInline>
   <release>1</release>
   <preservePaths>0</preservePaths>
@@ -896,9 +896,9 @@
   <allinst>0</allinst>
   <stackStomp>0</stackStomp>
   <betterC>0</betterC>
-  <dip25>0</dip25>
-  <dip1000>0</dip1000>
-  <dip1008>0</dip1008>
+  <dip25>1</dip25>
+  <dip1000>1</dip1000>
+  <dip1008>1</dip1008>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -906,7 +906,7 @@
   <transition_complex>0</transition_complex>
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
-  <preview_markdown>0</preview_markdown>
+  <preview_markdown>1</preview_markdown>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -920,8 +920,8 @@
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
-  <doDocComments>0</doDocComments>
-  <docdir />
+  <doDocComments>1</doDocComments>
+  <docdir>docs</docdir>
   <docname />
   <modules_ddoc />
   <ddocfiles />
@@ -970,9 +970,15 @@
  </Config>
  <Folder name="source">
   <Folder name="benchmarks">
-   <File path="bench\parse.d" />
+   <File path="bench\implem.d" />
+  </Folder>
+  <Folder name="docs">
+   <File path="docs\buffer.html" />
+   <File path="docs\source.html" />
+   <File path="docs\types.html" />
   </Folder>
   <File path="src\buffer.d" />
   <File path="src\source.d" />
+  <File path="src\types.d" />
  </Folder>
 </DProject>

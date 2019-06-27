@@ -3,7 +3,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>source</title>
+    <title>types</title>
     <style type="text/css" media="screen">
       html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p,
       blockquote, pre, a, abbr, address, cite, code, del, dfn, em, figure,
@@ -508,7 +508,7 @@
   <body id="ddoc_main" class="ddoc dlang">
     <div class="content_wrapper">
       <article class="module">
-        <h1 class="module_name">source</h1>
+        <h1 class="module_name">types</h1>
         <section id="module_content">
 <section class="section ddoc_module_members_section">
   <div class="ddoc_module_members">
@@ -516,7 +516,7 @@
   <li class="ddoc_member">
   <div class="ddoc_member_header">
   <div class="ddoc_header_anchor">
-  <a href="#NetSource" id="NetSource"><code class="code">NetSource</code></a>
+  <a href="#isBuffer" id="isBuffer"><code class="code">isBuffer</code></a>
 </div>
 </div><div class="ddoc_decl">
   <section class="section">
@@ -525,7 +525,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="NetSource"></span>struct <code class="code">NetSource</code>;
+            <span class="ddoc_anchor" id="isBuffer"></span>enum auto <code class="code">isBuffer</code>(B);
 
           </code>
         </p>
@@ -537,38 +537,14 @@
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Downloads data from a specified ip address or link. Does not check for validity of the address.
-When the source blocks, a custom delegate defined in the compile time parameter will be called.
-  </p>
-</div>
-
-</section>
-<ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#NetSource.this" id="NetSource.this"><code class="code">this</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="NetSource.this"></span>@trusted this(const string <code class="code">ip</code>);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Creates a connection by parsing an <code class="code">ip</code> or url from a string.
+    Buffer conformance checker, will return <code class="code">true</code> if object is a valid buffer.
+ All of the subsequent functions may have optional arguments or alternative variants,
+ but they must be callable with just these arguments.
+<ul><li>Implements opSlice(size_t,size_t), opAssign(typeof(this)), opDollar and length.</li>
+<li>Implements function "size_t avail()", returns number of available items.</li>
+<li>Implements function "void fill(T[])", fills the buffer. T[] is void[] if T is not defined as an alias in the struct.</li>
+<li>Implements either a function, variable or enumerator "size_t max"</li>
+</ul>
   </p>
 </div>
 
@@ -579,7 +555,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
 </li><li class="ddoc_member">
   <div class="ddoc_member_header">
   <div class="ddoc_header_anchor">
-  <a href="#NetSource.read" id="NetSource.read"><code class="code">read</code></a>
+  <a href="#isSource" id="isSource"><code class="code">isSource</code></a>
 </div>
 </div><div class="ddoc_decl">
   <section class="section">
@@ -588,11 +564,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="NetSource.read"></span>@trusted ptrdiff_t <code class="code">read</code>(alias code = ()
-{
-}
-, bool callOnce = false)(scope void[] <code class="code">buf</code>) if (__traits(compiles, code()));
-
+            <span class="ddoc_anchor" id="isSource"></span>template <code class="code">isSource</code>(S)
           </code>
         </p>
       </div>
@@ -603,83 +575,13 @@ When the source blocks, a custom delegate defined in the compile time parameter 
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Reads new data to <code class="code">buf</code>. Returns negative on error, zero on empty and positive for bytes <code class="code">read</code>
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li>
+    Source conformance checker, will return <code class="code">true</code> if object is a valid source.
+<ul><li>Implements "ptrdiff_t read(T[])", if "alias T = ?" is not declared in struct, T will default to void[].</li>
 </ul>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#ArraySource" id="ArraySource"><code class="code">ArraySource</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="ArraySource"></span>struct <code class="code">ArraySource</code>(InternalType = char);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Source that reads from an array as if it were a <code class="code">true</code> source. This is best used only for debugging or testing.
   </p>
 </div>
 
 </section>
-<ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#ArraySource.read" id="ArraySource.read"><code class="code">read</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="ArraySource.read"></span>pure nothrow @nogc ptrdiff_t <code class="code">read</code>(scope T[] <code class="code">buf</code>);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Will never return a negative number. Zero if empty.
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li>
-</ul>
 
 </div>
 
