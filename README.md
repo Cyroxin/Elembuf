@@ -35,18 +35,23 @@ them through your compiler. If you have any questions, issues or feature request
 ```
 void main()
 {
+		import std.stdio;
 		import buffer, source;
 
-		StaticBuffer!char buffer = "Hello World!";
-		buffer = buffer[$..$]; // Pop all elements 
-		
-		scope src = "192.168.1.1".NetSource!();
+		StaticBuffer!char buf = "Hello World!";
+		buf = buf[$..$]; // Pop all elements 
+
+		NetSource src;
+
+		try {src = "192.168.1.1".NetSource;} 
+		catch(Exception e) { writeln("Url incorrect or network failure."); return;}
+
 		bool alive;
 
 		do
 		{
-			alive = (buffer << src); // Calls buffer.fill(src)
-			buffer.length = 0; // Removes all elements. O(1)
+			alive = (buf << src); // Calls buffer.fill(src)
+			buf.length = 0; // Removes all elements. O(1)
 		} while (alive);
 }
 ```
