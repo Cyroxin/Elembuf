@@ -501,22 +501,30 @@ struct StaticBuffer(InternalType = char)
 		fill!(true)(rhs);
 	}
 	
-	/* Enabling this will cause socket requests every compile.
+	
+	//  Enabling this unittest will cause socket requests every compile.
 	unittest
 	{
-		import buf = buffer, source; // @suppress(dscanner.suspicious.local_imports)
+		import std.stdio;
+		import buffer, source;
 
-		scope buffer = StaticBuffer!()();
-		scope src = "www.dlang.org".NetSource;
-		bool alive = true;
+		StaticBuffer!char buf = "Hello World!";
+		buf = buf[$..$]; // Pop all elements 
 
-		while (alive)
+		NetSource src;
+
+		try {src = "192.168.1.1".NetSource;} 
+		catch(Exception e) { writeln("Url incorrect or network failure."); return;}
+
+		bool alive;
+
+		do
 		{
-			alive = buffer.fill(src);
-			buffer.length = 0; // Removes all items with complexity of O(1).
-		}
+			alive = (buf << src); // Calls buffer.fill(src)
+			buf.length = 0; // Removes all elements. O(1)
+		} while (alive);
 	}
-	*/
+	
 	
 	
 	

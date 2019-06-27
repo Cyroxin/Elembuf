@@ -22,7 +22,7 @@ enum runs = 100_000; // Keep runs at least this high for accurate results
 // Construction timings can vary drastically due to changes in memory availabillity,
 // thus runs should be kept at 100k runs so that averages are valid.
 
-void disabledmain()
+void main()
 {
 	import std.datetime.stopwatch;
 

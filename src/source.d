@@ -17,8 +17,6 @@ struct NetSource
 	this(const string ip) @trusted
 	{
 		import std.stdio;
-		try
-		{
 			scope const Address addr = getAddress(ip,80)[0];
 			sock = new TcpSocket(cast(Address) addr);
 
@@ -31,9 +29,6 @@ struct NetSource
 				"Accept: text/html, text/plain" ~ "\r\n\r\n"; 
 
 			sock.send(a);
-		}
-		catch (SocketException e)
-			writefln("  Lookup failed: %s", e.msg);
 
 	}
 
