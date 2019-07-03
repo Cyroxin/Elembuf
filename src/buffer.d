@@ -42,10 +42,11 @@ struct StaticBuffer(InternalType = char)
 														  NULL, PAGE_READWRITE, 0, pagesize, NULL);
 
 
+			do{
 			// Find a suitable large memory location in memory. TODO: Dropping win7 compatab will allow this to be automated by the os.
-			while (true)
-			{
-				ret = cast(T[]) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE)[0..0];
+				do
+					ret = cast(T[]) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE)[0..0];
+				while (ret.ptr == NULL); // Could be outofmem
 
 				// Select a page with a pagebit of 0.
 				if ((cast(ptrdiff_t) ret.ptr & pagesize) == pagesize) // Pagebit 1, next is 0, final 1
@@ -63,12 +64,11 @@ struct StaticBuffer(InternalType = char)
 				else if (!MapViewOfFileEx(cast(void*) memfile,FILE_MAP_ALL_ACCESS, 0, 0, 0, cast(void*)((cast(ptrdiff_t)ret.ptr) + pagesize)))
 					UnmapViewOfFile(cast(void*) ret.ptr);
 				else
-				{
-					CloseHandle(cast(void*) memfile); // This will destroy the mapfile once there are no mappings
 					break;
-				}
+			} while(true);
 
-			}
+			CloseHandle(cast(void*) memfile); // This will destroy the mapfile once there are no mappings
+
 
 		}
 
@@ -83,18 +83,18 @@ struct StaticBuffer(InternalType = char)
 
 			// Memfd_create file descriptors are automatically collected once references are dropped,
 			// so there is no need to have a memfile global.
-			scope const int memfile = memfd_create("elembuf", 0);
+			scope const int memfile;
 
-			if (memfile == -1)
-				assert(0, "Memory file creation error!");
-
-			//assert(memfile >= 0); // Errors: NoMem / MaxMemFiles
+			do
+				memfile = memfd_create("elembuf", 0);
+			while (memfile == -1); // Outofmem / Maxmemfiles
 
 			ftruncate(memfile, pagesize);
 
 			// Create a two page size memory mapping of the file
-			ret =  cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
-			assert(ret.ptr != MAP_FAILED);
+			do
+				ret =  cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
+			while(ret.ptr == MAP_FAILED); // Outofmem?
 
 			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0
 				munmap(ret.ptr, pagesize * 3);
@@ -138,22 +138,23 @@ struct StaticBuffer(InternalType = char)
 				// Create a memory file
 				memfile = shm_open(hname.ptr, O_RDWR | O_CREAT | O_EXCL, S_IWUSR | S_IRUSR);
 				if (memfile >= 0)
-					goto cont;
+					break;
 
+				static if(i == char.max)
+					assert(0, "Memory file creation error!");
 			}
-			assert(0, "Memory file creation error!");
 
-		cont:
+			shm_unlink(hname.ptr);
 
 			scope (exit)
 				close(memfile); // Deallocates memory once all mappings are unmapped
 
-			shm_unlink(hname.ptr);
 			ftruncate(memfile, pagesize); // Sets the memory file length
 
 			// Create a two page size memory mapping of the file
-			ret = cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
-			assert(ret.ptr != MAP_FAILED);
+			do
+				ret = cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
+			while(ret.ptr == MAP_FAILED); // Outofmem / Maxmemfile
 
 
 			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0
@@ -238,15 +239,12 @@ struct StaticBuffer(InternalType = char)
 	// Page bits in POSIX: xxxx ... 1111 1111 1111
 
 	private enum pagebits = pagesize - 1;  // Returns the bits that the buffer can write to.
-	private enum membits = -pagebits; // Returns the bits that signify the page position.
+	private enum membits = -pagesize; // Returns the bits that signify the page position.
 	enum max = pagesize / T.sizeof; /// Returns the maximum size of the buffer depending on the size of T.
 	nothrow @nogc @trusted size_t avail() { return max - buf.length;} /// Returns how many T's of free buffer space is available.
 	nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
 	nothrow @nogc @trusted @property size_t length() {return buf.length;} // Necessary if previous line is added.
 
-
-	// Underlying type which the buffer manages, modifying this will exit out of safe mode.
-	// Safe mode does not improve performance in release, but removes all debug asserts in debug mode.
 
 	T[] buf = void;
 	alias buf this;
@@ -257,8 +255,13 @@ struct StaticBuffer(InternalType = char)
 	{
 		assert(buf.ptr != null);  // If this is hit, the destructor is called more than once. Performance decreases if true, but will run in release. 
 
+		version (Windows)
+			static assert((cast(ptrdiff_t) 0xFFFF0045 & (membits & (~pagesize))) == 0xFFFE0000);
+		version (Posix)
+			static assert((cast(ptrdiff_t) 0xFFFFF045 & (membits & (~pagesize))) == 0xFFFFE000);
+
 		//Set the buffer to page start so that the os unmapper will work. TODO: Check if some OS can do this for us.
-		buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & (~pagebits)))[0..buf.length];
+		buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & (membits & (~pagesize))))[0..buf.length];
 
 
 		version (Windows)
@@ -295,7 +298,7 @@ struct StaticBuffer(InternalType = char)
 	
 	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
 	{
-		buf = (cast(T*)(cast(ptrdiff_t) newbuf.ptr))[0..newbuf.length];
+		buf = cast(T[]) newbuf;
 	}
 
 
@@ -502,6 +505,7 @@ struct StaticBuffer(InternalType = char)
 	}
 	
 	
+	/*
 	//  Enabling this unittest will cause socket requests every compile.
 	unittest
 	{
@@ -514,7 +518,11 @@ struct StaticBuffer(InternalType = char)
 		NetSource src;
 
 		try {src = "192.168.1.1".NetSource;} 
-		catch(Exception e) { writeln("Url incorrect or network failure."); return;}
+		catch(Exception e) 
+		{ 
+			// writeln("Url incorrect or network failure.");
+			return;
+		}
 
 		bool alive;
 
@@ -524,7 +532,7 @@ struct StaticBuffer(InternalType = char)
 			buf.length = 0; // Removes all elements. O(1)
 		} while (alive);
 	}
-	
+	*/
 	
 	
 	
@@ -573,11 +581,13 @@ struct StaticCopyBuffer(InternalType = char)
 	// Page bits in POSIX: xxxx ... 1111 1111 1111
 
 	private enum pagebits = pagesize - 1;  /// Returns the bits that the buffer can write to.
-	private enum membits = -pagebits; /// Returns the bits that signify the page position.
-	enum max = pagesize / T.sizeof; // Returns the maximum size of the buffer depending on the size of T.
+	private enum membits = -pagesize; /// Returns the bits that signify the page position.
+	enum max = (pagesize / T.sizeof) - 1; // Returns the maximum size of the buffer depending on the size of T.
 	nothrow @nogc @trusted size_t avail() { return max - buf.length;} // Returns how many T's of free buffer space is available.
 	nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
 	nothrow @nogc @trusted @property size_t length() {return buf.length;}
+
+	// Max is -1, so that page traversal is not possible after popping max items.
 
 	T[] buf;
 	alias buf this;
@@ -598,11 +608,9 @@ struct StaticCopyBuffer(InternalType = char)
 
 			// Find a suitable large memory location in memory.
 
-		cont:
+		do
 			ret = cast(T[]) VirtualAlloc(NULL, pagesize, MEM_COMMIT, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
-
-			if (ret.ptr is NULL) // Request sent too soon
-				goto cont;
+		while(ret.ptr is NULL);
 
 
 		}
@@ -661,14 +669,14 @@ struct StaticCopyBuffer(InternalType = char)
 	{
 		assert(buf.ptr !is null); // If this is hit, the destructor is called more than once. Performance decreases by two if true, but will run in release. 
 
-		buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & (~pagebits)))[0..buf.length]; //Set the buffer to page start so that the os unmapper will work.
+		buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]; //Set the buffer to page start so that the os unmapper will work.
 
 		version (Windows)
 		{
-			import core.sys.windows.windef : MEM_RELEASE;
+			import core.sys.windows.windef : MEM_DECOMMIT;
 			import core.sys.windows.winbase : VirtualFree;
 
-			VirtualFree(buf.ptr, 0, MEM_RELEASE);
+			VirtualFree(buf.ptr, 0, MEM_DECOMMIT);
 		}
 
 		else version (Posix)
@@ -684,15 +692,15 @@ struct StaticCopyBuffer(InternalType = char)
 
 	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
 	{
-		buf = (cast(T*)(cast(ptrdiff_t) newbuf.ptr))[0..newbuf.length];
+		buf = cast(T[]) newbuf;
 	}
 
 	bool fill(E)(scope ref E source)
 		if(__traits(hasMember, E, "read"))
 		{
 			// Old data to start of buffer
-			(cast(T*)(cast(ptrdiff_t) buf.ptr & (-pagesize)))[0..buf.length] = buf[];
-			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & (-pagesize)))[0..buf.length];
+			(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
+			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
 
 			// Fill the empty area of the buffer. Returns 0 if an error occurs or there is no more data.
 			scope const len = source.read((buf.ptr + buf.length)[0 .. avail(buf)]);
@@ -710,8 +718,8 @@ struct StaticCopyBuffer(InternalType = char)
 		assert(arr.length <= this.avail);
 
 		// Old data to start of buffer
-		(cast(T*)(cast(ptrdiff_t) buf.ptr & (-pagesize)))[0..buf.length] = buf[];
-		buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & (-pagesize)))[0..buf.length];
+		(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
+		buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
 
 		// New data to end of buffer
 		(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = arr[];

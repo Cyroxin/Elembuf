@@ -32,6 +32,9 @@ void main()
 	// INFO:
 	// The benchmark is for comparing different internal implementations.
 	// The benchmark writes half a page worth of data (%runs) times by reusing the buffer.
+
+	// To even out the differences, as staticbuffer is internally 1 element larger than copybuffer, 
+	// staticbuffer.max is decremented by one in the benchmark.
 	
 	auto sw = StopWatch();
 
@@ -46,10 +49,10 @@ void main()
 	sw.reset;
 	sw.start;
 
-	sbuffer.fill(data(sbuffer.max/2));
+	sbuffer.fill(data((sbuffer.max-1)/2));
 	foreach(i; 0..runs)
 	{
-		sbuffer.fill(data(sbuffer.max/2));
+		sbuffer.fill(data((sbuffer.max-1)/2));
 		sbuffer = sbuffer[$/2..$]; // Consume half of the data
 		sbuffer.fill("|");
 		sbuffer = sbuffer[1..$];
@@ -85,7 +88,8 @@ void main()
 
 	writeln("\nReuses needed: ",(bufcon-cbufcon)/(cbufrun-bufrun)); // To make usage worth it
 
-	assert(cbuffer == sbuffer);
+	assert(sbuffer == cbuffer);
+
 	readln;
 
 	// PERSONAL NOTES:
@@ -95,7 +99,7 @@ void main()
 
 	/*
 
-	Windows 10 - AMD A8-6410 - 4GB memory - 5 consecutive runs of 100k runs.
+	Windows 10 - AMD A8-6410 - 4GB memory - LDC 5 consecutive runs of 100k runs.
 	
 	Bench [circlebuf construction + destr]:67 ╬╝s and 7 hnsecs
 	Bench [circlebuf runtime]:168 ╬╝s and 8 hnsecs
