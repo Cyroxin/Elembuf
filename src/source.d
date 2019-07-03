@@ -34,7 +34,7 @@ struct NetSource
 
 	~this() @trusted
 	{
-		assert(sock !is null && sock.isAlive);
+		if (sock !is null && sock.isAlive) // This is false if construction failed.
 		//sock.shutdown(SocketShutdown.BOTH); // Optional,but can be thought of as common courtesy.
 		sock.close;
 	}
