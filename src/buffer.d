@@ -3,7 +3,21 @@ module buffer;
 static import types;
 
 // Creates a file in memory. See Linux manpages for further information. 
-private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc; // TODO: Add to druntime
+private version (linux)
+{
+	import core.stdc.config : c_long;
+	extern (C) c_long syscall (c_long SYS, ...) @nogc nothrow;
+
+
+ extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc // TODO: Add to druntime
+	{
+		version(X86_64)
+			return cast(int) syscall(319, name, flags);
+		version(X86)
+			return cast(int) syscall(356, name, flags);
+	}
+
+}
 
 /***********************************
 * Dynamic buffer with a maximum length of one memory page which can take up to <a href="#StaticBuffer.max">max</a> elements.
@@ -13,7 +27,7 @@ private version (CRuntime_Glibc) extern (C) int memfd_create(const char* name, u
 *
 * Note:
 *				1. Setting the buffer to anything else than memory that the buffer owns will cause memory leaks and exceptions.
-*				2. <b style="color:blue;">[WINDOWS]</b> Multiple instances of this type in one process will slice the same memory.
+*				2. <b style="color:blue;">[WINDOWS]</b> Only one instance of this type, or any type that creates a file in memory, is allowed.
 * Params:
 *			T	= Element type which the buffer will hold. Defaults to char.
 */
@@ -41,12 +55,18 @@ struct StaticBuffer(InternalType = char)
 			scope const void* memfile = CreateFileMapping(INVALID_HANDLE_VALUE,
 														  NULL, PAGE_READWRITE, 0, pagesize, NULL);
 
+			debug
+			{
+				import core.sys.windows.winbase : GetLastError;
+				import core.sys.windows.windef :ERROR_ALREADY_EXISTS;
+				assert(GetLastError != ERROR_ALREADY_EXISTS,"[WINONLYERR] There are multiple type instances that create files to memory. Either destroy existing or use another buffer type.");
+			}
 
-			do{
+			do
+			{
 			// Find a suitable large memory location in memory. TODO: Dropping win7 compatab will allow this to be automated by the os.
-				do
-					ret = cast(T[]) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE)[0..0];
-				while (ret.ptr == NULL); // Could be outofmem
+			ret = cast(T[]) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE)[0..0];
+				assert(ret.ptr != NULL); // Outofmem
 
 				// Select a page with a pagebit of 0.
 				if ((cast(ptrdiff_t) ret.ptr & pagesize) == pagesize) // Pagebit 1, next is 0, final 1
@@ -72,7 +92,8 @@ struct StaticBuffer(InternalType = char)
 
 		}
 
-		else version (CRuntime_Glibc)
+
+		else version (linux)
 		{
 			//pragma(msg, "CRuntime_Glibc");
 
@@ -83,31 +104,35 @@ struct StaticBuffer(InternalType = char)
 
 			// Memfd_create file descriptors are automatically collected once references are dropped,
 			// so there is no need to have a memfile global.
-			scope const int memfile;
-
-			do
-				memfile = memfd_create("elembuf", 0);
-			while (memfile == -1); // Outofmem / Maxmemfiles
+			scope const int memfile = memfd_create("elembuf", 0);
+			assert(memfile != -1); // Outofmem
 
 			ftruncate(memfile, pagesize);
 
 			// Create a two page size memory mapping of the file
-			do
 				ret =  cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
-			while(ret.ptr == MAP_FAILED); // Outofmem?
+			assert(ret.ptr != MAP_FAILED); // Outofmem
 
 			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0
-				munmap(ret.ptr, pagesize * 3);
+			{
+				// Sub map it to two identical consecutive maps
+				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+
+				munmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize * 2), pagesize);
+			}
 			else // First page is 1, second 0, third 1
 			{
 				ret = (cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize))[0..ret.length];
-				munmap(cast(T*) ((cast(ptrdiff_t)ret.ptr) - pagesize), pagesize * 3);
+
+				// Sub map it to two identical consecutive maps
+				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+
+				munmap(cast(T*) ((cast(ptrdiff_t)ret.ptr) - pagesize), pagesize);
 			}
 
-
-			// Sub map it to two identical consecutive maps
-			mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-			mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+			close(memfile); // Will only truly close once maps are closed. Documentation in manpages is lacking in regards to this.
 		}
 
 		else version (Posix)
@@ -138,38 +163,39 @@ struct StaticBuffer(InternalType = char)
 				// Create a memory file
 				memfile = shm_open(hname.ptr, O_RDWR | O_CREAT | O_EXCL, S_IWUSR | S_IRUSR);
 				if (memfile >= 0)
-					break;
-
-				static if(i == char.max)
-					assert(0, "Memory file creation error!");
+					goto success;
 			}
+			assert(0, "Memory file creation error!");
 
+			success:
 			shm_unlink(hname.ptr);
-
-			scope (exit)
-				close(memfile); // Deallocates memory once all mappings are unmapped
 
 			ftruncate(memfile, pagesize); // Sets the memory file length
 
 			// Create a two page size memory mapping of the file
-			do
 				ret = cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
-			while(ret.ptr == MAP_FAILED); // Outofmem / Maxmemfile
-
+			assert(ret.ptr != MAP_FAILED); // Outofmem
 
 			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0
-				munmap(ret.ptr, pagesize * 3);
+			{
+				// Sub map it to two identical consecutive maps
+				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+
+				munmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize * 2), pagesize);
+			}
 			else // First page is 1, second 0, third 1
 			{
 				ret = (cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize))[0..ret.length];
-				munmap(cast(T*)((cast(ptrdiff_t)ret.ptr) - pagesize), pagesize * 3);
+
+				// Sub map it to two identical consecutive maps
+				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+
+				munmap(cast(T*) ((cast(ptrdiff_t)ret.ptr) - pagesize), pagesize);
 			}
 
-
-			// Sub map it to two identical consecutive maps
-			mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-			mmap(cast(T*) ((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE,
-				 MAP_SHARED | MAP_FIXED, memfile, 0);
+			close(memfile); // Deallocates memory once all mappings are unmapped
 		}
 
 		else
@@ -177,7 +203,6 @@ struct StaticBuffer(InternalType = char)
 
 
 
-		assert(ret.ptr != NULL);
 
 		return *cast(typeof(this)*) &ret;
 	}
@@ -211,10 +236,7 @@ struct StaticBuffer(InternalType = char)
 	static typeof(this) opCall(scope const T[] init) @nogc @trusted nothrow
 	{
 		auto ret = opCall();
-
-		ret.ptr[ret.length..init.length] = init[];
-		ret.buf = ret.ptr[0..ret.length + init.length];
-
+		ret.fill!true(init);
 		return ret;
 
 	}
@@ -298,7 +320,7 @@ struct StaticBuffer(InternalType = char)
 	
 	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
 	{
-		buf = cast(T[]) newbuf;
+		buf = (cast(T*) newbuf.ptr) [0..newbuf.length];
 	}
 
 
@@ -326,18 +348,16 @@ struct StaticBuffer(InternalType = char)
 	*		array	= Array source that is slicable and has a length property.
 	*/
 
-	public void fill(bool isSafe = false, ArrayType)(ArrayType array) // Direct write
-		if(!(types.isSource!(ArrayType)) && __traits(compiles, array[0..$]))
+	public void fill(bool isSafe = false, ArrayType)(ArrayType arr) // Direct write
+		if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[0..$]))
 		{
-			//pragma(msg, ArrayType);
-
-			assert((max - buf.length) >= array.length, "[SAFE] Not enough space available to fill the buffer"); 
-			assert(array.length <= this.max);
+			assert((max - buf.length) >= arr.length, "[SAFE] Not enough space available to fill the buffer");
+			assert(arr.length <= this.max);
 
 			static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length]; // Safety not guaranteed by caller.
 
-			(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. array.length] = array[];
-			buf = (cast(T*)(buf.ptr))[0 .. buf.length + array.length];
+			(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = arr[];
+			buf = (cast(T*)(buf.ptr))[0 .. buf.length + arr.length];
 		}
 
 
@@ -582,12 +602,12 @@ struct StaticCopyBuffer(InternalType = char)
 
 	private enum pagebits = pagesize - 1;  /// Returns the bits that the buffer can write to.
 	private enum membits = -pagesize; /// Returns the bits that signify the page position.
-	enum max = (pagesize / T.sizeof) - 1; // Returns the maximum size of the buffer depending on the size of T.
+	enum max = (pagesize / T.sizeof) - 2; // Returns the maximum size of the buffer depending on the size of T.
 	nothrow @nogc @trusted size_t avail() { return max - buf.length;} // Returns how many T's of free buffer space is available.
 	nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
 	nothrow @nogc @trusted @property size_t length() {return buf.length;}
 
-	// Max is -1, so that page traversal is not possible after popping max items.
+	// Max is less than truly, so that page traversal is not possible after popping max items.
 
 	T[] buf;
 	alias buf this;
@@ -608,9 +628,8 @@ struct StaticCopyBuffer(InternalType = char)
 
 			// Find a suitable large memory location in memory.
 
-		do
 			ret = cast(T[]) VirtualAlloc(NULL, pagesize, MEM_COMMIT, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
-		while(ret.ptr is NULL);
+			assert(ret.ptr != NULL); // Outofmem
 
 
 		}
@@ -619,23 +638,24 @@ struct StaticCopyBuffer(InternalType = char)
 		{
 			//pragma(msg, "Posix");
 
-			import core.sys.posix.sys.mman : mmap, PROT_NONE, MAP_PRIVATE, MAP_FAILED, MAP_ANON;
+			import core.sys.posix.sys.mman : mmap, PROT_READ, PROT_WRITE, MAP_PRIVATE, MAP_FAILED, MAP_ANON;
 
-			ret = cast(T[]) mmap(null, pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0.. 0];
-			assert(ret.ptr != MAP_FAILED);
+
+			ret = cast(T[]) mmap(cast(void*) 0, pagesize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0)[0.. 0];
+			assert(ret.ptr != MAP_FAILED); //Outofmem
 		}
 
 		else
 			static assert(0, "Not supported");
 
-		assert(ret.ptr != NULL && ret.length == 0);
+		assert(ret.length == 0);
 		return *(cast(typeof(this)*) &ret);
 	}
 
 	static typeof(this) opCall(const T[] init) @nogc @trusted nothrow
 	{
 		auto ret = opCall();
-		ret.fill(init);
+		ret.fill!true(init); // Will simply add to the end, not copy all existing to start as there is nothing.
 		return ret;
 
 	}
@@ -692,18 +712,34 @@ struct StaticCopyBuffer(InternalType = char)
 
 	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
 	{
-		buf = cast(T[]) newbuf;
+		buf = (cast(T*) newbuf.ptr) [0..newbuf.length];
 	}
 
-	bool fill(E)(scope ref E source)
-		if(__traits(hasMember, E, "read"))
+	// Fill the buffer with data, pops is the popcount after last fill or construction.
+	// isSafe => pops + buf.length + this.avail <= buf.max
+	// isOptimal => pops >= buf.length
+	bool fill(bool isSafe = false, bool isOptimal = false, Source)(scope ref Source source)
+		if (types.isSource!(Source))
 		{
-			// Old data to start of buffer
-			(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
-			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
 
-			// Fill the empty area of the buffer. Returns 0 if an error occurs or there is no more data.
-			scope const len = source.read((buf.ptr + buf.length)[0 .. avail(buf)]);
+		static if(!isSafe)  // Old data to start of buffer. Resets pop count.
+		{
+			static if(!isOptimal) // Copying will overlap with itself
+			{
+				import std.algorithm.mutation : copy;
+				(buf.ptr[0..buf.length]).copy((cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]);
+			}
+			else
+				(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
+
+			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
+		}
+
+		// Fill the empty area of the buffer. Returns neg, an error occurred or 0, there is no more data.
+		static if(!isSafe) // Safety measures were added
+			scope const len = source.read((buf.ptr + buf.length)[0 .. this.avail]);
+		else
+			scope const len = source.read((buf.ptr + buf.length)[0 .. this.max - (((cast(ptrdiff_t)buf.ptr) & pagebits) + buf.length)]);
 
 			if (len <= 0)
 				return false;
@@ -712,14 +748,26 @@ struct StaticCopyBuffer(InternalType = char)
 			return true;
 		}
 
-
-	void fill(scope const T[] arr)
+	// Fill the buffer with data, pops is the popcount after last fill or construction.
+	// isSafe => pops + buf.length + arr.length <= buf.max
+	// isOptimal => pops >= buf.length
+	void fill(bool isSafe = false, bool isOptimal = false,ArrayType)(ArrayType arr)
+	if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[1..$]))
 	{
 		assert(arr.length <= this.avail);
 
-		// Old data to start of buffer
-		(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
-		buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
+		 static if(!isSafe)  // Old data to start of buffer. Resets pop count.
+		{
+			static if(!isOptimal) // Copying will overlap with itself
+			{
+				import std.algorithm.mutation : copy;
+				(buf.ptr[0..buf.length]).copy((cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]);
+			}
+			else
+				(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
+
+			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
+		}
 
 		// New data to end of buffer
 		(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = arr[];
