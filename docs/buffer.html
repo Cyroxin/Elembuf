@@ -549,7 +549,7 @@
     <span class="ddoc_section_h">Note:</span>
 
 <ol><li>Setting the buffer to anything else than memory that the buffer owns will cause memory leaks and exceptions.</li>
-<li><b style="color:blue;">[WINDOWS]</b> Multiple instances of this type in one process will slice the same memory.</li>
+<li><b style="color:blue;">[WINDOWS]</b> Only one instance of this type, or any type that creates a file in memory, is allowed.</li>
 </ol>
 
   </p>
@@ -718,7 +718,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>void <code class="code">fill</code>(bool isSafe = false, ArrayType)(ArrayType <code class="code">array</code>) if (!types.isSource!ArrayType &amp;&amp; __traits(compiles, <code class="code">array</code>[0 .. $]));
+            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>void <code class="code">fill</code>(bool isSafe = false, ArrayType)(scope const ArrayType <code class="code">arr</code>) if (!types.isSource!ArrayType &amp;&amp; __traits(compiles, <code class="code">arr</code>[0 .. $]) &amp;&amp; is(typeof(<code class="code">arr</code>[0]) : T));
 
           </code>
         </p>
@@ -730,7 +730,7 @@
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-     Extends the buffer with new data directly from an <code class="code">array</code> or buffer masquerading as an <code class="code">array</code>.
+     Extends the buffer with new data directly from an array or buffer masquerading as an array.
  This is the most efficient extension method as consuming the source is not needed nor is returning lifetime.
  The following must be <code class="code">true</code> on function call:
 
@@ -738,7 +738,7 @@
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="keyword">assert</span>(buffer.avail &gt;= <span class="param">array</span>.length);
+        <li><code class="code"><span class="keyword">assert</span>(buffer.avail &gt;= array.length);
 </code></li>
       </ol>
     </div>
@@ -761,7 +761,7 @@
   <div class="ddoc_param_desc">
     <p class="para">
       Safety guarantee optimization, set to <code class="code">true</code> if pop count after last unsafe <code class="code">fill</code> is less than max or less than 2 times max after construction.
- Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal <code class="code">array</code>. <b>Default:</b> <font color=red>False.</font>
+ Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. <b>Default:</b> <font color=red>False.</font>
     </p>
   </div>
 </td>
@@ -769,7 +769,7 @@
 <tr class="ddoc_param_row">
   <td scope="ddoc_param_id">
   <code class="code">
-    <em class="term">ArrayType <code class="code">array</code></em>
+    <em class="term">array</em>
   </code>
 </td>
 <td>

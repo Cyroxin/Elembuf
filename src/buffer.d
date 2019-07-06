@@ -2,13 +2,13 @@ module buffer;
 
 static import types;
 
-// Creates a file in memory. See Linux manpages for further information. 
+
 private version (linux)
 {
 	import core.stdc.config : c_long;
 	extern (C) c_long syscall (c_long SYS, ...) @nogc nothrow;
 
-
+// Creates a file in memory. See Linux manpages for further information. 
  extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc // TODO: Add to druntime
 	{
 		version(X86_64)
@@ -348,11 +348,10 @@ struct StaticBuffer(InternalType = char)
 	*		array	= Array source that is slicable and has a length property.
 	*/
 
-	public void fill(bool isSafe = false, ArrayType)(ArrayType arr) // Direct write
-		if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[0..$]))
+	public void fill(bool isSafe = false, ArrayType)(scope const ArrayType arr) // Direct write
+		if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[$]) && is(typeof(arr[0]) : T))
 		{
-			assert((max - buf.length) >= arr.length, "[SAFE] Not enough space available to fill the buffer");
-			assert(arr.length <= this.max);
+			assert(arr.length <= this.avail,"[SAFE] Not enough space available to fill the buffer");
 
 			static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length]; // Safety not guaranteed by caller.
 
@@ -628,10 +627,22 @@ struct StaticCopyBuffer(InternalType = char)
 
 			// Find a suitable large memory location in memory.
 
-			ret = cast(T[]) VirtualAlloc(NULL, pagesize, MEM_COMMIT, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
-			assert(ret.ptr != NULL); // Outofmem
+			do
+			{
+				ret = cast(T[]) VirtualAlloc(NULL, pagesize, MEM_COMMIT, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
 
+				debug
+				{
+					import core.sys.windows.winbase : GetLastError;
+					// import core.sys.windows.windef => Check error code from here;
+					// https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
 
+					if ( ret.ptr == NULL )
+						const a = GetLastError; // Check this in debugging
+				}
+			
+			}
+			while(ret.ptr == NULL); // Outofmem
 		}
 
 		else version (Posix)
@@ -652,7 +663,7 @@ struct StaticCopyBuffer(InternalType = char)
 		return *(cast(typeof(this)*) &ret);
 	}
 
-	static typeof(this) opCall(const T[] init) @nogc @trusted nothrow
+	static typeof(this) opCall(scope const T[] init) nothrow @nogc @trusted
 	{
 		auto ret = opCall();
 		ret.fill!true(init); // Will simply add to the end, not copy all existing to start as there is nothing.
@@ -689,14 +700,21 @@ struct StaticCopyBuffer(InternalType = char)
 	{
 		assert(buf.ptr !is null); // If this is hit, the destructor is called more than once. Performance decreases by two if true, but will run in release. 
 
+		version (Windows)
+			static assert((cast(ptrdiff_t) 0xFFFF0045 & membits) == 0xFFFF0000);
+		version (Posix)
+			static assert((cast(ptrdiff_t) 0xFFFFF045 & membits) == 0xFFFFF000);
+
 		buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]; //Set the buffer to page start so that the os unmapper will work.
 
 		version (Windows)
 		{
-			import core.sys.windows.windef : MEM_DECOMMIT;
+			import core.sys.windows.windef : MEM_RELEASE;
 			import core.sys.windows.winbase : VirtualFree;
 
-			VirtualFree(buf.ptr, 0, MEM_DECOMMIT);
+			VirtualFree(buf.ptr, 0, MEM_RELEASE); // Works for committed memory
+			// => Oddly MEM_DECOMMIT will fail to release memory fast enough on x86 and
+			// will cause outofmemory before 100k runs.
 		}
 
 		else version (Posix)
@@ -721,19 +739,21 @@ struct StaticCopyBuffer(InternalType = char)
 	bool fill(bool isSafe = false, bool isOptimal = false, Source)(scope ref Source source)
 		if (types.isSource!(Source))
 		{
-
-		static if(!isSafe)  // Old data to start of buffer. Resets pop count.
-		{
-			static if(!isOptimal) // Copying will overlap with itself
+			static if(!isSafe)  // Old data to start of buffer. Resets pop count.
 			{
-				import std.algorithm.mutation : copy;
-				(buf.ptr[0..buf.length]).copy((cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]);
-			}
-			else
-				(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
+				static if(!isOptimal) // Copying will overlap with itself
+				{
+					// Memmove
+					//((cast(T*)((cast(ptrdiff_t) buf.ptr) & membits))[0..buf.length]) = buf[];
+					import core.stdc.string : memmove;
+					memmove((cast(T*)((cast(ptrdiff_t) buf.ptr) & membits)),buf.ptr, buf.length);
+				}
+				else
+					// Memcpy. In windows is the same as memmove.
+					(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
 
-			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
-		}
+				buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
+			}
 
 		// Fill the empty area of the buffer. Returns neg, an error occurred or 0, there is no more data.
 		static if(!isSafe) // Safety measures were added
@@ -751,28 +771,108 @@ struct StaticCopyBuffer(InternalType = char)
 	// Fill the buffer with data, pops is the popcount after last fill or construction.
 	// isSafe => pops + buf.length + arr.length <= buf.max
 	// isOptimal => pops >= buf.length
-	void fill(bool isSafe = false, bool isOptimal = false,ArrayType)(ArrayType arr)
-	if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[1..$]))
+
+	void fill(bool isSafe = false, bool isOptimal = false, ArrayType)(scope const ArrayType arr) nothrow @nogc @trusted
+		if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[$]) && is(typeof(arr[0]) : T))
 	{
 		assert(arr.length <= this.avail);
 
-		 static if(!isSafe)  // Old data to start of buffer. Resets pop count.
+		static if(!isSafe)  // Old data to start of buffer. Resets pop count.
 		{
 			static if(!isOptimal) // Copying will overlap with itself
 			{
-				import std.algorithm.mutation : copy;
-				(buf.ptr[0..buf.length]).copy((cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]);
+				// Memmove
+				import core.stdc.string : memmove;
+				memmove((cast(T*)((cast(ptrdiff_t) buf.ptr) & membits)),buf.ptr, buf.length);
 			}
 			else
+				// Memcpy. In windows is the same as memmove.
 				(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
 
 			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
 		}
 
 		// New data to end of buffer
-		(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = arr[];
+		(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = cast(T[]) arr[];
 		buf = buf.ptr[0..buf.length + arr.length];
 
 	}
+}
+
+unittest // Test all implementations
+{
+	string data(size_t characters)
+	{
+		char character = cast(char) 0;
+
+		char[] data;
+		data.reserve(characters);
+		data.length = characters;
+
+		foreach(i; 0 .. characters)
+		{
+			data[i] = character;
+			character++;
+		}
+
+		return cast(string) data;						
+	}
+
+	version(Windows)
+		enum pagesize = 0x10000;
+	else version (Posix)
+		enum pagesize = 0x1000;
+
+	// pagesize-2 as copybuffer needs two bytes less than pagesize.
+	// char.max+1 as that is the amount of possible characters in a byte, including null character.
+	enum fakemax = 127 * 2 * 256; // Maximum that is dividable by two and 256 that is below pagesize-2
+	static assert(fakemax == 65024);
+
+	StaticBuffer!char sbuf = "";
+	StaticCopyBuffer!char cbuf = "";
+
+	sbuf.fill(data(fakemax));
+	cbuf.fill(data(fakemax));
+
+	assert(sbuf[0] == cast(char) 0);
+	assert(cbuf[0] == cast(char) 0);
+	assert(sbuf[1] == cast(char) 1);
+	assert(cbuf[1] == cast(char) 1);
+	assert(sbuf[(fakemax) - 2] == cast(char) 254);
+	assert(cbuf[(fakemax) - 2] == cast(char) 254);
+	assert(sbuf[(fakemax) - 1] == cast(char) 255);
+	assert(cbuf[(fakemax) - 1] == cast(char) 255);
+	assert(sbuf == cbuf);
+
+	sbuf = sbuf[$/2..$];
+	cbuf = cbuf[$/2..$];
+
+
+	assert(sbuf[0] == cast(char) 0);
+	assert(cbuf[0] == cast(char) 0);
+	assert(sbuf[1] == cast(char) 1);
+	assert(cbuf[1] == cast(char) 1);
+	assert(sbuf[(fakemax/2) - 2] == cast(char) 254);
+	assert(cbuf[(fakemax/2) - 2] == cast(char) 254);
+	assert(sbuf[(fakemax/2) - 1] == cast(char) 255);
+	assert(cbuf[(fakemax/2) - 1] == cast(char) 255);
+
+	assert(sbuf == cbuf);
+	assert(sbuf.length == cbuf.length);
+
+	sbuf.fill(data(fakemax/2));
+	cbuf.fill(data(fakemax/2));
+
+	assert(sbuf[0] == cast(char) 0);
+	assert(cbuf[0] == cast(char) 0);
+	assert(sbuf[1] == cast(char) 1);
+	assert(cbuf[1] == cast(char) 1);
+	assert(sbuf[(fakemax) - 2] == cast(char) 254);
+	assert(cbuf[(fakemax) - 2] == cast(char) 254);
+	assert(sbuf[(fakemax) - 1] == cast(char) 255);
+	assert(cbuf[(fakemax) - 1] == cast(char) 255);
+	assert(sbuf == cbuf);
+
+
 
 }

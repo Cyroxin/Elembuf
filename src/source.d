@@ -35,7 +35,7 @@ struct NetSource
 	~this() @trusted
 	{
 		if (sock !is null && sock.isAlive) // This is false if construction failed.
-		//sock.shutdown(SocketShutdown.BOTH); // Optional,but can be thought of as common courtesy.
+		//sock.shutdown(SocketShutdown.BOTH); // Optional, but can be thought of as common courtesy.
 		sock.close;
 	}
 
@@ -52,6 +52,10 @@ struct NetSource
 	}
 	do
 	{
+		// Dropping win7 compatabillity will improve the performance here.
+		// You may implement your own source that does not work with windows 7
+		// or create a pull request and add to the current repository.
+
 		auto len = sock.receive(buf);
 
 		static if (callOnce)

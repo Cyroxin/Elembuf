@@ -323,7 +323,7 @@
   <doHdrGeneration>0</doHdrGeneration>
   <hdrdir />
   <hdrname />
-  <doXGeneration>1</doXGeneration>
+  <doXGeneration>0</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
   <debugids />
@@ -397,7 +397,7 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>0</useUnitTests>
+  <useUnitTests>1</useUnitTests>
   <useInline>1</useInline>
   <release>1</release>
   <preservePaths>0</preservePaths>
@@ -444,7 +444,7 @@
   <doHdrGeneration>0</doHdrGeneration>
   <hdrdir />
   <hdrname />
-  <doXGeneration>1</doXGeneration>
+  <doXGeneration>0</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
   <debugids />
@@ -807,7 +807,7 @@
   <doHdrGeneration>0</doHdrGeneration>
   <hdrdir />
   <hdrname />
-  <doXGeneration>1</doXGeneration>
+  <doXGeneration>0</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
   <debugids />
@@ -920,7 +920,7 @@
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
-  <doDocComments>1</doDocComments>
+  <doDocComments>0</doDocComments>
   <docdir>docs</docdir>
   <docname />
   <modules_ddoc />
@@ -928,7 +928,7 @@
   <doHdrGeneration>0</doHdrGeneration>
   <hdrdir />
   <hdrname />
-  <doXGeneration>1</doXGeneration>
+  <doXGeneration>0</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
   <debuglevel>0</debuglevel>
   <debugids />

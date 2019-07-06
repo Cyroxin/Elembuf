@@ -33,8 +33,9 @@ void main()
 	// The benchmark is for comparing different internal implementations.
 	// The benchmark writes half a page worth of data (%runs) times by reusing the buffer.
 
-	// To even out the differences, as staticbuffer is internally 1 element larger than copybuffer, 
-	// staticbuffer.max is decremented by one in the benchmark.
+	// StaticBuffer is filled less than its nominal capacity as it is slightly larger than copybuffer,
+	// this is due to copybuffer optimizations.
+
 	
 	auto sw = StopWatch();
 
@@ -69,7 +70,7 @@ void main()
 	sw.reset;
 	sw.start;
 	foreach(i; 0..runs)
-		const _temp = StaticCopyBuffer!()();
+		scope const _temp = StaticCopyBuffer!()();
 	sw.stop;
 
 	const cbufcon = sw.peek/runs;
@@ -99,11 +100,11 @@ void main()
 
 	writeln("\nReuses needed: ",(bufcon-cbufcon)/(cbufrun-bufrun)); // To make usage worth it
 
-	static assert(sbuffer.max - 2 == cbuffer.max);
+	static assert((sbuffer.max - 2) == cbuffer.max);
+
+	assert(sbuffer.length == cbuffer.length, "Buffer lengths do not match.");
+
 	assert(sbuffer == cbuffer);
-
-
-
 	readln;
 
 
@@ -114,16 +115,16 @@ void main()
 
 	/*
 
-	Windows 10 - AMD A8-6410 - 4GB memory - LDC release, 5 consecutive runs of 100k runs.
+	Windows 10 - AMD A8-6410 x64 - 4GB memory - LDC release, 100k runs.
 	
-	Bench [circlebuf construction + destr]:67 ╬╝s and 7 hnsecs
-	Bench [circlebuf runtime]:168 ╬╝s and 8 hnsecs
+	Bench [circlebuf construction + destr]:75 ╬╝s and 3 hnsecs
+	Bench [circlebuf runtime]:167 ╬╝s and 7 hnsecs
 	Bench [copybuf construction + destr]:15 ╬╝s and 7 hnsecs
-	Bench [copybuf runtime]:178 ╬╝s and 9 hnsecs
+	Bench [copybuf runtime]:185 ╬╝s and 3 hnsecs
 
-	Reuses needed: 5
+	Reuses needed: 3
 
-	Linux MX-18.3 (Glibc) - AMD A8-6410 - 4GB memory - DMD release -nobounds, 100k runs.
+	Linux MX-18.3 (Glibc) - AMD A8-6410 x64- 4GB memory - DMD release -nobounds, 100k runs.
 
 	Bench [circlebuf construction + destr]:18 μs and 6 hnsecs
 	Bench [circlebuf runtime]:14 μs and 5 hnsecs
@@ -132,7 +133,7 @@ void main()
 
 	Reuses needed: 1
 
-	Linux MX-18.3 (Posix) - AMD A8-6410 - 4GB memory - DMD release -nobounds, 100k runs.
+	Linux MX-18.3 (Posix) - AMD A8-6410 x64 - 4GB memory - DMD release -nobounds, 100k runs.
 
 	Bench [circlebuf construction + destr]:27 μs and 5 hnsecs
 	Bench [circlebuf runtime]:14 μs and 5 hnsecs
