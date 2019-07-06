@@ -718,7 +718,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>void <code class="code">fill</code>(bool isSafe = false, ArrayType)(scope const ArrayType <code class="code">arr</code>) if (!types.isSource!ArrayType &amp;&amp; __traits(compiles, <code class="code">arr</code>[0 .. $]) &amp;&amp; is(typeof(<code class="code">arr</code>[0]) : T));
+            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>void <code class="code">fill</code>(bool isSafe = false, ArrayType)(scope const ArrayType <code class="code">arr</code>) if (!types.isSource!ArrayType &amp;&amp; __traits(compiles, <code class="code">arr</code>[$]) &amp;&amp; is(typeof(<code class="code">arr</code>[0]) : T));
 
           </code>
         </p>
@@ -731,7 +731,7 @@
   <div class="ddoc_summary">
   <p class="para">
      Extends the buffer with new data directly from an array or buffer masquerading as an array.
- This is the most efficient extension method as consuming the source is not needed nor is returning lifetime.
+ In this variant of <code class="code">fill</code>, consuming the source is not needed nor is returning lifetime.
  The following must be <code class="code">true</code> on function call:
 
 <section class="code_listing">
@@ -830,7 +830,7 @@
 <td>
   <div class="ddoc_param_desc">
     <p class="para">
-      Safety guarantee optimization, set to <code class="code">true</code> if pop count after last unsafe <code class="code">fill</code> is less than max or less than 2 times max after construction.
+      Safety guarantee optimization, set to <code class="code">true</code> if pop count after last unsafe <code class="code">fill</code> is less or equal to max or less than 2 times max after construction.
  Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. <b>Default:</b> <font color=red>False.</font>
     </p>
   </div>
@@ -977,7 +977,7 @@ buf.length = 0; <span class="comment">// Remove all items. O(1)
     <div class="dlang">
       <ol class="code_lines">
         <li><code class="code"><span class="comment">// [ADVANCED]
-</span><span class="comment">// This is a example of how to mirror data to create new array element orders using a mirror.
+</span><span class="comment">// This is a example of how to mirror data to create new array item orders using a mirror.
 </span><span class="comment">// X will represent data that is viewed by the buffer and O data that is not viewed, but still owned by it.
 </span><span class="comment">// | will represent the mirror or page boundary. Left side of | is the first page, right side is the second.
 </span>

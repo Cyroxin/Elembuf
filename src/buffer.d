@@ -337,7 +337,7 @@ struct StaticBuffer(InternalType = char)
 
 	/***********************************
 	* Extends the buffer with new data directly from an array or buffer masquerading as an array. 
-	* This is the most efficient extension method as consuming the source is not needed nor is returning lifetime.
+	* In this variant of fill, consuming the source is not needed nor is returning lifetime.
 	* The following must be true on function call:
 	* ---
 	* assert(buffer.avail >= array.length);
@@ -363,7 +363,7 @@ struct StaticBuffer(InternalType = char)
 	/***********************************
 	* Extends the buffer with new data from an abstacted reference source.
 	* Params:
-	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less than max or less than 2 times max after construction. 
+	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less or equal to max or less than 2 times max after construction. 
 	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. <b>Default:</b> <font color=red>False.</font>
 	*				source	= Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/types.html">docs/types</a></font> source interface.
 	* The function "ptrdiff_t read(void[] arr)" is expected to be implemented, where arr is the free writable area of the buffer.
@@ -471,7 +471,7 @@ struct StaticBuffer(InternalType = char)
 	unittest
 	{
 		// [ADVANCED]
-		// This is a example of how to mirror data to create new array element orders using a mirror.
+		// This is a example of how to mirror data to create new array item orders using a mirror.
 		// X will represent data that is viewed by the buffer and O data that is not viewed, but still owned by it.
 		// | will represent the mirror or page boundary. Left side of | is the first page, right side is the second.
 
