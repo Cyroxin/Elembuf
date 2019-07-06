@@ -135,6 +135,7 @@ struct StaticBuffer(InternalType = char)
 			close(memfile); // Will only truly close once maps are closed. Documentation in manpages is lacking in regards to this.
 		}
 
+
 		else version (Posix)
 		{
 			//pragma(msg, "Posix");
@@ -152,20 +153,21 @@ struct StaticBuffer(InternalType = char)
 
 			static assert(ubyte.sizeof == char.sizeof);
 
-			enum iname = cast(char[]) "/elembuf-";
-			scope char[iname.length + 1] hname = iname;
+			enum iname = cast(char[]) "/elbu-" ~ cast(char)0 ~ cast(char)0; // 8 bytes reduces fragmentation.
+			scope char[8] hname = iname;
 			scope int memfile = void;
 
-			static foreach (i; char.min .. char.max)
+			static foreach (i; char.min + 1 .. char.max)
 			{
-				hname[$ - 1] = i;
-
 				// Create a memory file
 				memfile = shm_open(hname.ptr, O_RDWR | O_CREAT | O_EXCL, S_IWUSR | S_IRUSR);
 				if (memfile >= 0)
 					goto success;
+
+				static if(i != char.max)
+					hname[$ - 2] = i;
 			}
-			assert(0, "Memory file creation error!");
+			assert(0); // nomem
 
 			success:
 			shm_unlink(hname.ptr);
@@ -173,7 +175,7 @@ struct StaticBuffer(InternalType = char)
 			ftruncate(memfile, pagesize); // Sets the memory file length
 
 			// Create a two page size memory mapping of the file
-				ret = cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
+			ret = cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
 			assert(ret.ptr != MAP_FAILED); // Outofmem
 
 			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0

@@ -32,6 +32,7 @@ void main()
 	// INFO:
 	// The benchmark is for comparing different internal implementations.
 	// The benchmark writes half a page worth of data (%runs) times by reusing the buffer.
+	// Amount of reuses indicates how many fills needs to be done to make using circularbuffer worth it.
 
 	// StaticBuffer is filled less than its nominal capacity as it is slightly larger than copybuffer,
 	// this is due to copybuffer optimizations.
@@ -110,7 +111,7 @@ void main()
 
 	// PERSONAL NOTES:
 	// General: Copy buffer is better when buffer reuse is not possible due to slow circlebuf construction.
-	// AMD A8: Linux implementations were cpu bound on AMD A8. Win mem allocation is 7.5x slower than lin.
+	// AMD A8: Linux implementations were cpu bound on AMD A8. Win mem allocation is 3x slower than lin.
 	// Results can be found below.
 
 	/*
@@ -126,21 +127,21 @@ void main()
 
 	Linux MX-18.3 (Glibc) - AMD A8-6410 x64- 4GB memory - DMD release -nobounds, 100k runs.
 
-	Bench [circlebuf construction + destr]:18 μs and 6 hnsecs
-	Bench [circlebuf runtime]:14 μs and 5 hnsecs
-	Bench [copybuf construction + destr]:2 μs
-	Bench [copybuf runtime]:26 μs and 3 hnsecs
+	Bench [circlebuf construction + destr]:24 μs and 4 hnsecs
+	Bench [circlebuf runtime]:18 μs and 9 hnsecs
+	Bench [copybuf construction + destr]:2 μs and 9 hnsecs
+	Bench [copybuf runtime]:19 μs and 3 hnsecs
 
-	Reuses needed: 1
+	Reuses needed: 53
 
 	Linux MX-18.3 (Posix) - AMD A8-6410 x64 - 4GB memory - DMD release -nobounds, 100k runs.
 
-	Bench [circlebuf construction + destr]:27 μs and 5 hnsecs
-	Bench [circlebuf runtime]:14 μs and 5 hnsecs
-	Bench [copybuf construction + destr]:2 μs
-	Bench [copybuf runtime]:26 μs and 2 hnsecs
+	Bench [circlebuf construction + destr]:36 μs and 3 hnsecs
+	Bench [circlebuf runtime]:19 μs
+	Bench [copybuf construction + destr]:2 μs and 9 hnsecs
+	Bench [copybuf runtime]:19 μs and 4 hnsecs
 
-	Reuses needed: 2
+	Reuses needed: 83
 	*/
 
 }
