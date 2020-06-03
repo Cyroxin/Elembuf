@@ -40,7 +40,6 @@
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
@@ -52,6 +51,7 @@
   <dip25>0</dip25>
   <dip1000>0</dip1000>
   <dip1008>0</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -60,6 +60,8 @@
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
   <preview_markdown>0</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -161,7 +163,6 @@
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
@@ -173,6 +174,7 @@
   <dip25>0</dip25>
   <dip1000>0</dip1000>
   <dip1008>0</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -181,6 +183,8 @@
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
   <preview_markdown>0</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -247,16 +251,16 @@
   <link>0</link>
   <lib>0</lib>
   <subsystem>1</subsystem>
-  <multiobj>0</multiobj>
+  <multiobj>1</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
   <oneobj>0</oneobj>
-  <mscoff>0</mscoff>
+  <mscoff>1</mscoff>
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
   <vgc>0</vgc>
-  <symdebug>3</symdebug>
+  <symdebug>1</symdebug>
   <symdebugref>1</symdebugref>
   <optimize>0</optimize>
   <cpu>0</cpu>
@@ -276,13 +280,12 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>2</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>1</useUnitTests>
+  <useUnitTests>0</useUnitTests>
   <useInline>0</useInline>
   <release>0</release>
-  <preservePaths>0</preservePaths>
+  <preservePaths>1</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
@@ -294,6 +297,7 @@
   <dip25>1</dip25>
   <dip1000>1</dip1000>
   <dip1008>1</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -302,6 +306,8 @@
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
   <preview_markdown>0</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -343,7 +349,7 @@
   <cv2pdbNoDemangle>0</cv2pdbNoDemangle>
   <cv2pdbEnumType>0</cv2pdbEnumType>
   <cv2pdbOptions />
-  <enableMixin>1</enableMixin>
+  <enableMixin>0</enableMixin>
   <mixinPath>$(IntDir)\$(SafeProjectName).mixin</mixinPath>
   <objfiles />
   <linkswitches />
@@ -377,7 +383,7 @@
   <verbose>0</verbose>
   <vtls>0</vtls>
   <vgc>0</vgc>
-  <symdebug>3</symdebug>
+  <symdebug>1</symdebug>
   <symdebugref>1</symdebugref>
   <optimize>1</optimize>
   <cpu>0</cpu>
@@ -397,13 +403,12 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>1</useUnitTests>
-  <useInline>1</useInline>
+  <useUnitTests>0</useUnitTests>
+  <useInline>0</useInline>
   <release>1</release>
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
@@ -415,6 +420,7 @@
   <dip25>1</dip25>
   <dip1000>1</dip1000>
   <dip1008>1</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -422,7 +428,9 @@
   <transition_complex>0</transition_complex>
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
-  <preview_markdown>0</preview_markdown>
+  <preview_markdown>1</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -436,13 +444,13 @@
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
-  <doDocComments>0</doDocComments>
+  <doDocComments>1</doDocComments>
   <docdir>docs</docdir>
   <docname />
   <modules_ddoc />
   <ddocfiles />
   <doHdrGeneration>0</doHdrGeneration>
-  <hdrdir />
+  <hdrdir>headers</hdrdir>
   <hdrname />
   <doXGeneration>0</doXGeneration>
   <xfilename>$(IntDir)\$(TargetName).json</xfilename>
@@ -524,7 +532,6 @@
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
@@ -536,6 +543,7 @@
   <dip25>0</dip25>
   <dip1000>0</dip1000>
   <dip1008>0</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -544,6 +552,8 @@
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
   <preview_markdown>0</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -645,7 +655,6 @@
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
@@ -657,6 +666,7 @@
   <dip25>0</dip25>
   <dip1000>0</dip1000>
   <dip1008>0</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -665,6 +675,8 @@
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
   <preview_markdown>0</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -734,14 +746,14 @@
   <multiobj>0</multiobj>
   <singleFileCompilation>0</singleFileCompilation>
   <oneobj>0</oneobj>
-  <mscoff>0</mscoff>
+  <mscoff>1</mscoff>
   <trace>0</trace>
   <quiet>0</quiet>
   <verbose>0</verbose>
   <vtls>0</vtls>
   <vgc>0</vgc>
-  <symdebug>3</symdebug>
-  <symdebugref>1</symdebugref>
+  <symdebug>1</symdebug>
+  <symdebugref>0</symdebugref>
   <optimize>0</optimize>
   <cpu>0</cpu>
   <isX86_64>1</isX86_64>
@@ -766,8 +778,7 @@
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
-  <genStackFrame>0</genStackFrame>
+  <genStackFrame>1</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
   <nofloat>0</nofloat>
@@ -778,6 +789,7 @@
   <dip25>1</dip25>
   <dip1000>1</dip1000>
   <dip1008>1</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -786,6 +798,8 @@
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
   <preview_markdown>0</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
   <compiler>0</compiler>
   <otherDMD>0</otherDMD>
@@ -861,8 +875,8 @@
   <verbose>0</verbose>
   <vtls>1</vtls>
   <vgc>0</vgc>
-  <symdebug>3</symdebug>
-  <symdebugref>0</symdebugref>
+  <symdebug>1</symdebug>
+  <symdebugref>1</symdebugref>
   <optimize>1</optimize>
   <cpu>0</cpu>
   <isX86_64>1</isX86_64>
@@ -881,13 +895,12 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>2</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>1</useUnitTests>
-  <useInline>1</useInline>
+  <useUnitTests>0</useUnitTests>
+  <useInline>0</useInline>
   <release>1</release>
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
   <infowarnings>0</infowarnings>
-  <checkProperty>0</checkProperty>
   <genStackFrame>0</genStackFrame>
   <pic>0</pic>
   <cov>0</cov>
@@ -899,6 +912,7 @@
   <dip25>1</dip25>
   <dip1000>1</dip1000>
   <dip1008>1</dip1008>
+  <dip1021>0</dip1021>
   <transition_field>0</transition_field>
   <revert_import>0</revert_import>
   <preview_dtorfields>0</preview_dtorfields>
@@ -907,8 +921,10 @@
   <preview_intpromote>0</preview_intpromote>
   <preview_fixAliasThis>0</preview_fixAliasThis>
   <preview_markdown>1</preview_markdown>
+  <preview_rvaluerefparam>0</preview_rvaluerefparam>
+  <preview_nosharedaccess>0</preview_nosharedaccess>
   <transition_vmarkdown>0</transition_vmarkdown>
-  <compiler>0</compiler>
+  <compiler>2</compiler>
   <otherDMD>0</otherDMD>
   <cccmd>$(CC) -c</cccmd>
   <ccTransOpt>1</ccTransOpt>
@@ -971,14 +987,14 @@
  <Folder name="source">
   <Folder name="benchmarks">
    <File path="bench\implem.d" />
+   <File path="bench\select.d" />
+   <File path="bench\thred.d" />
   </Folder>
   <Folder name="docs">
    <File path="docs\buffer.html" />
    <File path="docs\source.html" />
-   <File path="docs\types.html" />
   </Folder>
   <File path="src\buffer.d" />
   <File path="src\source.d" />
-  <File path="src\types.d" />
  </Folder>
 </DProject>

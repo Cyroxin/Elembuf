@@ -525,7 +525,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer"></span>struct <code class="code">StaticBuffer</code>(InternalType = char);
+            <span class="ddoc_anchor" id="StaticBuffer"></span>struct <code class="code">StaticBuffer</code>(InternalType = char, bool Threaded = false);
 
           </code>
         </p>
@@ -582,7 +582,7 @@
   <li class="ddoc_member">
   <div class="ddoc_member_header">
   <div class="ddoc_header_anchor">
-  <a href="#StaticBuffer.opCall" id="StaticBuffer.opCall"><code class="code">opCall</code></a>
+  <a href="#StaticBuffer.gen" id="StaticBuffer.gen"><code class="code">gen</code></a>
 </div>
 </div><div class="ddoc_decl">
   <section class="section">
@@ -591,7 +591,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.opCall"></span>static nothrow @nogc @trusted typeof(this) <code class="code">opCall</code>();
+            <span class="ddoc_anchor" id="StaticBuffer.gen"></span>static @trusted T[] <code class="code">gen</code>();
 
           </code>
         </p>
@@ -600,45 +600,7 @@
   </section>
 </div>
 <div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_examples">
-  <h4>Examples</h4>
-  <p class="para">
-    
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="keyword">import</span> buffer, source;
-
-<span class="keyword">scope</span> bufchar = StaticBuffer!()(); <span class="comment">// Create buffer, defaults to char[]
-</span><span class="keyword">assert</span>(bufchar == <span class="string_literal">""</span>);
-
-<span class="keyword">scope</span> StaticBuffer!<span class="keyword">int</span> bufint = StaticBuffer!<span class="keyword">int</span>(); <span class="comment">// Create buffer of int[]
-</span><span class="keyword">assert</span>(bufint == []);
-
-<span class="comment">// With fill, internally calls constructor and then fill()
-</span>
-<span class="keyword">scope</span> StaticBuffer!<span class="keyword">char</span> fakebufchar = <span class="string_literal">"Hello World!"</span>;
-<span class="keyword">assert</span>(fakebufchar.avail == fakebufchar.max - <span class="string_literal">"Hello World!"</span>.length);
-
-<span class="keyword">scope</span> StaticBuffer!<span class="keyword">int</span> fakebufint = [1,2,3,4,5];
-<span class="keyword">assert</span>(fakebufint.avail == fakebufint.max - ([1,2,3,4,5]).length);		
-
-<span class="keyword">scope</span> StaticBuffer!<span class="keyword">char</span> fakebufcharlong = StaticBuffer!<span class="keyword">char</span>(<span class="string_literal">"Hello World!"</span>);
-<span class="keyword">assert</span>(fakebufcharlong.avail == fakebufcharlong.max - <span class="string_literal">"Hello World!"</span>.length);
-
-<span class="keyword">scope</span> StaticBuffer!<span class="keyword">int</span> fakebufintlong = StaticBuffer!<span class="keyword">int</span>([1,2,3,4,5]);
-<span class="keyword">assert</span>(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);
-</code></li>
-      </ol>
-    </div>
-  </div>
-</section>
-
-  </p>
-</div>
-</section>
+  
 
 </div>
 
@@ -686,7 +648,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.avail"></span>nothrow @nogc @trusted size_t <code class="code">avail</code>();
+            <span class="ddoc_anchor" id="StaticBuffer.avail"></span>const nothrow @nogc @property @trusted auto <code class="code">avail</code>();
 
           </code>
         </p>
@@ -718,7 +680,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>void <code class="code">fill</code>(bool isSafe = false, ArrayType)(scope const ArrayType <code class="code">arr</code>) if (!types.isSource!ArrayType &amp;&amp; __traits(compiles, <code class="code">arr</code>[$]) &amp;&amp; is(typeof(<code class="code">arr</code>[0]) : T));
+            <span class="ddoc_anchor" id="StaticBuffer.fill"></span>void <code class="code">fill</code>(bool isSafe = false)(scope const T[] <code class="code">arr</code>) if (!Threaded);
 
           </code>
         </p>
@@ -801,7 +763,7 @@
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="StaticBuffer.fill.2"></span>bool <code class="code">fill</code>(bool isSafe = false, Source)(ref scope Source <code class="code">source</code>) if (types.isSource!Source);
+            <span class="ddoc_anchor" id="StaticBuffer.fill.2"></span>void <code class="code">fill</code>(bool isSafe = false, Source)(ref Source <code class="code">source</code>) if (!Threaded &amp;&amp; !is(Source == T[]));
 
           </code>
         </p>
@@ -845,10 +807,10 @@
 <td>
   <div class="ddoc_param_desc">
     <p class="para">
-      Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/types.html">docs/types</a></font> <code class="code">source</code> interface.
- The function "ptrdiff_t read(void[] arr)" is expected to be implemented, where arr is the free writable area of the buffer.
- It should return the amount of bytes written, otherwise less than or equal to zero.
- For examples on how to implement the read interface, see
+      Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/<code class="code">source</code></a></font> <code class="code">source</code> interface.
+ The <code class="code">source</code> should implement delegate interface is expected to be implemented, where arr is the free writable area of the buffer.
+ A <code class="code">source</code> is valid if it implements "size_t delegate(T[]) src()" -function, where T[] is the area to be filled.
+ The <code class="code">source</code> should return the amount of elements written to the T[]. See <code class="code">source</code> for examples.
  <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/<code class="code">source</code></a></font>
     </p>
   </div>
@@ -858,156 +820,122 @@
     </tbody>
   </table>
 </div>
-<div class="ddoc_returns">
-  <h4>Return Value</h4>
-  <p class="para">
-    
-  </p>
-</div>
-<div class="ddoc_section">
-  <p class="para">
-    <span class="ddoc_section_h">True:</span>
-Source is not empty and can be reused.
 
-  </p>
-</div>
-<div class="ddoc_section">
-  <p class="para">
-    <span class="ddoc_section_h">False:</span>
-Source has been emptied.
-  </p>
-</div>
-<div class="ddoc_examples">
-  <h4>Examples</h4>
-  <p class="para">
-    Usage
-
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [BASIC]
-</span><span class="keyword">import</span> buffer,<span class="param">source</span>;
-
-StaticBuffer!<span class="keyword">char</span> buf = StaticBuffer!()();
-
-ArraySource!<span class="keyword">char</span> srcworld = ArraySource!<span class="keyword">char</span>(<span class="string_literal">" World!"</span>);
-ArraySource!<span class="keyword">char</span> srcbuf = ArraySource!<span class="keyword">char</span>(<span class="string_literal">"buf"</span>);
-
-buf.<span class="psymbol">fill</span>(<span class="string_literal">"Hello"</span>); <span class="comment">// Old method of filling without abstraction
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello"</span>);
-
-buf.<span class="psymbol">fill</span>(srcworld); <span class="comment">// Old method of filling with abstraction
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello World!"</span>);
-
-buf &lt;&lt; <span class="string_literal">" -Elem"</span>; <span class="comment">// Modern way of filling, equivalent to .fill
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello World! -Elem"</span>);
-
-buf &lt;&lt;= srcbuf; <span class="comment">// Modern way of filling, equivalent to .fill!true
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello World! -Elembuf"</span>);
-
-buf.length = 0; <span class="comment">// Remove all items. O(1)
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">""</span> &amp;&amp; buf[0..5] == <span class="string_literal">"Hello"</span>); <span class="comment">// Elements are not truly gone until overwritten.
-</span>
-<span class="keyword">assert</span>((buf &lt;&lt; srcworld) == <span class="keyword">false</span>); <span class="comment">// Source consumed.
-</span><span class="keyword">assert</span>((buf &lt;&lt;= srcbuf) == <span class="keyword">false</span>); <span class="comment">// Source consumed.
-</span></code></li>
-      </ol>
-    </div>
-  </div>
 </section>
 
-  </p>
-</div><div class="ddoc_examples">
-  <h4>Examples</h4>
-  <p class="para">
-    Optimization
+</div>
 
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [INTERMEDIATE]
-</span><span class="comment">// Removing all overhead from fill by using compile-time guarantees by counting increments to slice pointer.  
-</span>
-	<span class="keyword">char</span>[] data(size_t characters) <span class="keyword">pure</span> <span class="keyword">nothrow</span> @trusted
-	{
-		<span class="keyword">char</span>[] arr;
-		arr.reserve(characters);
-		arr.length = characters;
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#StaticBuffer.fill" id="StaticBuffer.fill"><code class="code">fill</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="StaticBuffer.fill.3"></span>void <code class="code">fill</code>()(scope const size_t delegate(T[]) <code class="code">source</code>) if (Threaded);
 
-		arr[] = ' ';
-		<span class="keyword">return</span> arr;
-	}
-
-	StaticBuffer!<span class="keyword">char</span> buf = StaticBuffer!()(); <span class="comment">/// There is (max * 2 - 1) of free pops after construction.
-</span>
-	buf &lt;&lt;= data(buf.max);
-
-	buf = buf[$ .. $]; <span class="comment">// Do work
-</span>	<span class="keyword">assert</span>(buf == <span class="string_literal">""</span>);
-
-	<span class="comment">// max - 1 pops left
-</span>
-	buf &lt;&lt;= data(buf.avail - 1); <span class="comment">// In this case, (avail - 1) == (max - 1)
-</span>
-	buf = buf[$ .. $]; <span class="comment">// Do work
-</span>	<span class="keyword">assert</span>(buf == <span class="string_literal">""</span>);
-
-	<span class="comment">// Out of free pops. Next pop will cause an exception.
-</span>
-	buf &lt;&lt; data(buf.max); <span class="comment">// Safety is now reinstated by the buffer.
-</span>	buf = buf [$..$]; <span class="comment">// Can now pop buf.max times again!
-</span>
-	<span class="comment">// Repeat from last comment region. Note: Setting length does not add to the pop count.
-</span></code></li>
-      </ol>
+          </code>
+        </p>
+      </div>
     </div>
-  </div>
-</section>
-
-  </p>
-</div><div class="ddoc_examples">
-  <h4>Examples</h4>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
   <p class="para">
-    Properties
-
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [ADVANCED]
-</span><span class="comment">// This is a example of how to mirror data to create new array item orders using a mirror.
-</span><span class="comment">// X will represent data that is viewed by the buffer and O data that is not viewed, but still owned by it.
-</span><span class="comment">// | will represent the mirror or page boundary. Left side of | is the first page, right side is the second.
-</span>
-StaticBuffer!<span class="keyword">char</span> buf = StaticBuffer!()(); <span class="comment">// OO|OO
-</span>buf.length = buf.max; <span class="comment">// XX|OO
-</span>
-buf = buf[buf.max/2..$]; <span class="comment">// OX|OO
-</span>buf[] = 'a'; <span class="comment">// Set all in X to 'a'
-</span>buf.length = buf.max; <span class="comment">// OX|XO
-</span>buf[$/2..$] = 'b'; <span class="comment">// Set all X right side of | to 'b'
-</span>
-<span class="comment">// The buffer is in a mirror |, half of the buffer is in the first page and half in second page. OX|XO
-</span><span class="comment">// It is possible to invert the buffer so, that data starts with 'b' instead of 'a'.
-</span><span class="comment">// Data is identical left and right side of the mirror, thus inversion can be sought from the mirror.
-</span>
-<span class="comment">// a, OX|XO
-</span>buf = (buf.ptr - buf.max/2)[0..buf.max]; <span class="comment">// XX|OO
-</span><span class="keyword">assert</span>(buf[0] == 'b' &amp;&amp; buf[$/2+1] == 'a'); <span class="comment">// Opt: In this case $ could be buf.max as well.
-</span>
-<span class="comment">// b, XX|OO
-</span>buf = (buf.ptr + buf.max)[0..buf.length]; <span class="comment">// OO|XX
-</span><span class="keyword">assert</span>(buf[0] == 'b' &amp;&amp; buf[$/2+1] == 'a'); <span class="comment">// As seen, both sides are identical. Both pages contain a's and b's.
-</span></code></li>
-      </ol>
-    </div>
-  </div>
-</section>
+    Orders the buffer to <code class="code">fill</code> itself with the given abstacted reference <code class="code">source</code>. A subsequent call without params is needed.
 
   </p>
 </div>
+<div class="ddoc_params">
+  <h4>Parameters</h4>
+  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
+    <tbody>
+      <tr class="ddoc_param_row">
+  <td scope="ddoc_param_id">
+  <code class="code">
+    <em class="term">size_t delegate(T[]) <code class="code">source</code></em>
+  </code>
+</td>
+<td>
+  <div class="ddoc_param_desc">
+    <p class="para">
+      Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/<code class="code">source</code></a></font> <code class="code">source</code> interface.
+ The <code class="code">source</code> should implement delegate interface is expected to be implemented, where arr is the free writable area of the buffer.
+ A <code class="code">source</code> is valid if it implements "size_t delegate(T[]) src()" -function, where T[] is the area to be filled.
+ The <code class="code">source</code> should return the amount of elements written to the T[]. See <code class="code">source</code> for examples.
+ <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/<code class="code">source</code></a></font>
+    </p>
+  </div>
+</td>
+</tr>
+
+    </tbody>
+  </table>
+</div>
+
+</section>
+
+</div>
+
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#StaticBuffer.fill" id="StaticBuffer.fill"><code class="code">fill</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="StaticBuffer.fill.4"></span>nothrow @nogc void <code class="code">fill</code>(bool isSafe = false)() if (Threaded);
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Extends buffer by the amount of data read by the buffer and orders buffer to read additional data from the same source.
+
+  </p>
+</div>
+<div class="ddoc_params">
+  <h4>Parameters</h4>
+  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
+    <tbody>
+      <tr class="ddoc_param_row">
+  <td scope="ddoc_param_id">
+  <code class="code">
+    <em class="term">isSafe</em>
+  </code>
+</td>
+<td>
+  <div class="ddoc_param_desc">
+    <p class="para">
+      Safety guarantee optimization, set to <code class="code">true</code> if pop count after last unsafe <code class="code">fill</code> is less or equal to max or less than 2 times max after construction.
+ Safety guaranteed calls can be stacked, but a singular call is more efficient. <b>Default:</b> <font color=red>False.</font>
+    </p>
+  </div>
+</td>
+</tr>
+
+    </tbody>
+  </table>
+</div>
+
 </section>
 
 </div>

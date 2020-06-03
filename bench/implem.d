@@ -22,7 +22,7 @@ enum runs = 100_000; // Keep runs at least this high for accurate results
 // Construction timings can vary drastically due to changes in memory availabillity.
 // Using a high run count mitigates the variance as average construction can be calculated.
 
-void main()
+void implemmain()
 {
 	import std.datetime.stopwatch;
 
@@ -106,8 +106,6 @@ void main()
 	assert(sbuffer.length == cbuffer.length, "Buffer lengths do not match.");
 
 	assert(sbuffer == cbuffer);
-	readln;
-
 
 	// PERSONAL NOTES:
 	// General: Copy buffer is better when buffer reuse is not possible due to slow circlebuf construction.

@@ -277,3 +277,8 @@ __pycache__/
 /buffer.ll
 /bench-parse.lst
 /bench-implem.lst
+/.syntax.cmd
+/headers
+/docs/thred.html
+/docs/select.html
+/docs/implem.html

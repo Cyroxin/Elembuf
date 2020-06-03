@@ -10,91 +10,120 @@ struct NetSource
 	debug import std.socket : lastSocketError;
 
 	private Socket sock = void;
+	private bool _empty;
+
+	/// Checks if our socket has been closed by the sender. Does not check for html closures.
+	@property empty(){ return _empty ||
+		!sock.isAlive;}
 
 	this(this) @disable;
 
 	/// Creates a connection by parsing an ip or url from a string.
-	this(const string ip) @trusted
+	this(const char[] ip) @trusted
 	{
-		import std.stdio;
-			scope const Address addr = getAddress(ip,80)[0];
-			sock = new TcpSocket(cast(Address) addr);
 
-			assert(sock !is null && sock.isAlive);
+		foreach(i, c; ip)
+		{
+			if(c == 'w' && ip[i..i+4] == "www.")
+			{
+				scope const Address addr = getAddress(ip[i..$],80)[0];
 
-			sock.blocking(false);
+				sock = new TcpSocket(cast(Address) addr);
 
-			scope const a = "GET " ~ '/' ~ " HTTP/1.1\r\n" ~ // TODO: Allow for subfolders instead of '/'
-				"Host: " ~ ip ~ "\r\n" ~
-				"Accept: text/html, text/plain" ~ "\r\n\r\n"; 
+				assert(sock !is null && sock.isAlive);
 
-			sock.send(a);
+				sock.blocking(false);
+
+				scope const a = "GET " ~ '/' ~ " HTTP/1.1\r\n" ~ // TODO: Allow for subfolders instead of '/'
+					"Host: " ~ ip ~ "\r\n" ~
+					"Accept: text/html, text/plain" ~ "\r\n\r\n"; 
+
+				sock.send(a);
+
+				return;
+			}
+		}
+
+		assert(0, "Error, url invalid.");
+
+
 
 	}
 
 	~this() @trusted
 	{
 		if (sock !is null && sock.isAlive) // This is false if construction failed.
-		//sock.shutdown(SocketShutdown.BOTH); // Optional, but can be thought of as common courtesy.
-		sock.close;
+			//sock.shutdown(SocketShutdown.BOTH); // Optional, but can be thought of as common courtesy.
+			sock.close;
 	}
 
-	/// Reads new data to buf. Returns negative on error, zero on empty and positive for bytes read
-	ptrdiff_t read(alias code = {}, bool callOnce = false)(scope void[] buf) @trusted
-		if (__traits(compiles, code()))
-		in
-		{
-			assert(sock !is null && sock.isAlive);
-		}
-	out(ret)
+
+
+	auto src()() @nogc
 	{
-		assert(ret >= 0);
-	}
-	do
-	{
-		// Dropping win7 compatabillity will improve the performance here.
-		// You may implement your own source that does not work with windows 7
-		// or create a pull request and add to the current repository.
-
-		auto len = sock.receive(buf);
-
-		static if (callOnce)
+		return (char[] x) 
 		{
-			if (len < 0)
-				if (wouldHaveBlocked)
-				{
-					code();
-					len = sock.receive(buf);
-				}
-				else
-					return 0;
-			else
-				return len;
-		}
+			auto len = sock.receive(x);
 
-		while (true)
-		{
 			if (len < 0)
 			{
 				if (wouldHaveBlocked)
 				{
-					// Do something productive here.
-
-					static if(!callOnce)
-						code();
-
-					len = sock.receive(buf);
-
+					return 0;
 				}
 				else
+				{
+					_empty = true;
 					return 0;
+				}
 			}
 			else
+			{
 				return len;
-		}
-
+			}
+		};
 	}
+
+	/**
+	Read interface implementation example. 
+
+	This is what is currently inside NetSource. 
+	Parameter x must be a T[] for the Source to work for all buffers.
+	As seen from the example, NetSource only works when the underlying buffer is a char[]
+	=> T == char.
+
+	---
+	auto src()
+	{
+	return (char[] x) 
+	{
+	auto len = sock.receive(x);
+
+	if (len < 0)
+	{
+	if (wouldHaveBlocked)
+	{
+	return 0;
+	}
+	else
+	{
+	_empty = true;
+	return 0;
+	}
+	}
+	else
+	{
+	return len;
+	}
+	};
+	}
+	---
+	**/
+
+
+
 }
+
 
 
 /// Source that reads from an array as if it were a true source. This is best used only for debugging or testing.
@@ -103,33 +132,63 @@ struct ArraySource(InternalType = char)
 	alias T = InternalType;
 	T[] arr;
 
-	this(T[] array) pure nothrow @nogc
+	this()(T[] array) @nogc
 	{
 		arr = cast(T[]) array;
 	}
 
-	this(Range)(Range r)
+	this(Range)(Range r) @nogc
 	{
 		arr = cast(T[]) r;
 	}
 
-	/// Will never return a negative number. Zero if empty.
-	ptrdiff_t read(scope T[] buf) pure nothrow @nogc
+	auto src()
 	{
-
-		if (arr.length > buf.length)
+		return (T[] x)
 		{
-			buf[] = arr[0..buf.length];
-			arr = arr[buf.length .. $];
-			return buf.length;
-		}
-		else
-		{
+			if (arr.length > x.length)
+			{
+				x[] = arr.ptr[0..x.length];
+				arr = arr.ptr[x.length .. arr.length];
+				return x.length;
+			}
+			else
+			{
+				x[0..arr.length] = arr.ptr[0..arr.length];
+				scope(exit) arr = arr.ptr[0..0]; // It is safe to not reset, as it cannot be reused.
+				return arr.length;
+			}
+		};
+	}
 
-			buf[0..arr.length] = arr[];
-			scope(exit) arr = arr[0..0]; // It is safe to not reset, as it cannot be reused.
-			return arr.length;
+
+
+	/**
+	Read interface implementation example. 
+
+	This is what is currently inside ArraySource. 
+	Array source works for all buffers of type T[].
+
+	---
+	auto src()
+	{
+		return (T[] x)
+		{
+			if (arr.length > buf.length)
+			{
+				buf[] = arr[0..buf.length];
+				arr = arr[buf.length .. $];
+				return buf.length;
+			}
+			else
+			{
+				buf[0..arr.length] = arr[];
+				scope(exit) arr = arr[0..0]; // It is safe to not reset, as it cannot be reused.
+				return arr.length;
+			}
 		}
 	}
+	---
+	**/
 
 }

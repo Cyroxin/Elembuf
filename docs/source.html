@@ -547,6 +547,38 @@ When the source blocks, a custom delegate defined in the compile time parameter 
   <li class="ddoc_member">
   <div class="ddoc_member_header">
   <div class="ddoc_header_anchor">
+  <a href="#NetSource.empty" id="NetSource.empty"><code class="code">empty</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="NetSource.empty"></span>@property auto <code class="code">empty</code>();
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Checks if our socket has been closed by the sender. Does not check for html closures.
+  </p>
+</div>
+
+</section>
+
+</div>
+
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
   <a href="#NetSource.this" id="NetSource.this"><code class="code">this</code></a>
 </div>
 </div><div class="ddoc_decl">
@@ -556,7 +588,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="NetSource.this"></span>@trusted this(const string <code class="code">ip</code>);
+            <span class="ddoc_anchor" id="NetSource.this"></span>@trusted this(const char[] <code class="code">ip</code>);
 
           </code>
         </p>
@@ -569,41 +601,6 @@ When the source blocks, a custom delegate defined in the compile time parameter 
   <div class="ddoc_summary">
   <p class="para">
     Creates a connection by parsing an <code class="code">ip</code> or url from a string.
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#NetSource.read" id="NetSource.read"><code class="code">read</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="NetSource.read"></span>@trusted ptrdiff_t <code class="code">read</code>(alias code = ()
-{
-}
-, bool callOnce = false)(scope void[] <code class="code">buf</code>) if (__traits(compiles, code()));
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Reads new data to <code class="code">buf</code>. Returns negative on error, zero on empty and positive for bytes <code class="code">read</code>
   </p>
 </div>
 
@@ -645,41 +642,6 @@ When the source blocks, a custom delegate defined in the compile time parameter 
 </div>
 
 </section>
-<ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#ArraySource.read" id="ArraySource.read"><code class="code">read</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="ArraySource.read"></span>pure nothrow @nogc ptrdiff_t <code class="code">read</code>(scope T[] <code class="code">buf</code>);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Will never return a negative number. Zero if empty.
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li>
-</ul>
 
 </div>
 

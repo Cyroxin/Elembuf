@@ -1,15 +1,13 @@
 module buffer;
 
-static import types;
-
 
 private version (linux)
 {
 	import core.stdc.config : c_long;
 	extern (C) c_long syscall (c_long SYS, ...) @nogc nothrow;
 
-// Creates a file in memory. See Linux manpages for further information. 
- extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc // TODO: Add to druntime
+	// Creates a file in memory. See Linux manpages for further information. 
+	extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc // TODO: Add to druntime
 	{
 		version(X86_64)
 			return cast(int) syscall(319, name, flags);
@@ -32,12 +30,12 @@ private version (linux)
 *			T	= Element type which the buffer will hold. Defaults to char.
 */
 
-struct StaticBuffer(InternalType = char)
+struct StaticBuffer(InternalType = char, bool Threaded = false)
 {
 	alias T = InternalType;
 
 	///
-	static typeof(this) opCall() @nogc @trusted nothrow
+	static T[] gen() @trusted
 	{
 		T[] ret;
 
@@ -64,8 +62,8 @@ struct StaticBuffer(InternalType = char)
 
 			do
 			{
-			// Find a suitable large memory location in memory. TODO: Dropping win7 compatab will allow this to be automated by the os.
-			ret = cast(T[]) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE)[0..0];
+				// Find a suitable large memory location in memory. TODO: Dropping win7 compatab will allow this to be automated by the os.
+				ret = cast(T[]) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE)[0..0];
 				assert(ret.ptr != NULL); // Outofmem
 
 				// Select a page with a pagebit of 0.
@@ -110,7 +108,7 @@ struct StaticBuffer(InternalType = char)
 			ftruncate(memfile, pagesize);
 
 			// Create a two page size memory mapping of the file
-				ret =  cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
+			ret =  cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
 			assert(ret.ptr != MAP_FAILED); // Outofmem
 
 			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0
@@ -169,7 +167,7 @@ struct StaticBuffer(InternalType = char)
 			}
 			assert(0); // nomem
 
-			success:
+		success:
 			shm_unlink(hname.ptr);
 
 			ftruncate(memfile, pagesize); // Sets the memory file length
@@ -204,10 +202,48 @@ struct StaticBuffer(InternalType = char)
 			static assert(0, "Operating system not supported");
 
 
-
-
-		return *cast(typeof(this)*) &ret;
+		return ret;
 	}
+
+
+	static typeof(this) opCall()
+	{
+		mixin("typeof(this) val = void; val.buf = typeof(this).gen();");
+
+		static if(Threaded)
+		{
+			import std.parallelism : taskPool, task;
+
+			taskPool.put(task!initWriter(val.buf.ptr,&mail));
+			//return mixin("cast(typeof(this)) {typeof(this).gen(),0}");
+			//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val.initWriter(val.ptr); val");
+			//return cast(typeof(this)) null;
+		}
+
+			return val;
+			//return mixin("cast(typeof(this)) {typeof(this).gen()};");
+			//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val");
+		
+	}
+
+	static typeof(this) opCall(scope const T[] init)
+	{
+		mixin("typeof(this) val = void; val.buf = typeof(this).gen(); val[0..init.length] = init[]; val.length = init.length;");
+
+		static if(Threaded)
+		{
+			import std.parallelism : taskPool, task;
+
+			taskPool.put(task!initWriter(val.buf.ptr,&mail));
+		}
+
+		return val;
+
+	}
+
+
+
+
 
 	///
 	unittest
@@ -235,13 +271,6 @@ struct StaticBuffer(InternalType = char)
 		assert(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);	
 	}
 
-	static typeof(this) opCall(scope const T[] init) @nogc @trusted nothrow
-	{
-		auto ret = opCall();
-		ret.fill!true(init);
-		return ret;
-
-	}
 
 
 	/// Number of bytes per page of memory. Use max!T instead.
@@ -265,19 +294,36 @@ struct StaticBuffer(InternalType = char)
 	private enum pagebits = pagesize - 1;  // Returns the bits that the buffer can write to.
 	private enum membits = -pagesize; // Returns the bits that signify the page position.
 	enum max = pagesize / T.sizeof; /// Returns the maximum size of the buffer depending on the size of T.
-	nothrow @nogc @trusted size_t avail() { return max - buf.length;} /// Returns how many T's of free buffer space is available.
+	nothrow @nogc @trusted @property const avail() { return max - buf.length;} /// Returns how many T's of free buffer space is available.
 	nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
-	nothrow @nogc @trusted @property size_t length() {return buf.length;} // Necessary if previous line is added.
+	nothrow @nogc @trusted @property const length() {return buf.length;} // Necessary if previous line is added.
 
 
 	T[] buf = void;
 	alias buf this;
 
-	static assert(typeof(this).sizeof == (T[]).sizeof);
+	static if (Threaded)
+	{
+		__gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
+
+		version(linux)
+			alias mailmintype = short; // Smallest size that can fit max
+		version(Windows)
+			alias mailmintype = int; // Smallest size that can fit max
+
+		//ptrdiff_t padding; 
+
+		//static assert(mail.offsetof == 16);
+	}
+	else
+		static assert(typeof(this).sizeof == (T[]).sizeof);
 
 	~this() @nogc @trusted nothrow
 	{
+
 		assert(buf.ptr != null);  // If this is hit, the destructor is called more than once. Performance decreases if true, but will run in release. 
+
+		static if(Threaded) this.fill = cast(size_t delegate(T[])) null; // Shorthand for terminate worker thread
 
 		version (Windows)
 			static assert((cast(ptrdiff_t) 0xFFFF0045 & (membits & (~pagesize))) == 0xFFFE0000);
@@ -318,8 +364,8 @@ struct StaticBuffer(InternalType = char)
 			static assert(0, "System not supported");
 
 	}
-	
-	
+
+
 	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
 	{
 		buf = (cast(T*) newbuf.ptr) [0..newbuf.length];
@@ -350,8 +396,9 @@ struct StaticBuffer(InternalType = char)
 	*		array	= Array source that is slicable and has a length property.
 	*/
 
-	public void fill(bool isSafe = false, ArrayType)(scope const ArrayType arr) // Direct write
-		if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[$]) && is(typeof(arr[0]) : T))
+	static if(!Threaded)
+	public void fill(bool isSafe = false)(scope const T[] arr) // Direct write
+		if (!Threaded)
 		{
 			assert(arr.length <= this.avail,"[SAFE] Not enough space available to fill the buffer");
 
@@ -367,74 +414,222 @@ struct StaticBuffer(InternalType = char)
 	* Params:
 	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less or equal to max or less than 2 times max after construction. 
 	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. <b>Default:</b> <font color=red>False.</font>
-	*				source	= Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/types.html">docs/types</a></font> source interface.
-	* The function "ptrdiff_t read(void[] arr)" is expected to be implemented, where arr is the free writable area of the buffer.
-	* It should return the amount of bytes written, otherwise less than or equal to zero.
-	* For examples on how to implement the read interface, see 
+	*				source	= Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font> source interface.
+	* The source should implement delegate interface is expected to be implemented, where arr is the free writable area of the buffer.
+	* A source is valid if it implements "size_t delegate(T[]) src()" -function, where T[] is the area to be filled. 
+	* The source should return the amount of elements written to the T[]. See source for examples.
 	* <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font>
-	* Returns:
-	*				True: Source is not empty and can be reused.
-	*				False: Source has been emptied.
-	*
 	*/
-	
-	public bool fill(bool isSafe = false, Source)(scope ref Source source) // Attributes defined lower
-		if (types.isSource!(Source))
-			{
 
-				static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
-
-				// Fill the empty area of the buffer. Returns less than 0 or less if source is dead.
-				scope const len = source.read((buf.ptr+buf.length)[0..this.avail]);
-
-				assert(len <= this.max);
-
-				if (len <= 0)
-					return false;
-
-				buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
-				return true;
-			}
-
-	
-	/// Usage
-	nothrow @nogc @trusted 
-		unittest 
+	static if(!Threaded)
+	public void fill(bool isSafe = false, Source)(ref Source source) // Attributes defined lower
+		if(!Threaded && !is(Source == T[]))
 		{
-			// [BASIC]
-			import buffer,source;
+			static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			StaticBuffer!char buf = StaticBuffer!()();
+			scope ptrdiff_t len = void;
 
-			ArraySource!char srcworld = ArraySource!char(" World!");
-			ArraySource!char srcbuf = ArraySource!char("buf");
+			// Fill the empty area of the buffer. Returns less than 0 if source is dead. Otherwise read amount.
+			static if(__traits(compiles, cast(ptrdiff_t) source(T[].init)))
+				len = source((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length))[0..avail]);
+			else static if(__traits(compiles, cast(ptrdiff_t) source.src()(T[].init))) // source.src
+				len = source.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length))[0..avail]);
+			else static assert(0, "Source interface not defined. See documentation for information.");
+			
 
-			buf.fill("Hello"); // Old method of filling without abstraction
-			assert(buf == "Hello");
+			assert(len <= this.max);
 
-			buf.fill(srcworld); // Old method of filling with abstraction
-			assert(buf == "Hello World!");
+			buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
 
-			buf << " -Elem"; // Modern way of filling, equivalent to .fill
-			assert(buf == "Hello World! -Elem");
-
-			buf <<= srcbuf; // Modern way of filling, equivalent to .fill!true
-			assert(buf == "Hello World! -Elembuf");
-
-			buf.length = 0; // Remove all items. O(1)
-			assert(buf == "" && buf[0..5] == "Hello"); // Elements are not truly gone until overwritten.
-
-			assert((buf << srcworld) == false); // Source consumed.
-			assert((buf <<= srcbuf) == false); // Source consumed.
 		}
 
+	/***********************************
+	* Orders the buffer to fill itself with the given abstacted reference source. A subsequent call without params is needed.
+	* Params:
+	*				source	= Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font> source interface.
+	* The source should implement delegate interface is expected to be implemented, where arr is the free writable area of the buffer.
+	* A source is valid if it implements "size_t delegate(T[]) src()" -function, where T[] is the area to be filled. 
+	* The source should return the amount of elements written to the T[]. See source for examples.
+	* <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font>
+	*/
+
+	static if(Threaded)
+		public void fill()(scope const size_t delegate(T[]) source) // Change source
+			if(Threaded)
+		{
+			import core.atomic;
+
+			(*cast(mailmintype*) &mail).atomicStore!(MemoryOrder.raw)(cast(mailmintype)max + 1); // Alert thread
+			while ((*cast(mailmintype*) &mail).atomicLoad!(MemoryOrder.raw)() == cast(mailmintype) max + 1){} // Wait till thread ready
+
+			mail.atomicStore(cast(typeof(mail)) &source); // Give source to thread
+			while (mail.atomicLoad!(MemoryOrder.raw) == cast(typeof(mail)) &source){} // Wait till thread ready
+		}
+
+
+	static if(Threaded)
+		public void fill()(size_t function(T[]) source) // Change source
+			if(Threaded)
+			{
+				import std.functional : toDelegate;
+				fill(source.toDelegate);
+			}
+
+
+	/***********************************
+	* Extends buffer by the amount of data read by the buffer and orders buffer to read additional data from the same source. 
+	* Params:
+	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less or equal to max or less than 2 times max after construction. 
+	* Safety guaranteed calls can be stacked, but a singular call is more efficient. <b>Default:</b> <font color=red>False.</font>
+	*/
+
+	static if(Threaded)
+		public void fill(bool isSafe = false)()  @nogc nothrow
+			if(Threaded)
+		{
+			import core.atomic : atomicLoad, atomicStore, cas, MemoryOrder;
+			debug import std.math : abs;
+
+			assert(buf.length <= max, "Error! Buffer length exceeds capacity or popped when no length");
+
+			scope const i = atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail);
+
+			if(i > 0) {
+				atomicStore!(MemoryOrder.raw)(*cast(mailmintype*) &mail,cast(mailmintype)-(i+length)); // Aquire more length
+				
+				static if(isSafe)
+					buf = buf.ptr[0..buf.length + i];
+				else
+					buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + i];
+			}
+			else if(!cas!(MemoryOrder.raw, MemoryOrder.raw)(cast(mailmintype*) &mail,cast(mailmintype)i,cast(mailmintype) -length)){
+				scope const x = atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail);
+					atomicStore!(MemoryOrder.raw)(*cast(mailmintype*) &mail,cast(mailmintype)-(x+length)); 
+					
+					static if(isSafe)
+						buf = buf.ptr[0..buf.length + i];
+					else
+						buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + i];
+				}
+			
+		}
+
+
+	// Concurrent background thread
+		private static void initWriter()(scope const T* ptr, scope const typeof(mail)* mailptr)
+			if(Threaded)
+		{
+				import core.atomic;
+
+			// Alternative method: Pops = -(previousLenAsNegative - currentLenAsNegative); => source(pops);
+				
+
+				scope size_t delegate(T[]) source = (T[] x) {return 0;};
+				scope T* localbuf = cast(T*) ptr;
+
+
+
+				while(true)
+				{
+					// Read mail
+					scope const typeof(mail) i = atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*)mailptr);
+
+					
+					debug {
+						import std.stdio : writeln;
+						scope(failure)
+						{
+							debug writeln("ERROR! THREAD EXITED WITHOUT AGREEMENT WITH MAIN THREAD! ", i);
+						}
+					}
+					
+
+					// Got buffer length
+					if(cast(mailmintype) i <= 0 && cast(mailmintype) i != -max) // New length received!
+					{
+						// Works as i is negative.
+						scope const read = source(localbuf[0..(max+i)]);
+						assert(read <= max);
+
+
+						if(read == 0)
+							continue;
+
+						// Write amount read to mail so that it may be extended to buffer with call to fill()
+						if(atomicExchange!(MemoryOrder.raw)(cast(mailmintype*) &mail, cast(mailmintype) read) == cast(mailmintype) max + 1)
+						{
+
+							// Order received while writing to mail
+							while(atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail) == cast(mailmintype) read){}
+							source = *cast(typeof(source)*) atomicLoad!(MemoryOrder.raw)(mail);
+							atomicStore!(MemoryOrder.raw)(mail,0); // Assume max data must be read and clear bits
+
+							if(source == null) 
+								return; // Order received to terminate.
+						}
+						else
+							localbuf = (cast(T*)((cast(ptrdiff_t)localbuf + read) & ~pagesize));
+					}
+					else if(i == cast(mailmintype) max + 1) // Order received
+					{
+						atomicStore!(MemoryOrder.raw)(*cast(mailmintype*) &mail, cast(mailmintype) -max);
+						while(atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail) == cast(mailmintype) -max){}
+						source = *cast(typeof(source)*) atomicLoad!(MemoryOrder.raw)(mail);
+						atomicStore!(MemoryOrder.raw)(mail,0); // Assume max data must be read and clear bits
+
+
+						if(source == null) 
+							return; // Order received to terminate.
+					}
+
+				} // While
+
+		} //Function
+	
 	
 
-	/// Optimization
-	unittest
-	{
-		// [INTERMEDIATE]
-		// Removing all overhead from fill by using compile-time guarantees by counting increments to slice pointer.  
+
+		/// Usage
+			unittest 
+			{
+				// [BASIC]
+				import buffer,source;
+
+				StaticBuffer!char buf = StaticBuffer!()();
+
+				// Sources could also directly use a delegate lambda => "(char[] x){return numberOfElementsWrittenToXArray}
+				auto srcworld = " World".ArraySource!char;
+				auto srcbuf = "buf".ArraySource!char;
+
+				buf.fill("Hello"); // Old method of filling without abstraction
+				assert(buf == "Hello");
+
+				buf.fill(srcworld); // Old method of filling with abstraction
+				assert(buf == "Hello World");
+
+				buf << " -Elem"; // Modern way of filling, equivalent to .fill
+				assert(buf == "Hello World -Elem");
+
+				buf <<= srcbuf; // Modern way of filling, equivalent to .fill!true
+				assert(buf == "Hello World -Elembuf");
+
+				buf.length = 0; // Remove all items. O(1)
+				assert(buf == "" && buf[0..5] == "Hello"); // Elements are not truly gone until overwritten.
+
+				// Sources should not output anything as they are used. Reusable sources can be implemented with a lambda.
+				buf << srcworld;
+				buf <<= srcbuf;
+
+				assert(buf == ""); // Previous source reads did not output to buf as they were empty.
+			}
+
+
+
+		/// Optimization
+		unittest
+		{
+			// [INTERMEDIATE]
+			// Removing all overhead from fill by using compile-time guarantees by counting increments to slice pointer.  
 
 			char[] data(size_t characters) pure nothrow @trusted
 			{
@@ -468,68 +663,68 @@ struct StaticBuffer(InternalType = char)
 			// Repeat from last comment region. Note: Setting length does not add to the pop count.
 		}
 
-	
-	/// Properties
-	unittest
-	{
-		// [ADVANCED]
-		// This is a example of how to mirror data to create new array item orders using a mirror.
-		// X will represent data that is viewed by the buffer and O data that is not viewed, but still owned by it.
-		// | will represent the mirror or page boundary. Left side of | is the first page, right side is the second.
 
-		StaticBuffer!char buf = StaticBuffer!()(); // OO|OO
-		buf.length = buf.max; // XX|OO
+		/// Properties
+		unittest
+		{
+			// [ADVANCED]
+			// This is a example of how to mirror data to create new array item orders using a mirror.
+			// X will represent data that is viewed by the buffer and O data that is not viewed, but still owned by it.
+			// | will represent the mirror or page boundary. Left side of | is the first page, right side is the second.
 
-		buf = buf[buf.max/2..$]; // OX|OO
-		buf[] = 'a'; // Set all in X to 'a'
-		buf.length = buf.max; // OX|XO
-		buf[$/2..$] = 'b'; // Set all X right side of | to 'b'
+			StaticBuffer!char buf = StaticBuffer!()(); // OO|OO
+			buf.length = buf.max; // XX|OO
 
-		// The buffer is in a mirror |, half of the buffer is in the first page and half in second page. OX|XO
-		// It is possible to invert the buffer so, that data starts with 'b' instead of 'a'.
-		// Data is identical left and right side of the mirror, thus inversion can be sought from the mirror.
+			buf = buf[buf.max/2..$]; // OX|OO
+			buf[] = 'a'; // Set all in X to 'a'
+			buf.length = buf.max; // OX|XO
+			buf[$/2..$] = 'b'; // Set all X right side of | to 'b'
 
-		// a, OX|XO
-		buf = (buf.ptr - buf.max/2)[0..buf.max]; // XX|OO
-		assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // Opt: In this case $ could be buf.max as well.
+			// The buffer is in a mirror |, half of the buffer is in the first page and half in second page. OX|XO
+			// It is possible to invert the buffer so, that data starts with 'b' instead of 'a'.
+			// Data is identical left and right side of the mirror, thus inversion can be sought from the mirror.
 
-		// b, XX|OO
-		buf = (buf.ptr + buf.max)[0..buf.length]; // OO|XX
-		assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // As seen, both sides are identical. Both pages contain a's and b's. 
+			// a, OX|XO
+			buf = (buf.ptr - buf.max/2)[0..buf.max]; // XX|OO
+			assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // Opt: In this case $ could be buf.max as well.
 
-	}
+			// b, XX|OO
+			buf = (buf.ptr + buf.max)[0..buf.length]; // OO|XX
+			assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // As seen, both sides are identical. Both pages contain a's and b's. 
 
-
+		}
 
 
-	
-
-	public auto opBinary(string op : "<<", T)(ref T rhs) 
-	{
-		return fill(rhs);
-	}
-
-	public void opBinary(string op : "<<", T)(T rhs)
-	{
-		fill(rhs);
-	}
 
 
-	public auto opOpAssign(string op : "<<", T)(ref T rhs)
-	{
-		return fill!(true)(rhs);
-	}
 
-	public void opOpAssign(string op : "<<", T)(T rhs)
-	{
-		fill!(true)(rhs);
-	}
-	
-	
-	/*
-	//  Enabling this unittest will cause socket requests every compile.
-	unittest
-	{
+
+		public void opBinary(string op : "<<", T)(ref T rhs) 
+		{
+			fill(rhs);
+		}
+
+		public void opBinary(string op : "<<", T)(T rhs)
+		{
+			fill(rhs);
+		}
+
+
+		public void opOpAssign(string op : "<<", T)(ref T rhs)
+		{
+			fill!(true)(rhs);
+		}
+
+		public void opOpAssign(string op : "<<", T)(T rhs)
+		{
+			fill!(true)(rhs);
+		}
+
+
+		/*
+		//  Enabling this unittest will cause socket requests every compile.
+		unittest
+		{
 		import std.stdio;
 		import buffer, source;
 
@@ -541,205 +736,204 @@ struct StaticBuffer(InternalType = char)
 		try {src = "192.168.1.1".NetSource;} 
 		catch(Exception e) 
 		{ 
-			// writeln("Url incorrect or network failure.");
-			return;
+		// writeln("Url incorrect or network failure.");
+		return;
 		}
 
 		bool alive;
 
 		do
 		{
-			alive = (buf << src); // Calls buffer.fill(src)
-			buf.length = 0; // Removes all elements. O(1)
+		alive = (buf << src); // Calls buffer.fill(src)
+		buf.length = 0; // Removes all elements. O(1)
 		} while (alive);
+		}
+		*/
+
+
+
+		unittest {
+			StaticBuffer!char buf = "Hello World!";
+			assert(buf.length == "Hello World!".length);
+
+			assert(buf[$/2..$].length == "World!".length);
+
+			buf.length = "Hello World".length;
+			assert(buf == "Hello World");
+
+			buf.length = "Hello".length;
+			assert(buf == "Hello");
+		}
+
+
+
 	}
-	*/
-	
-	
-	
-	unittest {
-		StaticBuffer!char buf = "Hello World!";
-		assert(buf.length == "Hello World!".length);
-		
-		assert(buf[$/2..$].length == "World!".length);
-		
-		buf.length = "Hello World".length;
-		assert(buf == "Hello World");
-
-		buf.length = "Hello".length;
-		assert(buf == "Hello");
-	}
-	
-	
-
-}
 
 
-/* 
- This is a conventional buffer that should not be used in applications.
- It is used purely for internal benchmarking when comparing a
- circular buffer implementation with copying buffers.
-*/ 
-struct StaticCopyBuffer(InternalType = char)
-{
-	alias T = InternalType;
-	/// Number of bytes per page of memory. Use max!T instead.
-	version (Windows)
-		private enum pagesize = 65_536;
-
-	else version (CRuntime_Glibc)
-		private enum pagesize = 4096; /// ditto
-
-	else version (Posix)
-		private enum pagesize = 4096; /// ditto
-
-	else
-		static assert(0, "System not supported!");
-
-	// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
-	// Page bit or pagesize in POSIX: xxxx ... xxx1 0000 0000 0000
-	// Page bits in WINDOWS: xxxx ... 1111 1111 1111 1111
-	// Page bits in POSIX: xxxx ... 1111 1111 1111
-
-	private enum pagebits = pagesize - 1;  /// Returns the bits that the buffer can write to.
-	private enum membits = -pagesize; /// Returns the bits that signify the page position.
-	enum max = (pagesize / T.sizeof) - 2; // Returns the maximum size of the buffer depending on the size of T.
-	nothrow @nogc @trusted size_t avail() { return max - buf.length;} // Returns how many T's of free buffer space is available.
-	nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
-	nothrow @nogc @trusted @property size_t length() {return buf.length;}
-
-	// Max is less than truly, so that page traversal is not possible after popping max items.
-
-	T[] buf;
-	alias buf this;
-
-	static assert(typeof(this).sizeof == (T[]).sizeof);
-
-	static typeof(this) opCall() @nogc @trusted nothrow 
+	/* 
+	This is a conventional buffer that should not be used in applications.
+	It is used purely for internal benchmarking when comparing a
+	circular buffer implementation with copying buffers.
+	*/ 
+	struct StaticCopyBuffer(InternalType = char)
 	{
-
-		scope T[] ret;
-
+		alias T = InternalType;
+		/// Number of bytes per page of memory. Use max!T instead.
 		version (Windows)
+			private enum pagesize = 65_536;
+
+		else version (CRuntime_Glibc)
+			private enum pagesize = 4096; /// ditto
+
+		else version (Posix)
+			private enum pagesize = 4096; /// ditto
+
+		else
+			static assert(0, "System not supported!");
+
+		// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
+		// Page bit or pagesize in POSIX: xxxx ... xxx1 0000 0000 0000
+		// Page bits in WINDOWS: xxxx ... 1111 1111 1111 1111
+		// Page bits in POSIX: xxxx ... 1111 1111 1111
+
+		private enum pagebits = pagesize - 1;  /// Returns the bits that the buffer can write to.
+		private enum membits = -pagesize; /// Returns the bits that signify the page position.
+		enum max = (pagesize / T.sizeof) - 2; // Returns the maximum size of the buffer depending on the size of T.
+		nothrow @nogc @trusted size_t avail() { return max - buf.length;} // Returns how many T's of free buffer space is available.
+		nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
+		nothrow @nogc @trusted @property size_t length() {return buf.length;}
+
+		// Max is less than truly, so that page traversal is not possible after popping max items.
+
+		T[] buf;
+		alias buf this;
+
+		static assert(typeof(this).sizeof == (T[]).sizeof);
+
+		static typeof(this) opCall() @nogc @trusted nothrow 
 		{
-			//pragma(msg, "Windows");
 
-			import core.sys.windows.winbase : VirtualAlloc;
-			import core.sys.windows.windef : MEM_RELEASE, MEM_COMMIT, PAGE_READWRITE, NULL;
+			scope T[] ret;
 
-			// Find a suitable large memory location in memory.
-
-			do
+			version (Windows)
 			{
-				ret = cast(T[]) VirtualAlloc(NULL, pagesize, MEM_COMMIT, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
+				//pragma(msg, "Windows");
 
-				debug
+				import core.sys.windows.winbase : VirtualAlloc;
+				import core.sys.windows.windef : MEM_RELEASE, MEM_COMMIT, PAGE_READWRITE, NULL;
+
+				// Find a suitable large memory location in memory.
+
+				do
 				{
-					import core.sys.windows.winbase : GetLastError;
-					// import core.sys.windows.windef => Check error code from here;
-					// https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+					ret = cast(T[]) VirtualAlloc(NULL, pagesize, MEM_COMMIT, PAGE_READWRITE)[0 .. 0]; // TODO: [0..0] & cast compiler optimise?
 
-					if ( ret.ptr == NULL )
-						const a = GetLastError; // Check this in debugging
+					debug
+					{
+						import core.sys.windows.winbase : GetLastError;
+						// import core.sys.windows.windef => Check error code from here;
+						// https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+
+						if ( ret.ptr == NULL )
+							const a = GetLastError; // Check this in debugging
+					}
+
 				}
-			
+				while(ret.ptr == NULL); // Outofmem
 			}
-			while(ret.ptr == NULL); // Outofmem
+
+			else version (Posix)
+			{
+				//pragma(msg, "Posix");
+
+				import core.sys.posix.sys.mman : mmap, PROT_READ, PROT_WRITE, MAP_PRIVATE, MAP_FAILED, MAP_ANON;
+
+
+				ret = cast(T[]) mmap(cast(void*) 0, pagesize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0)[0.. 0];
+				assert(ret.ptr != MAP_FAILED); //Outofmem
+			}
+
+			else
+				static assert(0, "Not supported");
+
+			assert(ret.length == 0);
+			return *(cast(typeof(this)*) &ret);
 		}
 
-		else version (Posix)
+		static typeof(this) opCall(scope const T[] init) nothrow @nogc @trusted
 		{
-			//pragma(msg, "Posix");
+			auto ret = opCall();
+			ret.fill!true(init); // Will simply add to the end, not copy all existing to start as there is nothing.
+			return ret;
 
-			import core.sys.posix.sys.mman : mmap, PROT_READ, PROT_WRITE, MAP_PRIVATE, MAP_FAILED, MAP_ANON;
-
-
-			ret = cast(T[]) mmap(cast(void*) 0, pagesize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0)[0.. 0];
-			assert(ret.ptr != MAP_FAILED); //Outofmem
 		}
 
-		else
-			static assert(0, "Not supported");
 
-		assert(ret.length == 0);
-		return *(cast(typeof(this)*) &ret);
-	}
-
-	static typeof(this) opCall(scope const T[] init) nothrow @nogc @trusted
-	{
-		auto ret = opCall();
-		ret.fill!true(init); // Will simply add to the end, not copy all existing to start as there is nothing.
-		return ret;
-
-	}
-
-
-	unittest 
-	{
-		import buffer, source;
-
-		scope bufchar = StaticCopyBuffer!()(); // Create buffer
-		assert(bufchar == "");
-
-		scope StaticCopyBuffer!int bufint = StaticCopyBuffer!int(); // Create buffer
-		assert(bufint == []);
-
-		scope StaticCopyBuffer!char fakebufchar = "Hello World!"; // Create buffer and .fill("Hello World!")
-		assert(fakebufchar.avail == fakebufchar.max - "Hello World!".length);
-
-		scope StaticCopyBuffer!int fakebufint = [1,2,3,4,5]; // Create buffer and .fill([1,2,3,4,5])
-		assert(fakebufint.avail == fakebufint.max - ([1,2,3,4,5]).length);		
-
-		scope StaticCopyBuffer!char fakebufcharlong = StaticCopyBuffer!char("Hello World!"); // Create buffer and fill("Hello World!")
-		assert(fakebufcharlong.avail == fakebufcharlong.max - "Hello World!".length);
-
-		scope StaticCopyBuffer!int fakebufintlong = StaticCopyBuffer!int([1,2,3,4,5]); // Create buffer and .fill([1,2,3,4,5])
-		assert(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);		
-	}
-	
-
-	~this() @nogc @trusted nothrow
-	{
-		assert(buf.ptr !is null); // If this is hit, the destructor is called more than once. Performance decreases by two if true, but will run in release. 
-
-		version (Windows)
-			static assert((cast(ptrdiff_t) 0xFFFF0045 & membits) == 0xFFFF0000);
-		version (Posix)
-			static assert((cast(ptrdiff_t) 0xFFFFF045 & membits) == 0xFFFFF000);
-
-		buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]; //Set the buffer to page start so that the os unmapper will work.
-
-		version (Windows)
+		unittest 
 		{
-			import core.sys.windows.windef : MEM_RELEASE;
-			import core.sys.windows.winbase : VirtualFree;
+			import buffer, source;
 
-			VirtualFree(buf.ptr, 0, MEM_RELEASE); // Works for committed memory
-			// => Oddly MEM_DECOMMIT will fail to release memory fast enough on x86 and
-			// will cause outofmemory before 100k runs.
+			scope bufchar = StaticCopyBuffer!()(); // Create buffer
+			assert(bufchar == "");
+
+			scope StaticCopyBuffer!int bufint = StaticCopyBuffer!int(); // Create buffer
+			assert(bufint == []);
+
+			scope StaticCopyBuffer!char fakebufchar = "Hello World!"; // Create buffer and .fill("Hello World!")
+			assert(fakebufchar.avail == fakebufchar.max - "Hello World!".length);
+
+			scope StaticCopyBuffer!int fakebufint = [1,2,3,4,5]; // Create buffer and .fill([1,2,3,4,5])
+			assert(fakebufint.avail == fakebufint.max - ([1,2,3,4,5]).length);		
+
+			scope StaticCopyBuffer!char fakebufcharlong = StaticCopyBuffer!char("Hello World!"); // Create buffer and fill("Hello World!")
+			assert(fakebufcharlong.avail == fakebufcharlong.max - "Hello World!".length);
+
+			scope StaticCopyBuffer!int fakebufintlong = StaticCopyBuffer!int([1,2,3,4,5]); // Create buffer and .fill([1,2,3,4,5])
+			assert(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);		
 		}
 
-		else version (Posix)
+
+		~this() @nogc @trusted nothrow
 		{
-			import core.sys.posix.sys.mman : munmap;
+			assert(buf.ptr !is null); // If this is hit, the destructor is called more than once. Performance decreases by two if true, but will run in release. 
 
-			munmap(buf.ptr, pagesize);
+			version (Windows)
+				static assert((cast(ptrdiff_t) 0xFFFF0045 & membits) == 0xFFFF0000);
+			version (Posix)
+				static assert((cast(ptrdiff_t) 0xFFFFF045 & membits) == 0xFFFFF000);
+
+			buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]; //Set the buffer to page start so that the os unmapper will work.
+
+			version (Windows)
+			{
+				import core.sys.windows.windef : MEM_RELEASE;
+				import core.sys.windows.winbase : VirtualFree;
+
+				VirtualFree(buf.ptr, 0, MEM_RELEASE); // Works for committed memory
+				// => Oddly MEM_DECOMMIT will fail to release memory fast enough on x86 and
+				// will cause outofmemory before 100k runs.
+			}
+
+			else version (Posix)
+			{
+				import core.sys.posix.sys.mman : munmap;
+
+				munmap(buf.ptr, pagesize);
+			}
+
+			else
+				static assert(0, "System not supported");
 		}
 
-		else
-			static assert(0, "System not supported");
-	}
+		void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
+		{
+			buf = (cast(T*) newbuf.ptr) [0..newbuf.length];
+		}
 
-	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
-	{
-		buf = (cast(T*) newbuf.ptr) [0..newbuf.length];
-	}
-
-	// Fill the buffer with data, pops is the popcount after last fill or construction.
-	// isSafe => pops + buf.length + this.avail <= buf.max
-	// isOptimal => pops >= buf.length
-	bool fill(bool isSafe = false, bool isOptimal = false, Source)(scope ref Source source)
-		if (types.isSource!(Source))
+		// Fill the buffer with data, pops is the popcount after last fill or construction.
+		// isSafe => pops + buf.length + this.avail <= buf.max
+		// isOptimal => pops >= buf.length
+		void fill(bool isSafe = false, bool isOptimal = false, Source)(scope const size_t delegate(T[]) source)
 		{
 			static if(!isSafe)  // Old data to start of buffer. Resets pop count.
 			{
@@ -757,124 +951,121 @@ struct StaticCopyBuffer(InternalType = char)
 				buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
 			}
 
-		// Fill the empty area of the buffer. Returns neg, an error occurred or 0, there is no more data.
-		static if(!isSafe) // Safety measures were added
-			scope const len = source.read((buf.ptr + buf.length)[0 .. this.avail]);
-		else
-			scope const len = source.read((buf.ptr + buf.length)[0 .. this.max - (((cast(ptrdiff_t)buf.ptr) & pagebits) + buf.length)]);
+			// Fill the empty area of the buffer. Returns neg, an error occurred or 0, there is no more data.
+			static if(!isSafe) // Safety measures were added
+				scope const len = source((buf.ptr + buf.length)[0 .. this.avail]);
+			else
+				scope const len = source((buf.ptr + buf.length)[0 .. this.max - (((cast(ptrdiff_t)buf.ptr) & pagebits) + buf.length)]);
 
-			if (len <= 0)
-				return false;
+			assert(len <= max);
 
 			buf = buf.ptr[0 .. buf.length + len];
-			return true;
 		}
 
-	// Fill the buffer with data, pops is the popcount after last fill or construction.
-	// isSafe => pops + buf.length + arr.length <= buf.max
-	// isOptimal => pops >= buf.length
+		// Fill the buffer with data, pops is the popcount after last fill or construction.
+		// isSafe => pops + buf.length + arr.length <= buf.max
+		// isOptimal => pops >= buf.length
 
-	void fill(bool isSafe = false, bool isOptimal = false, ArrayType)(scope const ArrayType arr) nothrow @nogc @trusted
-		if(!(types.isSource!(ArrayType)) && __traits(compiles, arr[$]) && is(typeof(arr[0]) : T))
-	{
-		assert(arr.length <= this.avail);
-
-		static if(!isSafe)  // Old data to start of buffer. Resets pop count.
+		void fill(bool isSafe = false, bool isOptimal = false)(scope const T[] arr) nothrow @nogc @trusted
 		{
-			static if(!isOptimal) // Copying will overlap with itself
+			assert(arr.length <= this.avail);
+
+			static if(!isSafe)  // Old data to start of buffer. Resets pop count.
 			{
-				// Memmove
-				import core.stdc.string : memmove;
-				memmove((cast(T*)((cast(ptrdiff_t) buf.ptr) & membits)),buf.ptr, buf.length);
+				static if(!isOptimal) // Copying will overlap with itself
+				{
+					// Memmove
+					import core.stdc.string : memmove;
+					memmove((cast(T*)((cast(ptrdiff_t) buf.ptr) & membits)),buf.ptr, buf.length);
+				}
+				else
+					// Memcpy. In windows is the same as memmove.
+					(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
+
+				buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
 			}
-			else
-				// Memcpy. In windows is the same as memmove.
-				(cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length] = buf[];
 
-			buf = (cast(T*)(cast(ptrdiff_t)buf.ptr & membits))[0..buf.length];
+			// New data to end of buffer
+			(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = cast(T[]) arr[];
+			buf = buf.ptr[0..buf.length + arr.length];
+
 		}
-
-		// New data to end of buffer
-		(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = cast(T[]) arr[];
-		buf = buf.ptr[0..buf.length + arr.length];
-
 	}
-}
 
-unittest // Test all implementations
-{
-	string data(size_t characters)
+	unittest // Test all implementations
 	{
-		char character = cast(char) 0;
-
-		char[] data;
-		data.reserve(characters);
-		data.length = characters;
-
-		foreach(i; 0 .. characters)
+		string data(size_t characters)
 		{
-			data[i] = character;
-			character++;
+			char character = cast(char) 0;
+
+			char[] data;
+			data.reserve(characters);
+			data.length = characters;
+
+			foreach(i; 0 .. characters)
+			{
+				data[i] = character;
+				character++;
+			}
+
+			return cast(string) data;						
 		}
 
-		return cast(string) data;						
+		version(Windows)
+			enum pagesize = 0x10000;
+		else version (Posix)
+			enum pagesize = 0x1000;
+
+		// pagesize-2 as copybuffer needs two bytes less than pagesize.
+		// char.max+1 as that is the amount of possible characters in a byte, including null character.
+		enum fakemax = 127 * 2 * 256; // Maximum that is dividable by two and 256 that is below pagesize-2
+		static assert(fakemax == 65024);
+
+		StaticBuffer!char sbuf = "";
+		StaticCopyBuffer!char cbuf = "";
+
+		sbuf.fill(data(fakemax));
+		cbuf.fill(data(fakemax));
+
+		assert(sbuf[0] == cast(char) 0);
+		assert(cbuf[0] == cast(char) 0);
+		assert(sbuf[1] == cast(char) 1);
+		assert(cbuf[1] == cast(char) 1);
+		assert(sbuf[(fakemax) - 2] == cast(char) 254);
+		assert(cbuf[(fakemax) - 2] == cast(char) 254);
+		assert(sbuf[(fakemax) - 1] == cast(char) 255);
+		assert(cbuf[(fakemax) - 1] == cast(char) 255);
+		assert(sbuf == cbuf);
+
+		sbuf = sbuf[$/2..$];
+		cbuf = cbuf[$/2..$];
+
+
+		assert(sbuf[0] == cast(char) 0);
+		assert(cbuf[0] == cast(char) 0);
+		assert(sbuf[1] == cast(char) 1);
+		assert(cbuf[1] == cast(char) 1);
+		assert(sbuf[(fakemax/2) - 2] == cast(char) 254);
+		assert(cbuf[(fakemax/2) - 2] == cast(char) 254);
+		assert(sbuf[(fakemax/2) - 1] == cast(char) 255);
+		assert(cbuf[(fakemax/2) - 1] == cast(char) 255);
+
+		assert(sbuf == cbuf);
+		assert(sbuf.length == cbuf.length);
+
+		sbuf.fill(data(fakemax/2));
+		cbuf.fill(data(fakemax/2));
+
+		assert(sbuf[0] == cast(char) 0);
+		assert(cbuf[0] == cast(char) 0);
+		assert(sbuf[1] == cast(char) 1);
+		assert(cbuf[1] == cast(char) 1);
+		assert(sbuf[(fakemax) - 2] == cast(char) 254);
+		assert(cbuf[(fakemax) - 2] == cast(char) 254);
+		assert(sbuf[(fakemax) - 1] == cast(char) 255);
+		assert(cbuf[(fakemax) - 1] == cast(char) 255);
+		assert(sbuf == cbuf);
+
+
+
 	}
-
-	version(Windows)
-		enum pagesize = 0x10000;
-	else version (Posix)
-		enum pagesize = 0x1000;
-
-	// pagesize-2 as copybuffer needs two bytes less than pagesize.
-	// char.max+1 as that is the amount of possible characters in a byte, including null character.
-	enum fakemax = 127 * 2 * 256; // Maximum that is dividable by two and 256 that is below pagesize-2
-	static assert(fakemax == 65024);
-
-	StaticBuffer!char sbuf = "";
-	StaticCopyBuffer!char cbuf = "";
-
-	sbuf.fill(data(fakemax));
-	cbuf.fill(data(fakemax));
-
-	assert(sbuf[0] == cast(char) 0);
-	assert(cbuf[0] == cast(char) 0);
-	assert(sbuf[1] == cast(char) 1);
-	assert(cbuf[1] == cast(char) 1);
-	assert(sbuf[(fakemax) - 2] == cast(char) 254);
-	assert(cbuf[(fakemax) - 2] == cast(char) 254);
-	assert(sbuf[(fakemax) - 1] == cast(char) 255);
-	assert(cbuf[(fakemax) - 1] == cast(char) 255);
-	assert(sbuf == cbuf);
-
-	sbuf = sbuf[$/2..$];
-	cbuf = cbuf[$/2..$];
-
-
-	assert(sbuf[0] == cast(char) 0);
-	assert(cbuf[0] == cast(char) 0);
-	assert(sbuf[1] == cast(char) 1);
-	assert(cbuf[1] == cast(char) 1);
-	assert(sbuf[(fakemax/2) - 2] == cast(char) 254);
-	assert(cbuf[(fakemax/2) - 2] == cast(char) 254);
-	assert(sbuf[(fakemax/2) - 1] == cast(char) 255);
-	assert(cbuf[(fakemax/2) - 1] == cast(char) 255);
-
-	assert(sbuf == cbuf);
-	assert(sbuf.length == cbuf.length);
-
-	sbuf.fill(data(fakemax/2));
-	cbuf.fill(data(fakemax/2));
-
-	assert(sbuf[0] == cast(char) 0);
-	assert(cbuf[0] == cast(char) 0);
-	assert(sbuf[1] == cast(char) 1);
-	assert(cbuf[1] == cast(char) 1);
-	assert(sbuf[(fakemax) - 2] == cast(char) 254);
-	assert(cbuf[(fakemax) - 2] == cast(char) 254);
-	assert(sbuf[(fakemax) - 1] == cast(char) 255);
-	assert(cbuf[(fakemax) - 1] == cast(char) 255);
-	assert(sbuf == cbuf);
-
-
-
-}
