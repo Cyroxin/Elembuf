@@ -1,3 +1,10 @@
+/**
+* <a href="https://cyroxin.github.io/Elembuf/source.html">&#11148;</a>
+* Macros:
+* SOURCE = <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a>
+* BUFFER = <a href="https://cyroxin.github.io/Elembuf/buffer.html">docs/buffer</a>
+*/
+
 module buffer;
 
 
@@ -17,24 +24,35 @@ private version (linux)
 
 }
 
+
+
+
 /***********************************
-* Dynamic buffer with a maximum length of one memory page which can take up to <a href="#StaticBuffer.max">max</a> elements.
+* Dynamic buffer with a maximum length of one memory page which can take up to <a href="#Buffer.max">max</a> elements.
 * Takes an advantage of the system's memory mirroring capabillities to
 * create a memory loop so that memory copying wont be necessary.
 * The buffer may be manipulated normally as if it were a T[].
 *
-* Note:
-*				1. Setting the buffer to anything else than memory that the buffer owns will cause memory leaks and exceptions.
-*				2. <b style="color:blue;">[WINDOWS]</b> Only one instance of this type, or any type that creates a file in memory, is allowed.
 * Params:
-*			T	= Element type which the buffer will hold. Defaults to char.
+*			InternalType= Element type which the buffer will hold. 
+*			Threaded	= Create a background thread to fill the buffer. Makes it no longer directly castable to T[].
+* Bugs:
+*				- Setting the buffer to anything else than memory that the buffer owns will cause an exception.
+*				- <b style="color:blue;">[WINDOWS]</b> Only one instance of this type, or any type that creates a file in memory, is allowed.
+* $(BR)
+* - - -
+*
 */
 
-struct StaticBuffer(InternalType = char, bool Threaded = false)
+
+struct Buffer(InternalType = char, bool Threaded = false)
 {
+
+	
+
+
 	alias T = InternalType;
 
-	///
 	static T[] gen() @trusted
 	{
 		T[] ret;
@@ -226,6 +244,8 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 		
 	}
 
+
+
 	static typeof(this) opCall(scope const T[] init)
 	{
 		mixin("typeof(this) val = void; val.buf = typeof(this).gen(); val[0..init.length] = init[]; val.length = init.length;");
@@ -243,60 +263,29 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 
 
 
-
-
-	///
-	unittest
-	{
-		import buffer, source;
-
-		scope bufchar = StaticBuffer!()(); // Create buffer, defaults to char[]
-		assert(bufchar == "");
-
-		scope StaticBuffer!int bufint = StaticBuffer!int(); // Create buffer of int[]
-		assert(bufint == []);
-
-		// With fill, internally calls constructor and then fill()
-
-		scope StaticBuffer!char fakebufchar = "Hello World!";
-		assert(fakebufchar.avail == fakebufchar.max - "Hello World!".length);
-
-		scope StaticBuffer!int fakebufint = [1,2,3,4,5];
-		assert(fakebufint.avail == fakebufint.max - ([1,2,3,4,5]).length);		
-
-		scope StaticBuffer!char fakebufcharlong = StaticBuffer!char("Hello World!");
-		assert(fakebufcharlong.avail == fakebufcharlong.max - "Hello World!".length);
-
-		scope StaticBuffer!int fakebufintlong = StaticBuffer!int([1,2,3,4,5]);
-		assert(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);	
-	}
-
-
-
 	/// Number of bytes per page of memory. Use max!T instead.
 	version (Windows)
-		private enum pagesize = 65_536;
-
-	else version (CRuntime_Glibc)
-		private enum pagesize = 4096; /// ditto
-
-	else version (Posix)
-		private enum pagesize = 4096; /// ditto
-
-	else
-		static assert(0, "System not supported!");
+		private enum pagesize = 65_536; // This is actually allocation granularity, memory maps must be power of this.
+	else {
+		import core.memory : minimumPageSize;
+		private enum pagesize = minimumPageSize; // Other platforms do not have allocation granularity, but only pagesize.
+	}
 
 	// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
-	// Page bit or pagesize in POSIX: xxxx ... xxx1 0000 0000 0000
+	// Page bit or pagesize in LINUX: xxxx ... xxx1 0000 0000 0000
 	// Page bits in WINDOWS: xxxx ... 1111 1111 1111 1111
-	// Page bits in POSIX: xxxx ... 1111 1111 1111
+	// Page bits in LINUX: xxxx ... 1111 1111 1111
+
 
 	private enum pagebits = pagesize - 1;  // Returns the bits that the buffer can write to.
 	private enum membits = -pagesize; // Returns the bits that signify the page position.
-	enum max = pagesize / T.sizeof; /// Returns the maximum size of the buffer depending on the size of T.
-	nothrow @nogc @trusted @property const avail() { return max - buf.length;} /// Returns how many T's of free buffer space is available.
+
 	nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
 	nothrow @nogc @trusted @property const length() {return buf.length;} // Necessary if previous line is added.
+
+	enum max = pagesize / T.sizeof; /// Returns the maximum size of the buffer depending on the size of T.
+	nothrow @nogc @trusted @property const avail() { return max - buf.length;} // Returns how many T's of free buffer space is available. 
+
 
 
 	T[] buf = void;
@@ -306,14 +295,14 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 	{
 		__gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
 
-		version(linux)
-			alias mailmintype = short; // Smallest size that can fit max
-		version(Windows)
-			alias mailmintype = int; // Smallest size that can fit max
-
-		//ptrdiff_t padding; 
-
-		//static assert(mail.offsetof == 16);
+		static if(max <= byte.max)
+			alias mailmintype = byte;
+		else static if(max <= short.max)
+			alias mailmintype = short;
+		else static if(max <= int.max)
+			alias mailmintype = int;
+		else
+			alias mailmintype = typeof(mail);
 	}
 	else
 		static assert(typeof(this).sizeof == (T[]).sizeof);
@@ -327,7 +316,7 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 
 		version (Windows)
 			static assert((cast(ptrdiff_t) 0xFFFF0045 & (membits & (~pagesize))) == 0xFFFE0000);
-		version (Posix)
+		version (linux)
 			static assert((cast(ptrdiff_t) 0xFFFFF045 & (membits & (~pagesize))) == 0xFFFFE000);
 
 		//Set the buffer to page start so that the os unmapper will work. TODO: Check if some OS can do this for us.
@@ -374,7 +363,7 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 
 	unittest 
 	{
-		scope StaticBuffer!char buf = StaticBuffer!()();
+		scope Buffer!char buf = Buffer!()();
 
 		// Mirroring test
 		buf[buf.max] = 'a';
@@ -388,12 +377,12 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 	* In this variant of fill, consuming the source is not needed nor is returning lifetime.
 	* The following must be true on function call:
 	* ---
-	* assert(buffer.avail >= array.length);
+	* assert(buffer.avail >= arr.length);
 	* ---
 	* Params:
 	*		isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less than max or less than 2 times max after construction. 
-	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. <b>Default:</b> <font color=red>False.</font>
-	*		array	= Array source that is slicable and has a length property.
+	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array.
+	*		arr	= Array source that is slicable and has a length property.
 	*/
 
 	static if(!Threaded)
@@ -413,17 +402,16 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 	* Extends the buffer with new data from an abstacted reference source.
 	* Params:
 	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less or equal to max or less than 2 times max after construction. 
-	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. <b>Default:</b> <font color=red>False.</font>
-	*				source	= Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font> source interface.
-	* The source should implement delegate interface is expected to be implemented, where arr is the free writable area of the buffer.
-	* A source is valid if it implements "size_t delegate(T[]) src()" -function, where T[] is the area to be filled. 
-	* The source should return the amount of elements written to the T[]. See source for examples.
-	* <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font>
+	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. 
+	*				source	= Object that implements the $(SOURCE) src interface.
+	* A source is valid if it implements  $(D_INLINECODE $(BLUE size_t delegate)(T[]) src()) function, where T[] is the area to be filled. 
+	* The src function returns the source delegate/function, which returns the amount of elements written to the given T[].
+	* See_also: Source examples at $(SOURCE)
 	*/
 
 	static if(!Threaded)
 	public void fill(bool isSafe = false, Source)(ref Source source) // Attributes defined lower
-		if(!Threaded && !is(Source == T[]))
+		if(!Threaded)
 		{
 			static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
@@ -431,7 +419,7 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 
 			// Fill the empty area of the buffer. Returns less than 0 if source is dead. Otherwise read amount.
 			static if(__traits(compiles, cast(ptrdiff_t) source(T[].init)))
-				len = source((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length))[0..avail]);
+				len = source((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length))[0..avail]); // source direct
 			else static if(__traits(compiles, cast(ptrdiff_t) source.src()(T[].init))) // source.src
 				len = source.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length))[0..avail]);
 			else static assert(0, "Source interface not defined. See documentation for information.");
@@ -444,17 +432,17 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 		}
 
 	/***********************************
-	* Orders the buffer to fill itself with the given abstacted reference source. A subsequent call without params is needed.
+	* Sets the source which the buffer uses to fill itself. A subsequent call without params is needed
+	* to query the background thread for new data.
 	* Params:
-	*				source	= Object that implements the <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font> source interface.
-	* The source should implement delegate interface is expected to be implemented, where arr is the free writable area of the buffer.
-	* A source is valid if it implements "size_t delegate(T[]) src()" -function, where T[] is the area to be filled. 
-	* The source should return the amount of elements written to the T[]. See source for examples.
-	* <font color="blue"><a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a></font>
+	*				source	= Object that implements the $(SOURCE) src interface.
+	* A source is valid if it implements $(D_INLINECODE $(BLUE size_t delegate)(T[]) src()) function, where T[] is the area to be filled. 
+	* The src function returns the source delegate/function, which returns the amount of elements written to the given T[].
+	* See_also: Source examples at $(SOURCE)
 	*/
 
 	static if(Threaded)
-		public void fill()(scope const size_t delegate(T[]) source) // Change source
+		public void fill()(scope const size_t delegate(T[]) source) @property // Change source
 			if(Threaded)
 		{
 			import core.atomic;
@@ -480,7 +468,7 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 	* Extends buffer by the amount of data read by the buffer and orders buffer to read additional data from the same source. 
 	* Params:
 	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less or equal to max or less than 2 times max after construction. 
-	* Safety guaranteed calls can be stacked, but a singular call is more efficient. <b>Default:</b> <font color=red>False.</font>
+	* Safety guaranteed calls can be stacked, but a singular call is more efficient.
 	*/
 
 	static if(Threaded)
@@ -589,113 +577,10 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 	
 
 
-		/// Usage
-			unittest 
-			{
-				// [BASIC]
-				import buffer,source;
-
-				StaticBuffer!char buf = StaticBuffer!()();
-
-				// Sources could also directly use a delegate lambda => "(char[] x){return numberOfElementsWrittenToXArray}
-				auto srcworld = " World".ArraySource!char;
-				auto srcbuf = "buf".ArraySource!char;
-
-				buf.fill("Hello"); // Old method of filling without abstraction
-				assert(buf == "Hello");
-
-				buf.fill(srcworld); // Old method of filling with abstraction
-				assert(buf == "Hello World");
-
-				buf << " -Elem"; // Modern way of filling, equivalent to .fill
-				assert(buf == "Hello World -Elem");
-
-				buf <<= srcbuf; // Modern way of filling, equivalent to .fill!true
-				assert(buf == "Hello World -Elembuf");
-
-				buf.length = 0; // Remove all items. O(1)
-				assert(buf == "" && buf[0..5] == "Hello"); // Elements are not truly gone until overwritten.
-
-				// Sources should not output anything as they are used. Reusable sources can be implemented with a lambda.
-				buf << srcworld;
-				buf <<= srcbuf;
-
-				assert(buf == ""); // Previous source reads did not output to buf as they were empty.
-			}
+	
 
 
-
-		/// Optimization
-		unittest
-		{
-			// [INTERMEDIATE]
-			// Removing all overhead from fill by using compile-time guarantees by counting increments to slice pointer.  
-
-			char[] data(size_t characters) pure nothrow @trusted
-			{
-				char[] arr;
-				arr.reserve(characters);
-				arr.length = characters;
-
-				arr[] = ' ';
-				return arr;
-			}
-
-			StaticBuffer!char buf = StaticBuffer!()(); /// There is (max * 2 - 1) of free pops after construction.
-
-			buf <<= data(buf.max);
-
-			buf = buf[$ .. $]; // Do work
-			assert(buf == "");
-
-			// max - 1 pops left
-
-			buf <<= data(buf.avail - 1); // In this case, (avail - 1) == (max - 1)
-
-			buf = buf[$ .. $]; // Do work
-			assert(buf == "");
-
-			// Out of free pops. Next pop will cause an exception.
-
-			buf << data(buf.max); // Safety is now reinstated by the buffer.
-			buf = buf [$..$]; // Can now pop buf.max times again!
-
-			// Repeat from last comment region. Note: Setting length does not add to the pop count.
-		}
-
-
-		/// Properties
-		unittest
-		{
-			// [ADVANCED]
-			// This is a example of how to mirror data to create new array item orders using a mirror.
-			// X will represent data that is viewed by the buffer and O data that is not viewed, but still owned by it.
-			// | will represent the mirror or page boundary. Left side of | is the first page, right side is the second.
-
-			StaticBuffer!char buf = StaticBuffer!()(); // OO|OO
-			buf.length = buf.max; // XX|OO
-
-			buf = buf[buf.max/2..$]; // OX|OO
-			buf[] = 'a'; // Set all in X to 'a'
-			buf.length = buf.max; // OX|XO
-			buf[$/2..$] = 'b'; // Set all X right side of | to 'b'
-
-			// The buffer is in a mirror |, half of the buffer is in the first page and half in second page. OX|XO
-			// It is possible to invert the buffer so, that data starts with 'b' instead of 'a'.
-			// Data is identical left and right side of the mirror, thus inversion can be sought from the mirror.
-
-			// a, OX|XO
-			buf = (buf.ptr - buf.max/2)[0..buf.max]; // XX|OO
-			assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // Opt: In this case $ could be buf.max as well.
-
-			// b, XX|OO
-			buf = (buf.ptr + buf.max)[0..buf.length]; // OO|XX
-			assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // As seen, both sides are identical. Both pages contain a's and b's. 
-
-		}
-
-
-
+		
 
 
 
@@ -721,39 +606,9 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 		}
 
 
-		/*
-		//  Enabling this unittest will cause socket requests every compile.
-		unittest
-		{
-		import std.stdio;
-		import buffer, source;
-
-		StaticBuffer!char buf = "Hello World!";
-		buf = buf[$..$]; // Pop all elements 
-
-		NetSource src;
-
-		try {src = "192.168.1.1".NetSource;} 
-		catch(Exception e) 
-		{ 
-		// writeln("Url incorrect or network failure.");
-		return;
-		}
-
-		bool alive;
-
-		do
-		{
-		alive = (buf << src); // Calls buffer.fill(src)
-		buf.length = 0; // Removes all elements. O(1)
-		} while (alive);
-		}
-		*/
-
-
 
 		unittest {
-			StaticBuffer!char buf = "Hello World!";
+			Buffer!char buf = "Hello World!";
 			assert(buf.length == "Hello World!".length);
 
 			assert(buf[$/2..$].length == "World!".length);
@@ -769,6 +624,165 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 
 	}
 
+/// Construction
+unittest
+{
+	import buffer;
+
+	scope bufchar = Buffer!()(); // Create buffer, defaults to char[]
+	assert(bufchar == "");
+
+	scope Buffer!int bufint = Buffer!int(); // Create buffer of int[]
+	assert(bufint == []);
+
+	// With fill, internally calls constructor and then fill()
+
+	scope Buffer!char fakebufchar = "Hello World!";
+	assert(fakebufchar.avail == fakebufchar.max - "Hello World!".length);
+
+	scope Buffer!int fakebufint = [1,2,3,4,5];
+	assert(fakebufint.avail == fakebufint.max - ([1,2,3,4,5]).length);		
+
+	scope Buffer!char fakebufcharlong = Buffer!char("Hello World!");
+	assert(fakebufcharlong.avail == fakebufcharlong.max - "Hello World!".length);
+
+	scope Buffer!int fakebufintlong = Buffer!int([1,2,3,4,5]);
+	assert(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);	
+}
+
+
+/// Usage
+unittest 
+{
+	// [BASIC]
+	import buffer,source;
+
+	Buffer!char buf = Buffer!()();
+
+	// Sources could also directly use a delegate lambda => "(char[] x){return numberOfElementsWrittenToXArray}"
+	auto srcworld = " World".ArraySource!char;
+	auto srcbuf = "buf".ArraySource!char;
+
+	buf.fill("Hello"); // Old method of filling without abstraction
+	assert(buf == "Hello");
+
+	buf.fill(srcworld); // Old method of filling with abstraction
+	assert(buf == "Hello World");
+
+	buf << " -Elem"; // Modern way of filling, equivalent to .fill
+	assert(buf == "Hello World -Elem");
+
+	buf <<= srcbuf; // Modern way of filling, equivalent to .fill!true
+	assert(buf == "Hello World -Elembuf");
+
+	buf.length = 0; // Remove all items. O(1)
+	assert(buf == "" && buf[0..5] == "Hello"); // Elements are not truly gone until overwritten.
+
+	// Sources should not output anything as they are used. Reusable sources can be implemented with a lambda.
+	buf << srcworld;
+	buf <<= srcbuf;
+
+	assert(buf == ""); // Previous source reads did not output to buf as they were empty.
+}
+
+
+/// Optimization
+unittest
+{
+	// [INTERMEDIATE]
+	// Removing all overhead from fill by using compile-time guarantees by counting increments to slice pointer.  
+
+	import buffer;
+
+	char[] data(size_t characters) pure nothrow @trusted
+	{
+		char[] arr;
+		arr.reserve(characters);
+		arr.length = characters;
+
+		arr[] = ' ';
+		return arr;
+	}
+
+	Buffer!char buf = Buffer!()(); /// There is (max * 2 - 1) of free pops after construction and max after fill.
+
+	// max * 2 - 1 pops left
+
+	buf <<= data(buf.max); // '=' signifies unsafe fill. it is proven safe in this example
+	buf = buf[$ .. $]; // Do work
+
+	assert(buf == "");
+
+	// max - 1 pops left
+
+	assert(buf.avail - 1 == buf.max - 1);
+
+	buf <<= data(buf.avail - 1); // In this case, (avail - 1) == (max - 1)
+	buf = buf[$ .. $]; // We've now used our pops => 0 pops available
+
+	assert(buf == "");
+
+	// Out of free pops after construction. Next pop to an unsafely filled buffer will cause an exception eventually.
+	// From this point on, every safe fill will set max to available pops
+
+	buf << data(0); // Safety is now reinstated by the buffer. => Max pops available
+	assert(buf == ""); // While there are max pops available, there is nothing to pop
+
+	buf <<= "a";
+	buf <<= data(buf.max-1);
+
+	assert(buf[0] == 'a');
+	buf = buf [$..$]; // We've now used our pops => 0 pops available
+
+	// Note: Changing length does not add to the pop count.
+
+	buf << data(buf.max);
+	buf.length = buf.max/2; // Setting length is @nogc in a buffer
+	buf <<= data(buf.max/2); // We still have max pops.
+
+	buf = buf [$..$]; // We've now used our pops => 0 pops available
+
+}
+
+
+
+/// Properties
+unittest
+{
+	// [ADVANCED]
+	// This is a example of how to mirror data to create new array item orders using a mirror.
+	// X will represent max/2 amount of data that is viewed by the buffer and O data that is not viewed, but still owned by it.
+	// | will represent the mirror or page boundary. Left side of | is reality and right side is the mirror image.
+
+	// OO|OO => First O is identical to third O & Second O is identical to fourth O.
+	// XX|OO Length is max.
+	// OX|OO max/2 is popped
+	// OX|XO Length is max => Data order is now reversed, First is the second half of max/2 and then is the first half.
+	// Example on how to do this:
+
+	import buffer;
+
+	Buffer!char buf = Buffer!()(); // OO|OO
+	buf.length = buf.max; // XX|OO
+
+	buf = buf[buf.max/2..$]; // OX|OO
+	buf[] = 'a'; // Set all in X to 'a' => 0a|0a
+	buf.length = buf.max; // OX|XO
+	buf[$/2..$] = 'b'; // Set all X right side of | to 'b' => ba|ba
+
+	// The buffer is in a mirror |, half of the buffer is in the first page and half in second page. OX|XO
+	// It is possible to invert the buffer so, that data starts with 'b' instead of 'a'.
+	// Data is identical left and right side of the mirror, thus inversion can be sought from the mirror.
+
+	// a, OX|XO
+	buf = (buf.ptr - buf.max/2)[0..buf.max]; // XX|OO
+	assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // Opt: In this case $ could be buf.max as well.
+
+	// b, XX|OO
+	buf = (buf.ptr + buf.max)[0..buf.length]; // OO|XX
+	assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // As seen, both sides are identical. Both pages contain a's and b's. 
+
+} 
 
 	/* 
 	This is a conventional buffer that should not be used in applications.
@@ -779,17 +793,13 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 	{
 		alias T = InternalType;
 		/// Number of bytes per page of memory. Use max!T instead.
+
 		version (Windows)
-			private enum pagesize = 65_536;
-
-		else version (CRuntime_Glibc)
-			private enum pagesize = 4096; /// ditto
-
-		else version (Posix)
-			private enum pagesize = 4096; /// ditto
-
-		else
-			static assert(0, "System not supported!");
+			private enum pagesize = 65_536; // This is actually allocation granularity, memory maps must be power of this.
+		else {
+			import core.memory : minimumPageSize;
+			private enum pagesize = minimumPageSize; // Other platforms do not have allocation granularity, but only pagesize.
+		}
 
 		// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
 		// Page bit or pagesize in POSIX: xxxx ... xxx1 0000 0000 0000
@@ -899,7 +909,7 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 
 			version (Windows)
 				static assert((cast(ptrdiff_t) 0xFFFF0045 & membits) == 0xFFFF0000);
-			version (Posix)
+			version (linux)
 				static assert((cast(ptrdiff_t) 0xFFFFF045 & membits) == 0xFFFFF000);
 
 			buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & membits))[0..buf.length]; //Set the buffer to page start so that the os unmapper will work.
@@ -1011,17 +1021,10 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 			return cast(string) data;						
 		}
 
-		version(Windows)
-			enum pagesize = 0x10000;
-		else version (Posix)
-			enum pagesize = 0x1000;
+		
+		enum fakemax = (char.max+1)*2;
 
-		// pagesize-2 as copybuffer needs two bytes less than pagesize.
-		// char.max+1 as that is the amount of possible characters in a byte, including null character.
-		enum fakemax = 127 * 2 * 256; // Maximum that is dividable by two and 256 that is below pagesize-2
-		static assert(fakemax == 65024);
-
-		StaticBuffer!char sbuf = "";
+		Buffer!char sbuf = "";
 		StaticCopyBuffer!char cbuf = "";
 
 		sbuf.fill(data(fakemax));
@@ -1065,7 +1068,5 @@ struct StaticBuffer(InternalType = char, bool Threaded = false)
 		assert(sbuf[(fakemax) - 1] == cast(char) 255);
 		assert(cbuf[(fakemax) - 1] == cast(char) 255);
 		assert(sbuf == cbuf);
-
-
 
 	}

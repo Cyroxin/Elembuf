@@ -509,7 +509,15 @@
     <div class="content_wrapper">
       <article class="module">
         <h1 class="module_name">source</h1>
-        <section id="module_content">
+        <section id="module_content"><section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    <a href="https://cyroxin.github.io/Elembuf/buffer.html">&#11148;</a>
+
+  </p>
+</div>
+
+</section>
 <section class="section ddoc_module_members_section">
   <div class="ddoc_module_members">
     <ul class="ddoc_members">
@@ -537,11 +545,27 @@
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Downloads data from a specified ip address or link. Does not check for validity of the address.
-When the source blocks, a custom delegate defined in the compile time parameter will be called.
+    Downloads data from a specified ip address or link. Does not properly check for validity of the address.
+
   </p>
 </div>
-
+<div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="string_literal">"www.bing.com"</span>.<span class="psymbol">NetSource</span>;
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+<hr />
+  </p>
+</div>
 </section>
 <ul class="ddoc_members">
   <li class="ddoc_member">
@@ -556,7 +580,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="NetSource.empty"></span>@property auto <code class="code">empty</code>();
+            <span class="ddoc_anchor" id="NetSource.empty"></span>bool <code class="code">empty</code>();
 
           </code>
         </p>
@@ -568,7 +592,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Checks if our socket has been closed by the sender. Does not check for html closures.
+    Checks if the socket has been closed by the sender. Does not check for html based closures.
   </p>
 </div>
 
@@ -579,7 +603,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
 </li><li class="ddoc_member">
   <div class="ddoc_member_header">
   <div class="ddoc_header_anchor">
-  <a href="#NetSource.this" id="NetSource.this"><code class="code">this</code></a>
+  <a href="#NetSource.src" id="NetSource.src"><code class="code">src</code></a>
 </div>
 </div><div class="ddoc_decl">
   <section class="section">
@@ -588,7 +612,7 @@ When the source blocks, a custom delegate defined in the compile time parameter 
       <div class="dlang">
         <p class="para">
           <code class="code">
-            <span class="ddoc_anchor" id="NetSource.this"></span>@trusted this(const char[] <code class="code">ip</code>);
+            <span class="ddoc_anchor" id="NetSource.src"></span>@nogc auto <code class="code">src</code>()();
 
           </code>
         </p>
@@ -600,7 +624,54 @@ When the source blocks, a custom delegate defined in the compile time parameter 
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Creates a connection by parsing an <code class="code">ip</code> or url from a string.
+    Read interface implementation example.
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+    	NetSource depicts a great example on implementing a source.
+<br><br>
+	The first parameter must be a T[] for the Source to work for all buffers. Other parameters must be optional.
+	As seen from the example, NetSource only works when the underlying buffer is a char[].
+<br><br>
+<br><br>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">auto</span> <span class="psymbol">src</span>()
+{
+	<span class="keyword">return</span> (<span class="keyword">char</span>[] x)
+	{
+		<span class="keyword">auto</span> len = sock.receive(x);
+
+		<span class="keyword">if</span> (len &lt; 0)
+		{
+			<span class="keyword">if</span> (wouldHaveBlocked)
+			{
+				<span class="keyword">return</span> 0;
+			}
+			<span class="keyword">else</span>
+			{
+				_empty = <span class="keyword">true</span>;
+				<span class="keyword">return</span> 0;
+			}
+		}
+		<span class="keyword">else</span>
+		{
+			<span class="keyword">return</span> len;
+		}
+	};
+}
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
   </p>
 </div>
 
@@ -637,11 +708,104 @@ When the source blocks, a custom delegate defined in the compile time parameter 
   <section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    Source that reads from an array as if it were a <code class="code">true</code> source. This is best used only for debugging or testing.
+    Source that reads from an array as if it were a <code class="code">true</code> source. This is best used for debugging or testing.
+
+  </p>
+</div>
+<div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="string_literal">"World"</span>.<span class="psymbol">ArraySource</span>!<span class="keyword">char</span>;
+([0,1,2,3,4,5]).<span class="psymbol">ArraySource</span>!<span class="keyword">int</span>;
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+<hr />
+  </p>
+</div>
+</section>
+<ul class="ddoc_members">
+  <li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#ArraySource.src" id="ArraySource.src"><code class="code">src</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="ArraySource.src"></span>auto <code class="code">src</code>();
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Read interface implementation example.
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+     This is what is currently inside ArraySource. It is a simple example of implementing a source.
+ The source has a simple T[] called arr as an internal variable, which it pops whenever the source is read.
+<br><br>
+ Array source works for all buffers of type T[].
+<br><br>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">auto</span> <span class="psymbol">src</span>()
+{
+	<span class="keyword">return</span> (T[] x)
+	{
+		<span class="keyword">if</span> (arr.length &gt; x.length)
+		{
+			x[] = arr.ptr[0..x.length];
+			arr = arr.ptr[x.length .. arr.length];
+			<span class="keyword">return</span> x.length;
+		}
+		<span class="keyword">else</span>
+		{
+			x[0..arr.length] = arr.ptr[0..arr.length];
+			<span class="keyword">scope</span>(exit) arr = arr.ptr[0..0]; <span class="comment">// It is safe to not reset, as it cannot be reused.
+</span>			<span class="keyword">return</span> arr.length;
+		}
+	};
+}
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
   </p>
 </div>
 
 </section>
+
+</div>
+
+</li>
+</ul>
 
 </div>
 

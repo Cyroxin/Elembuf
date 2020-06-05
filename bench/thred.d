@@ -50,7 +50,7 @@ void thredmain()
 
 
 	{
-		scope StaticBuffer!(char, true) threadedbuf = "";
+		scope Buffer!(char, true) threadedbuf = "";
 		threadedbuf.fill = src;
 
 
@@ -81,7 +81,7 @@ void thredmain()
 
 
 	{
-	scope StaticBuffer!(char,false) buf = "";
+	scope Buffer!(char,false) buf = "";
 	sw.reset;
 
 	while(sw.peek() < dur!"seconds"(30))

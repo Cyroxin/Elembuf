@@ -26,7 +26,7 @@ void implemmain()
 {
 	import std.datetime.stopwatch;
 
-	auto sbuffer = StaticBuffer!()();
+	auto sbuffer = Buffer!()();
 	auto cbuffer = StaticCopyBuffer!()();
 
 	// INFO:
@@ -34,7 +34,7 @@ void implemmain()
 	// The benchmark writes half a page worth of data (%runs) times by reusing the buffer.
 	// Amount of reuses indicates how many fills needs to be done to make using circularbuffer worth it.
 
-	// StaticBuffer is filled less than its nominal capacity as it is slightly larger than copybuffer,
+	// Buffer is filled less than its nominal capacity as it is slightly larger than copybuffer,
 	// this is due to copybuffer optimizations.
 
 	
@@ -42,7 +42,7 @@ void implemmain()
 
 	sw.start;
 	foreach(i; 0..runs)
-		scope const _temp = StaticBuffer!()();
+		scope const _temp = Buffer!()();
 	sw.stop;
 
 	const bufcon = sw.peek/runs;

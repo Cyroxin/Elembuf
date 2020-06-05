@@ -403,7 +403,7 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>0</useUnitTests>
+  <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
   <release>1</release>
   <preservePaths>0</preservePaths>
@@ -994,7 +994,9 @@
    <File path="docs\buffer.html" />
    <File path="docs\source.html" />
   </Folder>
-  <File path="src\buffer.d" />
-  <File path="src\source.d" />
+  <Folder name="src">
+   <File path="src\buffer.d" />
+   <File path="src\source.d" />
+  </Folder>
  </Folder>
 </DProject>
