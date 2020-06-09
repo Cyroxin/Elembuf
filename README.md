@@ -1,3 +1,5 @@
+<img src="logo.png" align="left" height="96" width="96" >
+
 # Elembuf
 An efficient and simple to use buffer/array for data manipulation.
 #
@@ -10,7 +12,7 @@ A circular buffer can be thought of as an array that can eliminate program side 
 
 Elembuf is an implementation of a circular buffer. It is however different from a regular circular buffer in that it is as compact as an array, infact it is indistinquishable from a regular array and it can even be directly casted to it. Allocated memory of an Elembuf is internally memory mapped to work like a mirror of itself and it achieves higher speeds by allocating to a custom memory position. The mirroring properties of the implementation give additional benefits to encryption and compression algorithms. You may however use Elembuf for any purpose which a regular array is used for, such as when parsing data, reading files or assembling data. 
 
-As construction speed is slightly slower than with a regular array, reusage is key to the function of an Elembuf. You should construct the buffer at the start of the program, or at server boot, and change the source where data is received instead of deconstructing the array/buffer. This way you can take advantage of the filling speed compared to a normal array. 
+As construction speed is slightly slower than with a regular array, thus reusage is key to the function of an Elembuf. You should construct the buffer at the start of the program, or at server boot, and change the source where data is received instead of deconstructing the array/buffer. This way you can take advantage of the filling speed compared to a normal array. 
 
 Elembuf currently works for Windows, Linux, Mac and other Posix compatible systems. 
 
