@@ -22,7 +22,6 @@ matrix:
     - os: linux 
       arch: arm64
       d: ldc
-      name: "Android"
     - os: linux
       d: ldc
       env: ARCH="x86"
