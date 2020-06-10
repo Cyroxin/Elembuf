@@ -8,8 +8,14 @@
 module buffer;
 
 
-private version (linux)
+version (linux)
 {
+	static if(X86_64 || X86 || AArch64 || ARM || SPARC || SPARC64 || PPC || PPC64 || Alpha || AVR || HPPA || IA64 || MIPS_O32 || MIPS_N32 || MIPS_N64 || S390 || SystemZ || SH)
+		enum memfd = true;
+
+	static if(memfd)
+	{
+
 	import core.stdc.config : c_long;
 	extern (C) c_long syscall (c_long SYS, ...) @nogc nothrow;
 
@@ -21,8 +27,8 @@ private version (linux)
 			return cast(int) syscall(319, name, flags);
 		else version(X86)
 			return cast(int) syscall(356, name, flags);
-		//else version(AArch64)
-		//	return cast(int) syscall(385, name, flags);
+		else version(AArch64)
+			return cast(int) syscall(279, name, flags);
 		else version(ARM)
 			return cast(int) syscall(385, name, flags);
 		else version(SPARC)
@@ -39,8 +45,8 @@ private version (linux)
 			return cast(int) syscall(318, name, flags);
 		else version(HPPA)
 			return cast(int) syscall(340, name, flags);
-		else version(HPPA64) // No specific found, default to HPPA
-			return cast(int) syscall(340, name, flags);
+		//else version(HPPA64) // No specific found, default to HPPA
+			//return cast(int) syscall(340, name, flags);
 		else version(IA64)
 			return cast(int) syscall(316, name, flags);
 		else version(MIPS_O32)
@@ -55,8 +61,6 @@ private version (linux)
 			return cast(int) syscall(350, name, flags);
 		else version(SH)
 			return cast(int) syscall(374, name, flags);
-		else
-			return cast(int) syscall(279, name, flags); // 32 & 64
 
 		// Missing versions
 		// SH64 - 385
@@ -65,6 +69,8 @@ private version (linux)
 		// m68k - 353
 		// microblaze - 386
 		// xtensa - 339
+	}
+	
 	}
 
 }
@@ -154,7 +160,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 		}
 
 
-		else version (linux)
+		else static if(memfd) // Linux that supports memfd_create
 		{
 			//pragma(msg, "CRuntime_Glibc");
 
