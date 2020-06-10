@@ -14,12 +14,12 @@ matrix:
       d: ldc
     - os: linux
       d: dmd
-      script: dub test --arch "$ARCH"
       env: ARCH="x86"
+      script: dub test --arch "$ARCH"
     - os: linux
       d: ldc
-      script: dub test --arch "$ARCH"
       env: ARCH="x86"
+      script: dub test --arch "$ARCH"
     - os: linux 
       arc: arm64
       d: ldc
