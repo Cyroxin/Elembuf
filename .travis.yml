@@ -13,11 +13,11 @@ matrix:
     - os: osx
       d: ldc
     - os: linux
-      d: dmd-2.071.0
+      d: dmd
       script: dub test --arch "$ARCH"
       env: ARCH="x86"
     - os: linux
-      d: ldc-1.0.0
+      d: ldc
       script: dub test --arch "$ARCH"
       env: ARCH="x86"
     - os: linux 
