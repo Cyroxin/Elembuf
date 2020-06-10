@@ -7,23 +7,18 @@ matrix:
   - stage: "dmd" 
       os: linux
       d: dmd
-      name: "Linux" 
     - os: osx
       d: dmd
-      name: "Mac"
     - os: linux
       d: dmd
       env: ARCH="x86"
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
-      name: "x86"
   - stage: "ldc" 
       os: linux
       d: ldc
-      name: "Linux" 
     - os: osx
       d: ldc
-      name: "Mac" 
     - os: linux 
       arch: arm64
       d: ldc
@@ -33,4 +28,3 @@ matrix:
       env: ARCH="x86"
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
-      name: "x86"
