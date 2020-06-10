@@ -1,18 +1,22 @@
 # latest dmd, gdc and ldc
 language: d
 
+env:
+ - ARCH="x86_64"
+ 
 matrix:
   include:
     - {os: linux, d: dmd}
     - {os: linux, d: ldc}
-    - {os: linux, d: gdc}
     - {os: osx, d: dmd}
     - {os: osx, d: ldc}
-    - {os: osx, d: gdc}
     - {os: linux, arc: arm64, d: dmd}
     - {os: linux, arc: ppc64le, d: dmd}
     - {os: linux, arc: s390x, d: dmd}
+    - {os: linux, d: dmd-2.071.0, script: - dub test --arch "$ARCH", env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
+    - {os: linux, d: ldc-1.0.0, script: - dub test --arch "$ARCH", tenv: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
+  allow_failures:
+    - {os: osx, d: gdc}
+    - {os: linux, d: gdc}
     
-    #- {os: linux, d: dmd-2.071.0, env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
-    #- {os: linux, d: ldc-1.0.0, env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
 
