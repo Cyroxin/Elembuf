@@ -14,16 +14,16 @@ matrix:
       d: ldc
     - os: linux 
       arc: arm64
-      d: dmd
+      d: ldc
     - os: linux 
       arc: ppc64le
-      d: dmd
+      d: ldc
     - os: linux 
       arc: s390x
-      d: dmd
+      d: ldc
   allow_failures:
     - os: osx
-      d: gdc}
+      d: gdc
     - os: linux
       d: gdc
 
