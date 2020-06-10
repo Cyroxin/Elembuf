@@ -1,5 +1,34 @@
+# latest dmd, gdc and ldc
 language: d
-os:
-   - windows
-   - osx
-   - linux
+
+ 
+matrix:
+  include:
+    - os: linux,
+      d: dmd
+    - os: linux, 
+      d: ldc
+    - os: osx
+      d: dmd
+    - os: osx
+      d: ldc
+    - os: linux 
+      arc: arm64
+      d: ldc
+    - os: linux 
+      arc: ppc64le
+      d: ldc
+    - os: linux 
+      arc: s390x
+      d: ldc
+  allow_failures:
+    - os: osx
+      d: gdc
+    - os: linux
+      d: gdc
+
+ 
+    #- {os: linux, d: dmd-2.071.0, script: - dub test --arch "$ARCH", env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
+    #- {os: linux, d: ldc-1.0.0, script: - dub test --arch "$ARCH", env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
+    
+
