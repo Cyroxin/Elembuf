@@ -5,7 +5,7 @@ language: d
 matrix:
   include:
   - stage: "dmd" 
-    - os: linux
+      os: linux
       d: dmd
       name: "Linux" 
     - os: osx
@@ -18,14 +18,14 @@ matrix:
       script: dub test --arch "$ARCH"
       name: "x86"
   - stage: "ldc" 
-    - os: linux
+      os: linux
       d: ldc
       name: "Linux" 
     - os: osx
       d: ldc
       name: "Mac" 
     - os: linux 
-      arc: arm64
+      arch: arm64
       d: ldc
       name: "Android"
     - os: linux
