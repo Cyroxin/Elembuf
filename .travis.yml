@@ -1,12 +1,14 @@
 # latest dmd, gdc and ldc
-d:
-  - dmd
-  - gdc
-  - ldc
-  
-  os:
- - linux
- - osx
+language: d
+
+matrix:
+  include:
+    - {os: linux, d: dmd}
+    - {os: linux, d: ldc}
+    - {os: linux, d: gdc}
+    - {os: osx, d: dmd}
+    - {os: osx, d: ldc}
+    - {os: osx, d: gdc}
  
  env:
  - ARCH="x86_64"
