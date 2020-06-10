@@ -21,8 +21,8 @@ private version (linux)
 			return cast(int) syscall(319, name, flags);
 		else version(X86)
 			return cast(int) syscall(356, name, flags);
-		else version(AArch64)
-			return cast(int) syscall(385, name, flags);
+		//else version(AArch64)
+		//	return cast(int) syscall(385, name, flags);
 		else version(ARM)
 			return cast(int) syscall(385, name, flags);
 		else version(SPARC)
