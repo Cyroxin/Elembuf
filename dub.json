@@ -1,0 +1,10 @@
+{
+	"authors": [
+		"Cyroxin"
+	],
+	"copyright": "Copyright © 2020, Cyroxin",
+	"homepage": "https://github.com/Cyroxin/Elembuf",
+	"description": "Simple to use circular buffer/array for efficient IO",
+	"license": "MIT",
+	"name": "elembuf"
+}

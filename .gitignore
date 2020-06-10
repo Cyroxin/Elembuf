@@ -282,3 +282,5 @@ __pycache__/
 /docs/thred.html
 /docs/select.html
 /docs/implem.html
+/.dub
+*.exe

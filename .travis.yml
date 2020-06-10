@@ -1,0 +1,5 @@
+language: d
+os:
+   - windows
+   - osx
+   - linux

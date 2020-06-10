@@ -248,7 +248,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 	static typeof(this) opCall(scope const T[] init)
 	{
-		mixin("typeof(this) val = void; val.buf = typeof(this).gen(); val[0..init.length] = init[]; val.length = init.length;");
+		mixin("typeof(this) val = void; val.buf = typeof(this).gen(); val.ptr[0..init.length] = init[]; val.length = init.length;");
 
 		static if(Threaded)
 		{
@@ -280,7 +280,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 	private enum pagebits = pagesize - 1;  // Returns the bits that the buffer can write to.
 	private enum membits = -pagesize; // Returns the bits that signify the page position.
 
-	nothrow @nogc @trusted @property void length(size_t len) {buf = buf[0..len];} // Overidden so that it can be @nogc
+	nothrow @nogc @trusted @property void length(size_t len) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
 	nothrow @nogc @trusted @property const length() {return buf.length;} // Necessary if previous line is added.
 
 	enum max = pagesize / T.sizeof; /// Returns the maximum size of the buffer depending on the size of T.
@@ -358,18 +358,6 @@ struct Buffer(InternalType = char, bool Threaded = false)
 	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
 	{
 		buf = (cast(T*) newbuf.ptr) [0..newbuf.length];
-	}
-
-
-	unittest 
-	{
-		scope Buffer!char buf = Buffer!()();
-
-		// Mirroring test
-		buf[buf.max] = 'a';
-		assert(buf[0] == 'a');
-
-		scope(exit) destroy!false(buf);
 	}
 
 	/***********************************
@@ -676,7 +664,7 @@ unittest
 	assert(buf == "Hello World -Elembuf");
 
 	buf.length = 0; // Remove all items. O(1)
-	assert(buf == "" && buf[0..5] == "Hello"); // Elements are not truly gone until overwritten.
+	assert(buf == "" && buf.ptr[0..5] == "Hello"); // Elements are not truly gone until overwritten.
 
 	// Sources should not output anything as they are used. Reusable sources can be implemented with a lambda.
 	buf << srcworld;
