@@ -9,4 +9,10 @@ matrix:
     - {os: osx, d: dmd}
     - {os: osx, d: ldc}
     - {os: osx, d: gdc}
+    - {os: linux, arc: arm64, d: dmd}
+    - {os: linux, arc: ppc64le, d: dmd}
+    - {os: linux, arc: s390x, d: dmd}
+    
+    #- {os: linux, d: dmd-2.071.0, env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
+    #- {os: linux, d: ldc-1.0.0, env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
 
