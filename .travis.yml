@@ -23,18 +23,3 @@ matrix:
     - os: linux 
       arc: arm64
       d: ldc
-    - os: linux 
-      arc: s390x
-      d: gdc
-    - os: osx
-      d: gdc
-    - os: linux
-      d: gdc
-  allow_failures:
-  - os: linux 
-      arc: s390x
-      d: gdc
-    - os: osx
-      d: gdc
-    - os: linux
-      d: gdc
