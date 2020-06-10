@@ -4,7 +4,8 @@ language: d
  
 matrix:
   include:
-    - os: linux
+    - stage: "DMD"
+      os: linux
       d: dmd
     - os: osx
       d: dmd
@@ -13,7 +14,8 @@ matrix:
       env: ARCH="x86"
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
-    - os: linux
+    - stage: "LDC"
+      os: linux
       d: ldc
     - os: osx
       d: ldc
