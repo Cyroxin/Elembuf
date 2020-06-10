@@ -4,24 +4,33 @@ language: d
  
 matrix:
   include:
-    - os: linux,
+  - stage: "dmd" 
+    - os: linux
       d: dmd
-    - os: linux, 
-      d: ldc
+      name: "Linux" 
     - os: osx
       d: dmd
-    - os: osx
-      d: ldc
+      name: "Mac"
     - os: linux
       d: dmd
       env: ARCH="x86"
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
+      name: "x86"
+  - stage: "ldc" 
     - os: linux
       d: ldc
-      env: ARCH="x86"
-      addons: {apt: {packages: [[gcc-multilib]]}}
-      script: dub test --arch "$ARCH"
+      name: "Linux" 
+    - os: osx
+      d: ldc
+      name: "Mac" 
     - os: linux 
       arc: arm64
       d: ldc
+      name: "Android"
+    - os: linux
+      d: ldc
+      env: ARCH="x86"
+      addons: {apt: {packages: [[gcc-multilib]]}}
+      script: dub test --arch "$ARCH"
+      name: "x86"
