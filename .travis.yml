@@ -16,12 +16,10 @@ matrix:
       d: dmd-2.071.0
       script: - dub test --arch "$ARCH"
       env: ARCH="x86"
-      addons: {apt: {packages: [[gcc-multilib]]}}
     - os: linux
       d: ldc-1.0.0
       script: - dub test --arch "$ARCH"
       env: ARCH="x86"
-      addons: {apt: {packages: [[gcc-multilib]]}}
     - os: linux 
       arc: arm64
       d: ldc
