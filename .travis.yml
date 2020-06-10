@@ -1,8 +1,6 @@
 # latest dmd, gdc and ldc
 language: d
 
-env:
- - ARCH="x86_64"
  
 matrix:
   include:
@@ -23,10 +21,14 @@ matrix:
     - os: linux 
       arc: s390x
       d: dmd
+  allow_failures:
+    - os: osx
+      d: gdc}
+    - os: linux
+      d: gdc
+
+ 
     #- {os: linux, d: dmd-2.071.0, script: - dub test --arch "$ARCH", env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
     #- {os: linux, d: ldc-1.0.0, script: - dub test --arch "$ARCH", env: ARCH="x86", addons: {apt: {packages: [[gcc-multilib]]}}}
-  #allow_failures:
-  #  - {os: osx, d: gdc}
-   # - {os: linux, d: gdc}
     
 
