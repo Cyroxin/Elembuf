@@ -11,7 +11,7 @@ module buffer;
 version (linux)
 {
 	static if(X86_64 || X86 || AArch64 || ARM || SPARC || SPARC64 || PPC || PPC64 || Alpha || AVR || HPPA || IA64 || MIPS_O32 || MIPS_N32 || MIPS_N64 || S390 || SystemZ || SH)
-		enum memfd = true;
+		version = memfd;
 
 	static if(memfd)
 	{
@@ -160,7 +160,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 		}
 
 
-		else static if(memfd) // Linux that supports memfd_create
+		else version (memfd) // Linux that supports memfd_create
 		{
 			//pragma(msg, "CRuntime_Glibc");
 
