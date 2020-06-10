@@ -16,10 +16,55 @@ private version (linux)
 	// Creates a file in memory. See Linux manpages for further information. 
 	extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc // TODO: Add to druntime
 	{
+		// https://github.com/strace/strace/tree/master/linux
 		version(X86_64)
 			return cast(int) syscall(319, name, flags);
-		version(X86)
+		else version(X86)
 			return cast(int) syscall(356, name, flags);
+		else version(AArch64)
+			return cast(int) syscall(385, name, flags);
+		else version(ARM)
+			return cast(int) syscall(385, name, flags);
+		else version(SPARC)
+			return cast(int) syscall(348, name, flags);
+		else version(SPARC64)
+			return cast(int) syscall(348, name, flags);
+		else version(PPC)
+			return cast(int) syscall(360, name, flags);
+		else version(PPC64)
+			return cast(int) syscall(360, name, flags);
+		else version(Alpha)
+			return cast(int) syscall(512, name, flags);
+		else version(AVR)
+			return cast(int) syscall(318, name, flags);
+		else version(HPPA)
+			return cast(int) syscall(340, name, flags);
+		else version(HPPA64) // No specific found, default to HPPA
+			return cast(int) syscall(340, name, flags);
+		else version(IA64)
+			return cast(int) syscall(316, name, flags);
+		else version(MIPS_O32)
+			return cast(int) syscall(4000 + 354, name, flags);
+		else version(MIPS_N32)
+			return cast(int) syscall(6000 + 318, name, flags);
+		else version(MIPS_N64)
+			return cast(int) syscall(5000 + 314, name, flags);
+		else version(S390)
+			return cast(int) syscall(350, name, flags);
+		else version(SystemZ) //S390X
+			return cast(int) syscall(350, name, flags);
+		else version(SH)
+			return cast(int) syscall(374, name, flags);
+		else
+			return cast(int) syscall(279, name, flags); // 32 & 64
+
+		// Missing versions
+		// SH64 - 385
+		// bfin - 390
+		// i386 - 356
+		// m68k - 353
+		// microblaze - 386
+		// xtensa - 339
 	}
 
 }
