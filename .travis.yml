@@ -15,10 +15,12 @@ matrix:
     - os: linux
       d: dmd
       env: ARCH="x86"
+      addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
     - os: linux
       d: ldc
       env: ARCH="x86"
+      addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
     - os: linux 
       arc: arm64
