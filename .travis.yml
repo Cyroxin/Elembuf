@@ -4,30 +4,37 @@
 matrix:
   include:
     - stage: "DMD"
-      language: d
-      os: linux
-      d: dmd
-      name: "Linux"
-    - language: d
-      os: osx
-      d: dmd
-      name: "Mac"
-    - language: d
-      os: linux
-      d: dmd
-      env: ARCH="x86"
-      addons: {apt: {packages: [[gcc-multilib]]}}
-      script: dub test --arch "$ARCH"
-      name: "X86"
-    - language: bash
+      language: bash
       os: windows 
       script:
         - curl https://dlang.org/install.sh | bash -s
         - source $(~/dlang/install.sh dmd -a)
         - dub test --compiler=${DC}
       name: "Windows"
+    - language: d
+      os: linux
+      d: dmd
+      name: "Linux"
+    - language: d
+      os: osx
+      d: dmd
+      name: "Mac"
+    - language: d
+      os: linux
+      d: dmd
+      env: ARCH="x86"
+      addons: {apt: {packages: [[gcc-multilib]]}}
+      script: dub test --arch "$ARCH"
+      name: "X86"
     - stage: "LDC"
-      language: d
+      language: bash
+      os: windows
+      script:
+        - curl https://dlang.org/install.sh | bash -s
+        - source $(~/dlang/install.sh ldc -a)
+        - dub test --compiler=${DC}
+      name: "Windows"
+    - language: d
       os: linux
       d: ldc
       name: "Linux"
@@ -42,7 +49,7 @@ matrix:
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
       name: "X86"
-      language: android
+    - language: android
       dist: trusty
       script:
         - curl https://dlang.org/install.sh | bash -s
