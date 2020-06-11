@@ -1,37 +1,62 @@
 # latest dmd, gdc and ldc
-language: d
 
  
 matrix:
   include:
     - stage: "DMD"
+      language: bash
+      os: windows 
+      script:
+        - curl https://dlang.org/install.sh | bash -s
+        - source $(~/dlang/install.sh dmd -a)
+        - dub test --compiler=${DC}
+      name: "Windows"
+    - language: d
       os: linux
       d: dmd
       name: "Linux"
-    - os: osx
+    - language: d
+      os: osx
       d: dmd
       name: "Mac"
-    - os: linux
+    - language: d
+      os: linux
       d: dmd
       env: ARCH="x86"
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
       name: "X86"
     - stage: "LDC"
+      language: bash
+      os: windows
+      script:
+        - curl https://dlang.org/install.sh | bash -s
+        - source $(~/dlang/install.sh ldc -a)
+        - dub test --compiler=${DC}
+      name: "Windows"
+    - language: d
       os: linux
       d: ldc
       name: "Linux"
-    - os: osx
+    - language: d
+      os: osx
       d: ldc
       name: "Mac"
-    - os: linux 
-      arch: arm64
-      d: ldc
-      name: "Android"
-    - os: linux
+    - language: d
+      os: linux
       d: ldc
       env: ARCH="x86"
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
       name: "X86"
+    - language: d
+      os: linux
+      arch: arm64
+      d: ldc
+      name: "Aarch64"
 
+script:
+  - dub test -b unittest-cov --compiler=${DC}
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

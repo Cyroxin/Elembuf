@@ -3,9 +3,12 @@
 # Elembuf
 An efficient and simple to use buffer/array for data manipulation.
 #
+[![wiki](https://img.shields.io/badge/wiki-Circular%20buffer-9cf?logo=Wikimedia%20Commons)](https://en.wikipedia.org/wiki/Circular_buffer)
 [![LICENSE](https://img.shields.io/github/license/Cyroxin/Elembuf)](LICENSE)
 [![bench](https://img.shields.io/badge/bench-%20-brightgreen?logo=fastly)](bench)
-[![wiki](https://img.shields.io/badge/wiki-Circular%20buffer-9cf?logo=Wikimedia%20Commons)](https://en.wikipedia.org/wiki/Circular_buffer)
+[![ci](https://travis-ci.com/Cyroxin/Elembuf.svg?branch=master)](https://travis-ci.com/github/Cyroxin/Elembuf)
+[![cov](https://img.shields.io/codecov/c/github/Cyroxin/Elembuf)](https://codecov.io/gh/Cyroxin/Elembuf)
+
 
 ## Description
 A circular buffer can be thought of as an array that can eliminate program side copying, making data reads from sockets or other IO more efficient. The simple idea is that if elements/array items are popped/removed from the front, the free slots can be used to fill the back of the array without moving the existing data. A simple way to understand the concept is that a circular buffer is a faster concatenator (concat/cat/~) as all free data reserves are more easily taken advantage of, however, circular buffers are limited to a maximum size.
