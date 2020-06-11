@@ -32,6 +32,10 @@ matrix:
       os: linux 
       arch: arm64
       d: ldc
+      name: "Aarch64"
+    - language: android
+      dist: trusty
+      d: ldc
       name: "Android"
     - language: d
       os: linux
