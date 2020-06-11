@@ -35,7 +35,8 @@ matrix:
       name: "Aarch64"
     - language: android
       dist: trusty
-      install: ant deps
+      before_install:
+        - sudo apt-get -y install ant
       d: ldc
       name: "Android"
     - language: d
