@@ -1,0 +1,51 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+template: |
+  # Changes
+
+  $CHANGES
+categories:
+  - title: 'Breaking'
+    labels: 'type: breaking'
+  - title: 'New'
+    labels:
+      - 'new'
+      - 'feature'
+      - 'add'
+  - title: 'Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+      - 'issue'
+      - 'error'
+  - title: 'Maintenance'
+    label: 'type: maintenance'
+  - title: 'Documentation'
+    labels:
+      - 'doc'
+      - 'docs'
+      - 'document'
+      - 'documentation'
+
+version-resolver:
+  major:
+    labels:
+      - 'type: breaking'
+  minor:
+    labels:
+      - 'new'
+      - 'feature'
+      - 'add'
+  patch:
+    labels:
+      - 'type: maintenance'
+      - 'doc'
+      - 'docs'
+      - 'document'
+      - 'documentation'
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+      - 'issue'
+      - 'error'
