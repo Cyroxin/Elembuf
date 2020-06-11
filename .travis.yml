@@ -35,7 +35,7 @@ matrix:
       name: "Aarch64"
     - language: android
       dist: trusty
-      d: ldc
+      arch: arm64
       script:
         - curl https://dlang.org/install.sh | bash -s
         - source $(~/dlang/install.sh dmd -a)
