@@ -37,6 +37,8 @@ matrix:
       dist: trusty
       d: ldc
       script:
+        - curl https://dlang.org/install.sh | bash -s
+        - source $(~/dlang/install.sh dmd -a)
         - dub test --compiler=${DC}
       name: "Android"
     - language: d
