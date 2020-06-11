@@ -34,10 +34,11 @@ matrix:
       d: ldc
       name: "Aarch64"
     - language: android
+      arch: arm64
       dist: trusty
-      before_install:
-        - sudo apt-get -y install ant
       d: ldc
+      script:
+        - dub test --compiler=${DC}
       name: "Android"
     - language: d
       os: linux
