@@ -5,6 +5,7 @@ An efficient and simple to use buffer/array for data manipulation.
 #
 [![LICENSE](https://img.shields.io/github/license/Cyroxin/Elembuf)](LICENSE)
 [![bench](https://img.shields.io/badge/bench-%20-brightgreen?logo=fastly)](bench)
+[![ci](https://travis-ci.com/Cyroxin/Elembuf.svg?branch=master)](https://travis-ci.com/github/Cyroxin/Elembuf)
 [![wiki](https://img.shields.io/badge/wiki-Circular%20buffer-9cf?logo=Wikimedia%20Commons)](https://en.wikipedia.org/wiki/Circular_buffer)
 
 ## Description
