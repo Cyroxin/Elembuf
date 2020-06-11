@@ -35,6 +35,7 @@ matrix:
       name: "Aarch64"
     - language: android
       dist: trusty
+      install: ant deps
       d: ldc
       name: "Android"
     - language: d
