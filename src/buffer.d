@@ -17,11 +17,11 @@ version (linux)
 	version(X86_64){
 		version = memfd;
 		extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc // TODO: Add to druntime
-	{
-		return cast(int) syscall(319, name, flags);
+		{
+			return cast(int) syscall(319, name, flags);
+		}
 	}
-	}
-		
+
 	else version(X86){
 		version = memfd;
 		extern (C) int memfd_create(const char* name, uint flags) nothrow @trusted @nogc // TODO: Add to druntime
