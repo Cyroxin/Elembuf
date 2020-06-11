@@ -49,6 +49,11 @@ matrix:
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
       name: "X86"
+    - language: d
+      os: linux
+      arch: arm64
+      d: ldc
+      name: "Aarch64"
     - language: android
       dist: trusty
       script:
