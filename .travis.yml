@@ -34,7 +34,6 @@ matrix:
       d: ldc
       name: "Aarch64"
     - language: android
-      arch: arm64
       dist: trusty
       d: ldc
       script:
