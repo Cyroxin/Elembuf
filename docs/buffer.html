@@ -512,7 +512,7 @@
         <section id="module_content"><section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    <a href="https://cyroxin.github.io/Elembuf/source.html">&#11148;</a>
+    <a href="https://cyroxin.github.io/Elembuf/source.html">&lt;</a>
 
   </p>
 </div>
@@ -667,7 +667,7 @@ buf &lt;&lt;= srcbuf; <span class="comment">// Modern way of filling, equivalent
 </span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello World -Elembuf"</span>);
 
 buf.length = 0; <span class="comment">// Remove all items. O(1)
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">""</span> &amp;&amp; buf[0..5] == <span class="string_literal">"Hello"</span>); <span class="comment">// Elements are not truly gone until overwritten.
+</span><span class="keyword">assert</span>(buf == <span class="string_literal">""</span> &amp;&amp; buf.ptr[0..5] == <span class="string_literal">"Hello"</span>); <span class="comment">// Elements are not truly gone until overwritten.
 </span>
 <span class="comment">// Sources should not output anything as they are used. Reusable sources can be implemented with a lambda.
 </span>buf &lt;&lt; srcworld;
