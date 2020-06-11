@@ -19,6 +19,13 @@ matrix:
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
       name: "X86"
+    - language: bash
+      os: windows 
+      script:
+        - curl https://dlang.org/install.sh | bash -s
+        - source $(~/dlang/install.sh dmd -a)
+        - dub test --compiler=${DC}
+      name: "Windows"
     - stage: "LDC"
       language: d
       os: linux
@@ -29,23 +36,17 @@ matrix:
       d: ldc
       name: "Mac"
     - language: d
-      os: linux 
-      arch: arm64
-      d: ldc
-      name: "Aarch64"
-    - language: android
-      dist: trusty
-      arch: arm64
-      script:
-        - curl https://dlang.org/install.sh | bash -s
-        - source $(~/dlang/install.sh dmd -a)
-        - dub test --compiler=${DC}
-      name: "Android"
-    - language: d
       os: linux
       d: ldc
       env: ARCH="x86"
       addons: {apt: {packages: [[gcc-multilib]]}}
       script: dub test --arch "$ARCH"
       name: "X86"
+      language: android
+      dist: trusty
+      script:
+        - curl https://dlang.org/install.sh | bash -s
+        - source $(~/dlang/install.sh dmd -a)
+        - dub test --compiler=${DC}
+      name: "Android"
 
