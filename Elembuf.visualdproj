@@ -994,9 +994,9 @@
    <File path="docs\buffer.html" />
    <File path="docs\source.html" />
   </Folder>
-  <Folder name="src">
-   <File path="src\buffer.d" />
-   <File path="src\source.d" />
+  <Folder name="source">
+   <File path="source\buffer.d" />
+   <File path="source\source.d" />
   </Folder>
  </Folder>
 </DProject>
