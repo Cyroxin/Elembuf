@@ -1,8 +1,9 @@
-<img src="logo.png" align="left" height="96" width="96" >
+
+[![logo](logotiny.png)]()
 
 # Elembuf
 An efficient and simple to use buffer/array for data manipulation.
-#
+
 [![wiki](https://img.shields.io/badge/wiki-Circular%20buffer-9cf?logo=Wikimedia%20Commons)](https://en.wikipedia.org/wiki/Circular_buffer)
 [![LICENSE](https://img.shields.io/github/license/Cyroxin/Elembuf)](LICENSE)
 [![bench](https://img.shields.io/badge/bench-%20-brightgreen?logo=fastly)](bench)
@@ -23,13 +24,13 @@ Elembuf currently works for Windows, Linux, Mac and other Posix compatible syste
 ## Getting Started
 
 For examples  on how to use the library, the documentation is a good place to start: 
-* [buffer](https://cyroxin.github.io/Elembuf/buffer.html) <br />
+* [buffer](https://cyroxin.github.io/Elembuf/buffer.html) 
 * [source](https://cyroxin.github.io/Elembuf/source.html)
 
-<b>Windows/Mac</b>
+**Windows/Mac**
 You can download the repo and open the solution file in the repository called "Elembuf.sln" (VS17 & VS19) with [visuald](https://github.com/dlang/visuald) in visual studio. The source files should automatically link and you may easily edit the source code and add your own code into the solution.
 
-<b>Linux</b>
+**Linux**
 Manual linking must be done using the instructions of your own compiler. 
 
 You may use the source files as is, regardless of what os, editor or IDE you use, as long as you know how to link
