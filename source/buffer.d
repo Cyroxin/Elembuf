@@ -906,6 +906,18 @@ unittest
 
 } 
 
+unittest // issue #3 - minimal example
+{
+	import buffer;
+
+	Buffer!() bufchar = Buffer!()();
+	assert(bufchar == "");
+	bufchar.buf = bufchar.ptr[0..12];
+	assert(bufchar.length == 12);
+	bufchar[] = "Hello world!";
+	assert(bufchar == "Hello world!");
+}
+
 /* 
 This is a conventional buffer that should not be used in applications.
 It is used purely for internal benchmarking when comparing a

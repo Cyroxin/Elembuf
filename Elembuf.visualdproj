@@ -772,7 +772,7 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>2</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>1</useUnitTests>
+  <useUnitTests>0</useUnitTests>
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
@@ -994,6 +994,7 @@
    <File path="docs\buffer.html" />
    <File path="docs\source.html" />
   </Folder>
+  <Folder name="tests" />
   <Folder name="source">
    <File path="source\buffer.d" />
    <File path="source\source.d" />
