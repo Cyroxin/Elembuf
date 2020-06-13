@@ -360,25 +360,27 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 	static typeof(this) opCall()
 	{
+
 		mixin("typeof(this) val = void; val.buf = typeof(this).gen();");
 
 		static if(Threaded)
 		{
+
 			import std.parallelism : taskPool, task;
 
 			taskPool.put(task!initWriter(val.buf.ptr,&mail));
 			//return mixin("cast(typeof(this)) {typeof(this).gen(),0}");
 			//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val.initWriter(val.ptr); val");
 			//return cast(typeof(this)) null;
+
 		}
 
 		return val;
+
 		//return mixin("cast(typeof(this)) {typeof(this).gen()};");
 		//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val");
 
 	}
-
-
 
 	static typeof(this) opCall(scope const T[] init)
 	{
@@ -394,6 +396,8 @@ struct Buffer(InternalType = char, bool Threaded = false)
 		return val;
 
 	}
+
+
 
 
 
@@ -744,6 +748,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 
 
+
 }
 
 /// Construction
@@ -916,6 +921,27 @@ unittest // issue #3 - minimal example
 	assert(bufchar.length == 12);
 	bufchar[] = "Hello world!";
 	assert(bufchar == "Hello world!");
+}
+
+unittest // issue #2 - mutable -> shared
+{
+	import buffer;
+
+	shared Buffer!() bufcharshared = cast(shared) Buffer!()();
+	assert(bufcharshared == cast(shared char[]) "");
+}
+
+unittest // mutable -> const -> immutable
+{
+	import buffer;
+
+	// Buffer must always be mutable. It is however possible to give an immutable slice.
+
+	Buffer!() buf = Buffer!()();
+	immutable string slice = cast(const string) buf; // Internally passes a slice
+	assert(slice == "");
+
+	shared auto sliceshared = slice; // Immutable implicitly converts to shared
 }
 
 /* 
