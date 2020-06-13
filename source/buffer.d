@@ -254,8 +254,17 @@ struct Buffer(InternalType = char, bool Threaded = false)
 	version (Windows)
 		private enum pagesize = 65_536; // This is actually allocation granularity, memory maps must be power of this.
 	else {
-		import core.memory : minimumPageSize;
-		private enum pagesize = minimumPageSize; // Other platforms do not have allocation granularity, but only pagesize.
+		// Other platforms do not have allocation granularity, but only pagesize.
+		version (AnyARM)
+		{
+			version (iOSDerived)
+				private enum pagesize = 16384;
+			else
+				private enum pagesize = 4096;
+		}
+		else
+			private enum pagesize = 4096;
+
 	}
 
 	// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
@@ -806,8 +815,17 @@ struct StaticCopyBuffer(InternalType = char)
 	version (Windows)
 		private enum pagesize = 65_536; // This is actually allocation granularity, memory maps must be power of this.
 	else {
-		import core.memory : minimumPageSize;
-		private enum pagesize = minimumPageSize; // Other platforms do not have allocation granularity, but only pagesize.
+		// Other platforms do not have allocation granularity, but only pagesize.
+		version (AnyARM)
+		{
+			version (iOSDerived)
+				private enum pagesize = 16384;
+			else
+				private enum pagesize = 4096;
+		}
+		else
+			private enum pagesize = 4096;
+
 	}
 
 	// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
