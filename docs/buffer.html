@@ -824,7 +824,7 @@ buf = buf[buf.max/2..$]; <span class="comment">// OX|OO
 	<span class="keyword">assert</span>(bufslice[0] == 'a');
 } <span class="comment">// deallocation occurs here due to scope.
 </span>
-<span class="comment">// Lets say that another buffer is allocated.
+<span class="comment">// Let's say that another buffer is allocated.
 </span><span class="comment">// If the earlier examples were not scope and not encircled in curly brackets, a new buffer, "bufn", would have seen an error. 
 </span>
 <span class="psymbol">Buffer</span>!<span class="keyword">char</span> bufn = <span class="psymbol">Buffer</span>!()();

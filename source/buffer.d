@@ -790,7 +790,7 @@ unittest
 		assert(bufslice[0] == 'a');
 	} // deallocation occurs here due to scope.
 
-	// Lets say that another buffer is allocated.
+	// Let's say that another buffer is allocated.
 	// If the earlier examples were not scope and not encircled in curly brackets, a new buffer, "bufn", would have seen an error. 
 	
 	Buffer!char bufn = Buffer!()();
