@@ -807,13 +807,12 @@ buf = buf[buf.max/2..$]; <span class="comment">// OX|OO
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [Expert]
+        <li><code class="code"><span class="comment">// [EXPERT]
 </span><span class="comment">// Working with multiple buffers and sharing buffers. 
 </span>
 <span class="keyword">import</span> buffer;
 
 <span class="comment">/* Multiple buffers */</span>
-
 {
 	<span class="keyword">scope</span> buf = <span class="psymbol">Buffer</span>!()();
 	<span class="keyword">scope</span> bufslice = buf; <span class="comment">// Slice of buf.
@@ -830,14 +829,15 @@ buf = buf[buf.max/2..$]; <span class="comment">// OX|OO
 </span>
 <span class="psymbol">Buffer</span>!<span class="keyword">char</span> bufn = <span class="psymbol">Buffer</span>!()();
 
-<span class="comment">// The reason is that the earlier buffers would have deallocated during this comment, rather than during the closing squirly bracker.
-</span><span class="comment">// This is fine on all other operating systems except on Windows.
+<span class="comment">// The reason is that the earlier buffers would have deallocated during this comment, rather than during the closing squirly brackets.
+</span>
+<span class="comment">// This is fine on all other operating systems except on Windows.
 </span><span class="comment">// On Windows, there can only be one buffer and all new constructions, Buffer!()(), will be slices of the original.
-</span><span class="comment">// If bufn fills memory that is deallocated by buf and bufslice, it breaks on windows. This is why we use scope and squirly brackets to make this work.
+</span><span class="comment">// If bufn fills memory after it is deallocated by buf or bufslice, it breaks on windows. This is why we use scope and squirly brackets to make this work.
 </span>
 bufn &lt;&lt; <span class="string_literal">"Hello world!"</span>; <span class="comment">// As said, this would have caused an error if not for scope.
 </span>
-<span class="comment">// NOTE: Had bufslice been passed to a function, it would have deallocated buf in addition to bufslice. Thus you cannot pass slices of a buffer to functions.
+<span class="comment">// NOTE: Had bufslice been passed to a function, it would have deallocated buf in addition to bufslice. Thus you cannot pass buffer slices to functions.
 </span>
 <span class="comment">/* Sharing buffers */</span>
 
