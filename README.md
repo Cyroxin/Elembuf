@@ -28,13 +28,43 @@ For examples  on how to use the library, the documentation is a good place to st
 * [source](https://cyroxin.github.io/Elembuf/source.html)
 
 **Windows/Mac**
+
 You can download the repo and open the solution file in the repository called "Elembuf.sln" (VS17 & VS19) with [visuald](https://github.com/dlang/visuald) in visual studio. The source files should automatically link and you may easily edit the source code and add your own code into the solution.
 
 **Linux**
+
 Manual linking must be done using the instructions of your own compiler. 
 
 You may use the source files as is, regardless of what os, editor or IDE you use, as long as you know how to link
-them through your compiler. If you have any questions, issues or feature requests, please create an issue on this repository.
+them through your compiler. 
+
+**Dub**
+
+```` D
+#!/usr/bin/env dub
+/+ dub.sdl:
+name "app"
+dependency "elembuf" version="~>1.1.3"
++/
+
+module app;
+
+import buffer;
+import std.stdio;
+
+void main() {
+    Buffer!char bufchar = Buffer!()(); // char[]
+    assert(bufchar == "");
+  
+    bufchar << "Hello world!";
+    bufchar.writeln;
+}
+
+````
+$ dub app.d
+
+    Hello world!
+
 
 ## Contributions
 
