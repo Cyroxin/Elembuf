@@ -21,7 +21,8 @@ module buffer;
 *			Threaded	= Create a background thread to fill the buffer. Makes it no longer directly castable to T[].
 * Bugs:
 *				- Setting the buffer to anything else than memory that the buffer owns will cause an exception.
-*				- <b style="color:blue;">[WINDOWS]</b> Only one instance of this type, or any type that creates a file in memory, is allowed.
+*				- Copying will cause the original buffer to deallocate when out of scope. Instead pass slices, use a module-level global variable or do not deallocate instances. 
+*				- <b style="color:blue;">[WINDOWS]</b> Additional instances will become slices of the original buffer.
 * $(BR)
 * - - -
 *
@@ -32,7 +33,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 {
 
 
-
+	// @disable this(this);  // This can be allowed, as long as the user is mindful of what they are doing.
 
 	alias T = InternalType;
 
@@ -768,6 +769,63 @@ unittest
 	assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // As seen, both sides are identical. Both pages contain a's and b's. 
 
 } 
+
+/// Reusage
+unittest
+{
+	// [EXPERT]
+	// Working with multiple buffers and sharing buffers. 
+	
+	import buffer;
+
+	/* Multiple buffers */
+	{
+		scope buf = Buffer!()();
+		scope bufslice = buf; // Slice of buf.
+
+		buf.length = 1;
+		bufslice.length = 1;
+
+		buf[0] = 'a';
+		assert(bufslice[0] == 'a');
+	} // deallocation occurs here due to scope.
+
+	// Lets say that another buffer is allocated.
+	// If the earlier examples were not scope and not encircled in curly brackets, a new buffer, "bufn", would have seen an error. 
+	
+	Buffer!char bufn = Buffer!()();
+	
+	// The reason is that the earlier buffers would have deallocated during this comment, rather than during the closing squirly brackets.
+
+	// This is fine on all other operating systems except on Windows.
+	// On Windows, there can only be one buffer and all new constructions, Buffer!()(), will be slices of the original.
+	// If bufn fills memory after it is deallocated by buf or bufslice, it breaks on windows. This is why we use scope and squirly brackets to make this work.
+
+	bufn << "Hello world!"; // As said, this would have caused an error if not for scope.
+
+	// NOTE: Had bufslice been passed to a function, it would have deallocated buf in addition to bufslice. Thus you cannot pass buffer slices to functions.
+
+	/* Sharing buffers */
+
+	// Method 1: Normal slices
+	{
+		scope buf = Buffer!()();
+		char[] slice = buf; // While buffer slices deallocate original, normal slices do not.
+
+		buf << slice; // We can pass a normal slice to a function. A simple cast(char[]) would've worked as well.
+
+	} // deallocation occurs here due to scope.
+
+	// Method 2: Public shared buffers
+	{
+		// The idea is that you can define a global in module scope and make it deallocate only when the program exits. 
+		// You can also make it shared so other threads can take advantage of it as well. You can do it like this:
+
+		/* public */ shared Buffer!() bufs = cast(shared) Buffer!()(); 
+		assert(bufs == cast(shared) []);
+	}
+
+}
 
 unittest // issue #3 - minimal example
 {

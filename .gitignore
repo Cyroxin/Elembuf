@@ -284,3 +284,4 @@ __pycache__/
 /docs/implem.html
 /.dub
 *.exe
+/tests

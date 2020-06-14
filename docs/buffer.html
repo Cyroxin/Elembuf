@@ -593,7 +593,8 @@
   <p class="para">
     
 <ul><li>Setting the buffer to anything else than memory that the buffer owns will cause an exception.</li>
-<li><b style="color:blue;">[WINDOWS]</b> Only one instance of this type, or any type that creates a file in memory, is allowed.</li>
+<li>Copying will cause the original buffer to deallocate when out of scope. Instead pass slices, use a module-level global variable or do not deallocate instances.</li>
+<li><b style="color:blue;">[WINDOWS]</b> Additional instances will become slices of the original buffer.</li>
 </ul>
  <br>
 <hr />
@@ -791,6 +792,73 @@ buf = buf[buf.max/2..$]; <span class="comment">// OX|OO
 </span>buf = (buf.ptr + buf.max)[0..buf.length]; <span class="comment">// OO|XX
 </span><span class="keyword">assert</span>(buf[0] == 'b' &amp;&amp; buf[$/2+1] == 'a'); <span class="comment">// As seen, both sides are identical. Both pages contain a's and b's.
 </span></code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+  </p>
+</div><div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    Reusage
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="comment">// [Expert]
+</span><span class="comment">// Working with multiple buffers and sharing buffers. 
+</span>
+<span class="keyword">import</span> buffer;
+
+<span class="comment">/* Multiple buffers */</span>
+
+{
+	<span class="keyword">scope</span> buf = <span class="psymbol">Buffer</span>!()();
+	<span class="keyword">scope</span> bufslice = buf; <span class="comment">// Slice of buf.
+</span>
+	buf.length = 1;
+	bufslice.length = 1;
+
+	buf[0] = 'a';
+	<span class="keyword">assert</span>(bufslice[0] == 'a');
+} <span class="comment">// deallocation occurs here due to scope.
+</span>
+<span class="comment">// Lets say that another buffer is allocated.
+</span><span class="comment">// If the earlier examples were not scope and not encircled in curly brackets, a new buffer, "bufn", would have seen an error. 
+</span>
+<span class="psymbol">Buffer</span>!<span class="keyword">char</span> bufn = <span class="psymbol">Buffer</span>!()();
+
+<span class="comment">// The reason is that the earlier buffers would have deallocated during this comment, rather than during the closing squirly bracker.
+</span><span class="comment">// This is fine on all other operating systems except on Windows.
+</span><span class="comment">// On Windows, there can only be one buffer and all new constructions, Buffer!()(), will be slices of the original.
+</span><span class="comment">// If bufn fills memory that is deallocated by buf and bufslice, it breaks on windows. This is why we use scope and squirly brackets to make this work.
+</span>
+bufn &lt;&lt; <span class="string_literal">"Hello world!"</span>; <span class="comment">// As said, this would have caused an error if not for scope.
+</span>
+<span class="comment">// NOTE: Had bufslice been passed to a function, it would have deallocated buf in addition to bufslice. Thus you cannot pass slices of a buffer to functions.
+</span>
+<span class="comment">/* Sharing buffers */</span>
+
+<span class="comment">// Method 1: Normal slices
+</span>{
+	<span class="keyword">scope</span> buf = <span class="psymbol">Buffer</span>!()();
+	<span class="keyword">char</span>[] slice = buf; <span class="comment">// While buffer slices deallocate original, normal slices do not.
+</span>
+	buf &lt;&lt; slice; <span class="comment">// We can pass a normal slice to a function. A simple cast(char[]) would've worked as well.
+</span>
+} <span class="comment">// deallocation occurs here due to scope.
+</span>
+<span class="comment">// Method 2: Public shared buffers
+</span>{
+	<span class="comment">// The idea is that you can define a global in module scope and make it deallocate only when the program exits. 
+</span>	<span class="comment">// You can also make it shared so other threads can take advantage of it as well. You can do it like this:
+</span>
+	<span class="comment">/* public */</span> <span class="keyword">shared</span> <span class="psymbol">Buffer</span>!() bufs = <span class="keyword">cast</span>(<span class="keyword">shared</span>) <span class="psymbol">Buffer</span>!()(); 
+	<span class="keyword">assert</span>(bufs == <span class="keyword">cast</span>(<span class="keyword">shared</span>) []);
+}
+</code></li>
       </ol>
     </div>
   </div>
