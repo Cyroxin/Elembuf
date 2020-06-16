@@ -218,7 +218,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 			import std.parallelism : taskPool, task;
 
-			mixin("taskPool.put(task!initWriter(val.buf.ptr,&mail));");
+			taskPool.put(task!initWriter(val.buf.ptr,&mail));
 			//return mixin("cast(typeof(this)) {typeof(this).gen(),0}");
 			//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val.initWriter(val.ptr); val");
 			//return cast(typeof(this)) null;
