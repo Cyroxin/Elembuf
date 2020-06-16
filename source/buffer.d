@@ -218,7 +218,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 			import std.parallelism : taskPool, task;
 
-			taskPool.put(task!initWriter(val.buf.ptr,&mail));
+			mixin("taskPool.put(task!initWriter(val.buf.ptr,&mail));");
 			//return mixin("cast(typeof(this)) {typeof(this).gen(),0}");
 			//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val.initWriter(val.ptr); val");
 			//return cast(typeof(this)) null;
@@ -289,18 +289,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 	alias buf this;
 
 	static if (Threaded)
-	{
 		__gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
-
-		static if(max <= byte.max)
-			alias mailmintype = byte;
-		else static if(max <= short.max)
-			alias mailmintype = short;
-		else static if(max <= int.max)
-			alias mailmintype = int;
-		else
-			alias mailmintype = typeof(mail);
-	}
 	else
 		static assert(typeof(this).sizeof == (T[]).sizeof);
 
@@ -432,11 +421,11 @@ struct Buffer(InternalType = char, bool Threaded = false)
 			{
 				import core.atomic;
 
-				(*cast(mailmintype*) &mail).atomicStore!(MemoryOrder.raw)(cast(mailmintype)max + 1); // Alert thread
-				while ((*cast(mailmintype*) &mail).atomicLoad!(MemoryOrder.raw)() == cast(mailmintype) max + 1){} // Wait till thread ready
+				mail.atomicStore!(MemoryOrder.raw)(cast(typeof(mail)) max + 1); // Alert thread
+				while (mail.atomicLoad!(MemoryOrder.raw)() == cast(typeof(mail)) max + 1){} // Wait till thread ready
 
 				mail.atomicStore(cast(typeof(mail)) &source); // Give source to thread
-				while (mail.atomicLoad!(MemoryOrder.raw) == cast(typeof(mail)) &source){} // Wait till thread ready
+				while (mail.atomicLoad!(MemoryOrder.raw) != 0){} // Wait till thread ready
 			}
 
 
@@ -465,31 +454,31 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 				assert(buf.length <= max, "Error! Buffer length exceeds capacity or popped when no length");
 
-				scope const i = atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail);
+				scope const i = atomicLoad!(MemoryOrder.raw)(mail);
 
 				if(i > 0) {
-					atomicStore!(MemoryOrder.raw)(*cast(mailmintype*) &mail,cast(mailmintype)-(i+length)); // Aquire more length
+					atomicStore!(MemoryOrder.raw)(mail,cast(typeof(mail))-(i+length)); // Aquire more length
 
 					static if(isSafe)
 						buf = buf.ptr[0..buf.length + i];
 					else
 						buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + i];
 				}
-				else if(!cas!(MemoryOrder.raw, MemoryOrder.raw)(cast(mailmintype*) &mail,cast(mailmintype)i,cast(mailmintype) -length)){
-					scope const x = atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail);
-					atomicStore!(MemoryOrder.raw)(*cast(mailmintype*) &mail,cast(mailmintype)-(x+length)); 
+				else if(!cas!(MemoryOrder.raw, MemoryOrder.raw)(&mail,i,-length)){
+					scope const x = atomicLoad!(MemoryOrder.raw)(mail);
+					atomicStore!(MemoryOrder.raw)(mail,-(x+length)); 
 
 					static if(isSafe)
-						buf = buf.ptr[0..buf.length + i];
+						buf = buf.ptr[0..buf.length + x];
 					else
-						buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + i];
+						buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + x];
 				}
 
 			}
 
 
 	// Concurrent background thread
-	private static void initWriter()(scope const T* ptr, scope const typeof(mail)* mailptr)
+	static void initWriter()(scope const T* ptr, scope typeof(mail)* mailptr)
 		if(Threaded)
 		{
 			import core.atomic;
@@ -505,7 +494,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 			while(true)
 			{
 				// Read mail
-				scope const typeof(mail) i = atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*)mailptr);
+				scope const typeof(mail) i = atomicLoad!(MemoryOrder.raw)(*mailptr);
 
 
 				debug {
@@ -513,12 +502,13 @@ struct Buffer(InternalType = char, bool Threaded = false)
 					scope(failure)
 					{
 						debug writeln("ERROR! THREAD EXITED WITHOUT AGREEMENT WITH MAIN THREAD! ", i);
+						assert(0);
 					}
 				}
 
 
 				// Got buffer length
-				if(cast(mailmintype) i <= 0 && cast(mailmintype) i != -max) // New length received!
+				if(cast(typeof(mail)) i <= 0 && cast(typeof(mail)) i != -max) // New length received!
 				{
 					// Works as i is negative.
 					scope const read = source(localbuf[0..(max+i)]);
@@ -529,13 +519,13 @@ struct Buffer(InternalType = char, bool Threaded = false)
 						continue;
 
 					// Write amount read to mail so that it may be extended to buffer with call to fill()
-					if(atomicExchange!(MemoryOrder.raw)(cast(mailmintype*) &mail, cast(mailmintype) read) == cast(mailmintype) max + 1)
+					if(atomicExchange!(MemoryOrder.raw)(mailptr, cast(typeof(mail)) read) == cast(typeof(mail)) max + 1)
 					{
 
 						// Order received while writing to mail
-						while(atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail) == cast(mailmintype) read){}
-						source = *cast(typeof(source)*) atomicLoad!(MemoryOrder.raw)(mail);
-						atomicStore!(MemoryOrder.raw)(mail,0); // Assume max data must be read and clear bits
+						while(atomicLoad!(MemoryOrder.raw)(*mailptr) == cast(typeof(mail)) read){}
+						source = *cast(typeof(source)*) atomicLoad!(MemoryOrder.raw)(*mailptr);
+						atomicStore!(MemoryOrder.raw)(*mailptr,0); // Assume max data must be read and clear bits
 
 						if(source == null) 
 							return; // Order received to terminate.
@@ -543,12 +533,12 @@ struct Buffer(InternalType = char, bool Threaded = false)
 					else
 						localbuf = (cast(T*)((cast(ptrdiff_t)localbuf + read) & ~pagesize));
 				}
-				else if(i == cast(mailmintype) max + 1) // Order received
+				else if(i == cast(typeof(mail)) max + 1) // Order received
 				{
-					atomicStore!(MemoryOrder.raw)(*cast(mailmintype*) &mail, cast(mailmintype) -max);
-					while(atomicLoad!(MemoryOrder.raw)(*cast(mailmintype*) &mail) == cast(mailmintype) -max){}
-					source = *cast(typeof(source)*) atomicLoad!(MemoryOrder.raw)(mail);
-					atomicStore!(MemoryOrder.raw)(mail,0); // Assume max data must be read and clear bits
+					atomicStore!(MemoryOrder.raw)(*mailptr, cast(typeof(mail)) -max);
+					while(atomicLoad!(MemoryOrder.raw)(*mailptr) == cast(typeof(mail)) -max){}
+					source = *cast(typeof(source)*) atomicLoad!(MemoryOrder.raw)(*mailptr);
+					atomicStore!(MemoryOrder.raw)(*mailptr,0); // Assume max data must be read and clear bits
 
 
 					if(source == null) 
