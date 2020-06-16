@@ -367,7 +367,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 				static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length]; // Safety not guaranteed by caller.
 
-				(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length)) [0 .. arr.length] = arr[];
+				(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length*T.sizeof)) [0 .. arr.length] = arr[];
 				buf = (cast(T*)(buf.ptr))[0 .. buf.length + arr.length];
 			}
 
@@ -393,10 +393,10 @@ struct Buffer(InternalType = char, bool Threaded = false)
 
 				// Fill the empty area of the buffer. Returns less than 0 if source is dead. Otherwise read amount.
 				static if(__traits(compiles, cast(ptrdiff_t) source(T[].init)))
-					len = source((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length))[0..avail]); // source direct
+					len = source((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..avail]); // source direct
 				else static if(__traits(compiles, cast(ptrdiff_t) source.src()(T[].init))) // source.src
-					len = source.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length))[0..avail]);
-				else static assert(0, "Source interface not defined. See documentation for information.");
+					len = source.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..avail]);
+				else static assert(0, "Source interface not defined. See documentation for information. You may require a cast if doing [1,2,3] as an array.");
 
 
 				assert(len <= this.max);
@@ -531,7 +531,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 							return; // Order received to terminate.
 					}
 					else
-						localbuf = (cast(T*)((cast(ptrdiff_t)localbuf + read) & ~pagesize));
+						localbuf = (cast(T*)((cast(ptrdiff_t)localbuf + read * T.sizeof) & ~pagesize));
 				}
 				else if(i == cast(typeof(mail)) max + 1) // Order received
 				{
@@ -579,8 +579,6 @@ struct Buffer(InternalType = char, bool Threaded = false)
 	{
 		fill!(true)(rhs);
 	}
-
-
 
 	unittest {
 		Buffer!char buf = "Hello World!";
@@ -848,6 +846,24 @@ unittest // mutable -> const -> immutable
 	assert(slice == "");
 
 	shared auto sliceshared = slice; // Immutable implicitly converts to shared
+}
+
+unittest // T.sizeof > 1
+{
+	Buffer!size_t buf = Buffer!size_t();
+	static assert(buf[0].sizeof > 1); 
+
+	buf << cast(size_t[]) [1,2,3];
+	
+	auto sum = 0;
+	foreach(i; buf) {sum += i;}
+	assert(sum == 6);
+
+	buf << cast(size_t[]) [1,2,3];
+	foreach(i; buf) {sum += i;}
+
+	assert(sum == 6 + 12);
+
 }
 
 /* 
