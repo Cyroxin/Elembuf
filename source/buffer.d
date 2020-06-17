@@ -289,7 +289,7 @@ struct Buffer(InternalType = char, bool Threaded = false)
 	alias buf this;
 
 	static if (Threaded)
-		__gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
+		align(mail.sizeof) __gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
 	else
 		static assert(typeof(this).sizeof == (T[]).sizeof);
 
