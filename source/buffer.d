@@ -5,257 +5,39 @@
 * BUFFER = <a href="https://cyroxin.github.io/Elembuf/buffer.html">docs/buffer</a>
 */
 
-module elembuf;
-
-import std.traits : isArray;
+module buffer;
 
 
-/**
-* Dynamic circular array with a maximum length. $(BR) $(BR)
-* $(P $(BIG  Takes an advantage of the system's memory mirroring capabillities to
+
+
+/***********************************
+* Dynamic buffer with a maximum length of one memory page which can take up to <a href="#Buffer.max">max</a> elements.
+* Takes an advantage of the system's memory mirroring capabillities to
 * create a memory loop so that memory copying wont be necessary.
-* The buffer may be manipulated normally as if it were a T[] and can be implicitly converted to it.))
+* The buffer may be manipulated normally as if it were a T[].
 *
-*
-*				- $(BIG The concat operator cannot be used in @nogc code, but it does not use the GC.)
-*				- $(BIG  <b style="color:blue;">[WINDOWS]</b> Only one instance allowed. Additional will become slices of the original buffer. ) 
+* Params:
+*			InternalType= Element type which the buffer will hold. 
+*			Threaded	= Create a background thread to fill the buffer. Makes it no longer directly castable to T[].
+* Bugs:
+*				- Setting the buffer to anything else than memory that the buffer owns will cause an exception.
+*				- Copying will cause the original buffer to deallocate when out of scope. Instead pass slices, use a module-level global variable or do not deallocate instances. 
+*				- <b style="color:blue;">[WINDOWS]</b> Additional instances will become slices of the original buffer.
 * $(BR)
 * - - -
 *
 */
 
-/++ $(BR) $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.)) $(BR) $(BR) +/
-unittest
+
+struct Buffer(InternalType = char, bool Threaded = false)
 {
 
-	// Import
-	import elembuf;
 
-	// Instantiate
-	auto buf = buffer("Hello ");
+	// @disable this(this);  // This can be allowed, as long as the user is mindful of what they are doing.
 
-	// Ensure new data fits
-	assert(buf.max >= "world!".length + buf.length); 
+	alias T = InternalType;
 
-	// Fill
-	buf ~= "world!";
-
-	// Read
-	assert(buf == "Hello world!");
-}
-
-/++ $(BR) $(BIG $(B IO - Fast library integration))
-
-$(BIG  There is no need to create a new container just so outdated push/pop queues and lists can work with socket and file system libraries that require pointers. Just use a lambda! ) $(BR) $(BR)
-
-- - -
-$(BR) 
-+/
-unittest
-{
-	// Construct
-	auto buf = buffer([1,2,3]);
-
-	auto source = (int[] array) { array[0] = 4; return 1;}; //  Give array.ptr to socket.receive if using sockets. Return written.
-
-	// Fill
-	buf ~= source;
-	assert(buf == [1,2,3,4]);
-
-	// Reuse
-	buf.length = 0;
-	buf ~= source;
-	buf ~= 5;
-	assert(buf == [4,5]);
-} 
-
-/++ $(BR) $(BIG $(B Design - Type freedom))
-
-$(BIG  Types should be easy to use by the user, not obscure behind a type deduction declaration.) $(BR) $(BR)
-
-- - -
-$(BR) 
-+/
-unittest
-{
-	buffer!(char[], false) buf = buffer("");
-
-	buffer!(char[], true) tbuf = tbuffer("");
-	scope(exit) tbuf.deinit;
-
-	shared buffer!(char[], false) csbuf = buffer("");
-	const buffer!(char[], false) cibuf = buffer("");
-
-} 
-
-/++ $(BR) $(BIG $(B Concurrency - Built in for your convenience))
-
-$(BIG  Simple solution that works efficiently out of the box. Syncronized in the background without need for fiddling.) $(BR) $(BR)
-
-- - -
-$(BR) 
-+/
-unittest
-{
-
-	auto buf = tbuffer((size_t[]).init); // Producer thread created and syncronized
-
-	size_t counter;
-
-	size_t delegate(size_t[]) source = (size_t[] array) 
-	{ 
-		foreach(ref i; array)
-		{
-			i = counter;
-			counter++;
-		}
-
-		return array.length;
-	};
-
-	buf ~= source; // Give instructions to producer
-
-
-	for(int i; i < buf.max * 5; )
-	{
-		while(buf.length == 0) 
-			buf ~= buf.source; // Aquire data from producer
-
-		i += buf.length;
-		buf = buf[$..$];
-	}
-
-	buf.deinit; // Unallocates all data, including destroying the thread. Can be used for all buffers.
-}
-
-
-/+++
-
-$(BR) $(BIG $(B Mirroring - For Compression & Decryption))
-
-$(BIG  New item orders can easily be established without copying using a mirror provided natively by the operating system. ) $(BR) $(BR)
-
-- - -
-
-$(BR) $(BR) $(BIG We can represent memory as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s. $(BR) 
-The mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. )
-
-+/
-unittest
-{
-	/+ Current view is OO|OO +/
-	auto buf = buffer("");
-
-	// aO|aO
-	buf.ptr[0..buf.max/2] = 'a';
-
-	// ab|ab
-	buf.ptr[buf.max/2 .. buf.max] = 'b';
-
-	/+ Expand view from OO|OO +/
-
-	// OX|XO
-	buf = buf.ptr[buf.max/2..buf.max+buf.max/2];
-
-	// ab|ab
-	assert(buf[0] == 'b' && buf[$-1] == 'a');
-
-	/+ Order: ab -> ba +/
-} 
-
-
-
-
-
-
-auto buffer(A)(A arg)
-{
-	import std.traits : isMutable, Unqual, ForeachType, InoutOf;
-
-	return buffer!(Unqual!(ForeachType!A)[], false)(arg);
-
-}
-
-
-auto tbuffer(A)(A arg)
-{
-	import std.traits : isMutable, Unqual, ForeachType, InoutOf;
-
-	return buffer!(Unqual!(ForeachType!A)[], true)(arg);
-
-}
-
-
-
-
-
-private struct buffer(ArrayType, bool threaded)
-if(isArray!(ArrayType))
-{
-	import std.traits : isMutable, Unqual, ForeachType, InoutOf;
-	//debug import std.stdio : writeln;
-
-	alias T = Unqual!(ForeachType!ArrayType);
-
-	//pragma(msg,"root: ", threaded, " - ", ArrayType, " - ", T);
-
-	T[] buf;
-	alias buf this;
-
-	static if (threaded)
-		align(mail.sizeof) __gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
-	else
-		static assert(typeof(this).sizeof == (T[]).sizeof);
-
-	
-
-	this(Unqual!T[] arr) shared
-	{
-		//debug writeln("1 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
-		tempbuf[] = arr[];
-		buf = cast(shared) tempbuf;
-	}
-
-	this(Unqual!T[] arr)
-	{
-		//debug writeln("3 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
-		tempbuf[] = arr[];
-		buf = tempbuf;
-
-		static if(threaded)
-		{
-			import std.parallelism : taskPool, task;
-			taskPool.put(task!initWriter(buf.ptr,&mail));
-		}
-	}
-
-	this(inout Unqual!T[] arr) shared
-	{
-		//debug writeln("4 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
-		tempbuf[] = arr[];
-		buf = cast(shared) tempbuf;
-	}
-
-	this(inout Unqual!T[] arr)
-	{
-		//debug writeln("5 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
-		tempbuf[] = arr[];
-		buf = tempbuf;
-
-		static if(threaded)
-		{
-			import std.parallelism : taskPool, task;
-			taskPool.put(task!initWriter(buf.ptr,&mail));
-		}
-	}
-
-
-	
-	static initiate() @nogc @trusted nothrow
+	static T[] gen() @trusted
 	{
 		T[] ret;
 
@@ -297,7 +79,7 @@ if(isArray!(ArrayType))
 
 
 				// Map two contiguous views to point to the memory file created earlier.
-				if (!MapViewOfFileEx(cast(void*) memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, cast(void*) ret.ptr))
+				if (!MapViewOfFileEx(cast(void*) memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, ret.ptr))
 					continue;
 				else if (!MapViewOfFileEx(cast(void*) memfile,FILE_MAP_ALL_ACCESS, 0, 0, 0, cast(void*)((cast(ptrdiff_t)ret.ptr) + pagesize)))
 					UnmapViewOfFile(cast(void*) ret.ptr);
@@ -425,23 +207,98 @@ if(isArray!(ArrayType))
 		return ret;
 	}
 
-	public inout void deinit() @nogc @trusted nothrow
+
+	static typeof(this) opCall()
+	{
+
+		mixin("typeof(this) val = void; val.buf = typeof(this).gen();");
+
+		static if(Threaded)
+		{
+
+			import std.parallelism : taskPool, task;
+
+			taskPool.put(task!initWriter(val.buf.ptr,&mail));
+			//return mixin("cast(typeof(this)) {typeof(this).gen(),0}");
+			//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val.initWriter(val.ptr); val");
+			//return cast(typeof(this)) null;
+
+		}
+
+		return val;
+
+		//return mixin("cast(typeof(this)) {typeof(this).gen()};");
+		//return mixin(typeof(this)~" val = {"~ typeof(this) ~ ".gen(),0}; val");
+
+	}
+
+	static typeof(this) opCall(scope const T[] init)
+	{
+		mixin("typeof(this) val = void; val.buf = typeof(this).gen(); val.ptr[0..init.length] = init[]; val.length = init.length;");
+
+		static if(Threaded)
+		{
+			import std.parallelism : taskPool, task;
+
+			taskPool.put(task!initWriter(val.buf.ptr,&mail));
+		}
+
+		return val;
+
+	}
+
+
+
+
+
+	/// Number of bytes per page of memory. Use max!T instead.
+	version (Windows)
+		private enum pagesize = 65_536; // This is actually allocation granularity, memory maps must be power of this.
+	else {
+		// Other platforms do not have allocation granularity, but only pagesize.
+		version (AnyARM)
+		{
+			version (iOSDerived)
+				private enum pagesize = 16384;
+			else
+				private enum pagesize = 4096;
+		}
+		else
+			private enum pagesize = 4096;
+
+	}
+
+	// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
+	// Page bit or pagesize in LINUX: xxxx ... xxx1 0000 0000 0000
+	// Page bits in WINDOWS: xxxx ... 1111 1111 1111 1111
+	// Page bits in LINUX: xxxx ... 1111 1111 1111
+
+
+	private enum pagebits = pagesize - 1;  // Returns the bits that the buffer can write to.
+	private enum membits = -pagesize; // Returns the bits that signify the page position.
+
+	nothrow @nogc @trusted @property void length(size_t len) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
+	nothrow @nogc @trusted @property const length() {return buf.length;} // Necessary if previous line is added.
+
+	enum max = pagesize / T.sizeof; /// Returns the maximum size of the buffer depending on the size of T.
+	nothrow @nogc @trusted @property const avail() { return max - buf.length;} // Returns how many T's of free buffer space is available. 
+
+
+
+	T[] buf = void;
+	alias buf this;
+
+	static if (Threaded)
+		align(mail.sizeof) __gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
+	else
+		static assert(typeof(this).sizeof == (T[]).sizeof);
+
+	~this() @nogc @trusted nothrow
 	{
 
 		assert(buf.ptr != null);  // If this is hit, the destructor is called more than once. Performance decreases if true, but will run in release. 
 
-		static if(threaded)
-		{
-			const nulldelg = cast(size_t delegate(T[])) null; // Shorthand for terminate worker thread
-
-			import core.atomic;
-
-			mail.atomicStore!(MemoryOrder.raw)(cast(typeof(mail)) max + 1); // Alert thread
-			while (mail.atomicLoad!(MemoryOrder.raw)() == cast(typeof(mail)) max + 1){} // Wait till thread ready
-
-			mail.atomicStore(cast(typeof(mail)) &nulldelg); // Give source to thread
-			while (mail.atomicLoad!(MemoryOrder.raw) != 0){} // Wait till thread ready
-		}
+		static if(Threaded) this.fill = cast(size_t delegate(T[])) null; // Shorthand for terminate worker thread
 
 		version (Windows)
 			static assert((cast(ptrdiff_t) 0xFFFF0045 & (membits & (~pagesize))) == 0xFFFE0000);
@@ -449,7 +306,7 @@ if(isArray!(ArrayType))
 			static assert((cast(ptrdiff_t) 0xFFFFF045 & (membits & (~pagesize))) == 0xFFFFE000);
 
 		//Set the buffer to page start so that the os unmapper will work. TODO: Check if some OS can do this for us.
-		const buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & (membits & (~pagesize))))[0..buf.length];
+		buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & (membits & (~pagesize))))[0..buf.length];
 
 
 		version (Windows)
@@ -483,166 +340,146 @@ if(isArray!(ArrayType))
 
 	}
 
-	//static assert(typeof(this).sizeof == (T[]).sizeof, "BufErr: Buffer internal size is larger than an array!"); // Allows casting
 
-	// OVERRIDES
-
-	public void opOpAssign(string op : "~")(inout T[] rhs)
-		if(!threaded)
-		{
-			assert(buf.length + rhs.length <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
-
-			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + rhs.length]; 
-			buf[$ - rhs.length .. $] = rhs[];
-		}
-	public void opOpAssign(string op : "~")(inout T rhs) 
-		if(!threaded)
-		{
-			assert(buf.length + 1 <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
-
-			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + 1]; 
-			buf[$-1] = rhs;
-
-		}
-	
-	public void opOpAssign(string op : "~",Source)(Source rhs)
-		if(!threaded && __traits(compiles, { size_t ret = rhs(T[].init);}))
-		{
-
-			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
-
-			scope const size_t len = rhs((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..this.max - buf.length]);
-
-			assert(buf.length + len <= this.max);
-
-			buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
-
-		}
-
-	public void opOpAssign(string op : "~",Source)(Source rhs)
-		if(!threaded && __traits(compiles, { size_t ret = rhs.src()(T[].init);}))
-		{
-
-			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
-
-			scope const size_t len = rhs.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..max - buf.length]);
-
-			assert(buf.length + len <= this.max);
-
-			buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
-
-		}
-	public void opOpAssign(string op : "~",Source)(Source rhs)
-		if(threaded) // Threaded - change source
-		{
-			static if(__traits(compiles, rhs((T[]).init)))
-			{
-				import std.traits : isDelegate /+, isFunctionPointer+/;
-
-				static if(isDelegate!Source)
-				{
-					import core.atomic;
-
-					mail.atomicStore!(MemoryOrder.raw)(cast(typeof(mail)) max + 1); // Alert thread
-					while (mail.atomicLoad!(MemoryOrder.raw)() == cast(typeof(mail)) max + 1){} // Wait till thread ready
-
-					mail.atomicStore(cast(typeof(mail)) &rhs); // Give source to thread
-					while (mail.atomicLoad!(MemoryOrder.raw) != 0){} // Wait till thread ready
-				}
-				else
-				{
-					import std.functional : toDelegate;
-					import core.atomic;
-
-					auto deleg = toDelegate(rhs);
-
-					mail.atomicStore!(MemoryOrder.raw)(cast(typeof(mail)) max + 1); // Alert thread
-					while (mail.atomicLoad!(MemoryOrder.raw)() == cast(typeof(mail)) max + 1){} // Wait till thread ready
-
-					mail.atomicStore(cast(typeof(mail)) &deleg); // Give source to thread
-					while (mail.atomicLoad!(MemoryOrder.raw) != 0){} // Wait till thread ready
-				}
-			}
-			else static assert(0, "BufErrThreaded: "~Source.stringof~" is not of type size_t function("~T[].stringof~"), size_t delegate("~T[].stringof~") or it doesn't have a src() -function that returns either of them.");
-		}
-	public void opOpAssign(string op : "~", Source : typeof(null))(Source rhs) nothrow @nogc @trusted
-		if(threaded) // Threaded - fill from source
-		{
-			import core.atomic : atomicLoad, atomicStore, cas, MemoryOrder;
-
-			assert(buf.length <= max, "BufErrThreaded: Buffer length exceeds capacity or popped when no length");
-
-			scope const i = atomicLoad!(MemoryOrder.raw)(mail);
-
-			if(i > 0) {
-				atomicStore!(MemoryOrder.raw)(mail,cast(typeof(mail))-(i+length)); // Aquire more length
-
-				buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + i];
-			}
-			else if(!cas!(MemoryOrder.raw, MemoryOrder.raw)(&mail,i,-length)){
-				scope const x = atomicLoad!(MemoryOrder.raw)(mail);
-				atomicStore!(MemoryOrder.raw)(mail,-(x+length)); 
-
-				buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + x];
-			}
-		}
-
-
-
-	void opAssign(scope T[] s)
+	void opAssign(scope const T[] newbuf) nothrow @nogc @trusted
 	{
-		assert((cast(ptrdiff_t)s.ptr & mempos) == (cast(ptrdiff_t)buf.ptr & mempos), "BufErr: Setting the buffer to another memory position is not allowed, you can only slice and set slices. ");
-		buf = s.ptr[0..s.length];
+		buf = (cast(T*) newbuf.ptr) [0..newbuf.length];
 	}
 
-	// FUNCTIONS
+	/***********************************
+	* Extends the buffer with new data directly from an array or buffer masquerading as an array. 
+	* In this variant of fill, consuming the source is not needed nor is returning lifetime.
+	* The following must be true on function call:
+	* ---
+	* assert(buffer.avail >= arr.length);
+	* ---
+	* Params:
+	*		isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less than max or less than 2 times max after construction. 
+	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array.
+	*		arr	= Array source that is slicable and has a length property.
+	*/
 
-	nothrow @nogc @trusted @property void length(inout size_t len) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
-	nothrow @nogc @trusted @property auto length() inout {return buf.length;}
+	static if(!Threaded)
+		public void fill(bool isSafe = false)(scope const T[] arr) // Direct write
+			if (!Threaded)
+			{
+				assert(arr.length <= this.avail,"[SAFE] Not enough space available to fill the buffer");
 
-	shared nothrow @nogc @trusted @property void length(inout size_t len) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
-	shared nothrow @nogc @trusted @property auto length() inout {return buf.length;}
-	
+				static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length]; // Safety not guaranteed by caller.
 
-	// INTERNALS
+				(cast(T*)((cast(ptrdiff_t)buf.ptr) + buf.length*T.sizeof)) [0 .. arr.length] = arr[];
+				buf = (cast(T*)(buf.ptr))[0 .. buf.length + arr.length];
+			}
 
-	/// Number of bytes per page of memory. Use max!T instead.
-	version (Windows)
-		private enum pagesize = 65_536; // This is actually allocation granularity, memory maps must be power of this.
-	else {
-		// Other platforms do not have allocation granularity, but only pagesize.
-		version (AnyARM)
-		{
-			version (iOSDerived)
-				private enum pagesize = 16384;
-			else
-				private enum pagesize = 4096;
-		}
-		else
-			private enum pagesize = 4096;
 
-	}
+	/***********************************
+	* Extends the buffer with new data from an abstacted reference source.
+	* Params:
+	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less or equal to max or less than 2 times max after construction. 
+	* Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array. 
+	*				source	= Object that implements the $(SOURCE) src interface.
+	* A source is valid if it implements  $(D_INLINECODE $(BLUE size_t delegate)(T[]) src()) function, where T[] is the area to be filled. 
+	* The src function returns the source delegate/function, which returns the amount of elements written to the given T[].
+	* See_also: Source examples at $(SOURCE)
+	*/
 
-	// Page bit or pagesize in WINDOWS: xxxx ... xxx1 0000 0000 0000 0000
-	// Page bit or pagesize in LINUX: xxxx ... xxx1 0000 0000 0000
-	// Page bits in WINDOWS: xxxx ... 1111 1111 1111 1111
-	// Page bits in LINUX: xxxx ... 1111 1111 1111
+	static if(!Threaded)
+		public void fill(bool isSafe = false, Source)(ref Source source) // Attributes defined lower
+			if(!Threaded)
+			{
+				static if(!isSafe) buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-	private enum pagebits = pagesize - 1;  // Returns the bits that the buffer can write to.
-	private enum membits = -pagesize; // Returns the bits that signify the page position including page bit.
-	private enum mempos = membits * 2; // Returns the bits that signify the page position excluding page bit.
+				scope ptrdiff_t len = void;
 
-	/++
-	Maximum amount of items that the buffer can hold. Use this and length to determine how much can be concatenated.
-	+/
-	enum max = pagesize / T.sizeof; 
+				// Fill the empty area of the buffer. Returns less than 0 if source is dead. Otherwise read amount.
+				static if(__traits(compiles, cast(ptrdiff_t) source(T[].init)))
+					len = source((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..avail]); // source direct
+				else static if(__traits(compiles, cast(ptrdiff_t) source.src()(T[].init))) // source.src
+					len = source.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..avail]);
+				else static assert(0, "Source interface not defined. See documentation for information. You may require a cast if doing [1,2,3] as an array.");
 
-	static if(threaded)
-		enum source = null;
+
+				assert(len <= this.max);
+
+				buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
+
+			}
+
+	/***********************************
+	* Sets the source which the buffer uses to fill itself. A subsequent call without params is needed
+	* to query the background thread for new data.
+	* Params:
+	*				source	= Object that implements the $(SOURCE) src interface.
+	* A source is valid if it implements $(D_INLINECODE $(BLUE size_t delegate)(T[]) src()) function, where T[] is the area to be filled. 
+	* The src function returns the source delegate/function, which returns the amount of elements written to the given T[].
+	* See_also: Source examples at $(SOURCE)
+	*/
+
+	static if(Threaded)
+		public void fill()(scope const size_t delegate(T[]) source) @property // Change source
+			if(Threaded)
+			{
+				import core.atomic;
+
+				mail.atomicStore!(MemoryOrder.raw)(cast(typeof(mail)) max + 1); // Alert thread
+				while (mail.atomicLoad!(MemoryOrder.raw)() == cast(typeof(mail)) max + 1){} // Wait till thread ready
+
+				mail.atomicStore(cast(typeof(mail)) &source); // Give source to thread
+				while (mail.atomicLoad!(MemoryOrder.raw) != 0){} // Wait till thread ready
+			}
+
+
+	static if(Threaded)
+		public void fill()(size_t function(T[]) source) // Change source
+			if(Threaded)
+			{
+				import std.functional : toDelegate;
+				fill(source.toDelegate);
+			}
+
+
+	/***********************************
+	* Extends buffer by the amount of data read by the buffer and orders buffer to read additional data from the same source. 
+	* Params:
+	*				isSafe = Safety guarantee optimization, set to true if pop count after last unsafe fill is less or equal to max or less than 2 times max after construction. 
+	* Safety guaranteed calls can be stacked, but a singular call is more efficient.
+	*/
+
+	static if(Threaded)
+		public void fill(bool isSafe = false)()  @nogc nothrow
+			if(Threaded)
+			{
+				import core.atomic : atomicLoad, atomicStore, cas, MemoryOrder;
+				debug import std.math : abs;
+
+				assert(buf.length <= max, "Error! Buffer length exceeds capacity or popped when no length");
+
+				scope const i = atomicLoad!(MemoryOrder.raw)(mail);
+
+				if(i > 0) {
+					atomicStore!(MemoryOrder.raw)(mail,cast(typeof(mail))-(i+length)); // Aquire more length
+
+					static if(isSafe)
+						buf = buf.ptr[0..buf.length + i];
+					else
+						buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + i];
+				}
+				else if(!cas!(MemoryOrder.raw, MemoryOrder.raw)(&mail,i,-length)){
+					scope const x = atomicLoad!(MemoryOrder.raw)(mail);
+					atomicStore!(MemoryOrder.raw)(mail,-(x+length)); 
+
+					static if(isSafe)
+						buf = buf.ptr[0..buf.length + x];
+					else
+						buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0..buf.length + x];
+				}
+
+			}
+
 
 	// Concurrent background thread
 	static void initWriter()(scope const T* ptr, scope typeof(mail)* mailptr)
-		if(threaded)
+		if(Threaded)
 		{
 			import core.atomic;
 
@@ -714,198 +551,326 @@ if(isArray!(ArrayType))
 
 
 
-}
 
-// UNITTESTS
 
-// Instantiating, to ensure the doc is not cluttered, this should be showcased elsewhere.
-unittest
-{
-	import std.stdio;
-	auto buf = buffer("Hello world!");
-	static assert( is(typeof(buf) == buffer!(char[], false)) );
 
-	buffer!(char[], false) bufd = "Hello world!";
-	static assert( is(typeof(bufd) == buffer!(char[], false)) );
 
-	const bufc = buffer("Hello world!");
-	static assert( is(typeof(bufc) == const buffer!(char[], false)) );
 
-	const buffer!(char[], false) bufcd = "Hello world!";
-	static assert( is(typeof(bufcd) == const buffer!(char[], false)) );
 
-	shared bufs = buffer("Hello world!");
-	static assert( is(typeof(bufs) == shared buffer!(char[], false)) );
 
-	shared buffer!(char[], false) bufsd = "Hello world!";
-	static assert( is(typeof(bufsd) == shared buffer!(char[], false)) );
-}
 
-@trusted unittest // Unthreaded
-{
-	auto bufz = buffer([1,2,3,4,5]);
-	static assert( is(typeof(bufz) == buffer!(int[], false)) );
-
-	assert(bufz == [1,2,3,4,5]);
-
-	bufz ~= [6,7,8,9];
-	assert(bufz == [1,2,3,4,5,6,7,8,9]);
-
-	bufz ~= 0;
-	assert(bufz == [1,2,3,4,5,6,7,8,9,0]);
-
-	bufz.length = 9; 
-	assert(bufz == [1,2,3,4,5,6,7,8,9]);
-
-	bufz.deinit;
-
-	auto bufy = buffer((ulong[]).init);
-	static assert( is(typeof(bufy) == buffer!(ulong[], false)) );
-	bufy ~= 0;
-	assert(bufy == [0]);
-	bufy.deinit;
-
-}
-
-@trusted unittest // Threaded
-{
-	auto bufs = tbuffer((int[]).init);
-	static assert(is(typeof(bufs) == buffer!(int[], true)));
-
-	auto rhs = cast(size_t delegate(int[])) (int[] x){x[0] = 1; return 1;};
-	static assert(__traits(compiles, rhs((int[]).init)));
-
-	bufs ~= (int[] x){x[0] = 1; return 1;}; // Set source
-	while(bufs.length == 0) {bufs ~= bufs.source;} // Read from source set earlier
-
-	assert(bufs == [1]);
-
-	bufs.deinit;
-}
-
-unittest // Visuald issue
-{
-	struct test(T) {
-		T[] buf;
-
-		this(T[] arr)
-		{
-			buf = arr;
-		}
-
-		void print()
-		{
-			import std.stdio;
-			writeln(buf);
-		}
+	public void opBinary(string op : "<<", T)(ref T rhs) 
+	{
+		fill(rhs);
 	}
 
-	// TODO: Write up a bug report for visuald, this seems to run well if run without using dmd on debug mode and errors only on windows x64, not on x86. Linux works.
-	// Only fails when using visuald, so low priority.
+	public void opBinary(string op : "<<", T)(T rhs)
+	{
+		fill(rhs);
+	}
 
-	// The following do not compile in dmd debug, but do on release. Same issue with ushort. LDC works well. Runs on debug as well if set to x86 mode.
-	//test!short([1,2,3,4,5]);
-	//test!ushort([1,2,3,4,5]);
-	//test!double(cast(double[]) [1,2,3,4,5]);
-	//test!real(cast(real[]) [1,2,3,4,5]);
 
-	/+ DMD Debug
-	error LNK2001: unresolved external symbol "TypeInfo_Axs.__init" (_D12TypeInfo_Axs6__initZ)
-	fatal error LNK1120: 1 unresolved externals
-	´+/
+	public void opOpAssign(string op : "<<", T)(ref T rhs)
+	{
+		fill!(true)(rhs);
+	}
+
+	public void opOpAssign(string op : "<<", T)(T rhs)
+	{
+		fill!(true)(rhs);
+	}
+
+	unittest {
+		Buffer!char buf = "Hello World!";
+		assert(buf.length == "Hello World!".length);
+
+		assert(buf[$/2..$].length == "World!".length);
+
+		buf.length = "Hello World".length;
+		assert(buf == "Hello World");
+
+		buf.length = "Hello".length;
+		assert(buf == "Hello");
+	}
+
+
+
 
 }
 
+/// Construction
+unittest
+{
+	import buffer;
 
-	
+	scope bufchar = Buffer!()(); // Create buffer, defaults to char[]
+	assert(bufchar == "");
 
-unittest {
-	auto buf = buffer("Hello World!");
-	assert(buf.length == "Hello World!".length);
+	scope Buffer!int bufint = Buffer!int(); // Create buffer of int[]
+	assert(bufint == []);
 
-	assert(buf[$/2..$].length == "World!".length);
+	// With fill, internally calls constructor and then fill()
 
-	buf.length = "Hello World".length;
-	assert(buf == "Hello World");
+	scope Buffer!char fakebufchar = "Hello World!";
+	assert(fakebufchar.avail == fakebufchar.max - "Hello World!".length);
 
-	buf.length = "Hello".length;
-	assert(buf == "Hello");
+	scope Buffer!int fakebufint = [1,2,3,4,5];
+	assert(fakebufint.avail == fakebufint.max - ([1,2,3,4,5]).length);		
+
+	scope Buffer!char fakebufcharlong = Buffer!char("Hello World!");
+	assert(fakebufcharlong.avail == fakebufcharlong.max - "Hello World!".length);
+
+	scope Buffer!int fakebufintlong = Buffer!int([1,2,3,4,5]);
+	assert(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);	
 }
 
 
-// Usage
+/// Usage
 unittest 
 {
-	import elembuf,source;
-	import std.stdio;
+	// [BASIC]
+	import buffer,source;
 
-	// Construct
-	auto buf = buffer("");
-	static assert(is(typeof(buf) == buffer!(char[], false)));
+	Buffer!char buf = Buffer!()();
 
-	auto src = "buf".ArraySource!char;
-	size_t delegate(char[]) srclambda = (char[] buffer){buffer[0] = '!'; return 1;};
+	// Sources could also directly use a delegate lambda => "(char[] x){return numberOfElementsWrittenToXArray}"
+	auto srcworld = " World".ArraySource!char;
+	auto srcbuf = "buf".ArraySource!char;
 
-	// Fill
+	buf.fill("Hello"); // Old method of filling without abstraction
+	assert(buf == "Hello");
 
-	buf ~= "-Elem"; 
-	assert(buf == "-Elem");
+	buf.fill(srcworld); // Old method of filling with abstraction
+	assert(buf == "Hello World");
 
-	buf ~= src; 
-	assert(buf == "-Elembuf");
+	buf << " -Elem"; // Modern way of filling, equivalent to .fill
+	assert(buf == "Hello World -Elem");
 
-	buf ~= srclambda;
-	assert(buf == "-Elembuf!");
+	buf <<= srcbuf; // Modern way of filling, equivalent to .fill!true
+	assert(buf == "Hello World -Elembuf");
 
-	// Empty
+	buf.length = 0; // Remove all items. O(1)
+	assert(buf == "" && buf.ptr[0..5] == "Hello"); // Elements are not truly gone until overwritten.
 
-	buf = buf[5..$];
-	assert(buf == "buf!");
+	// Sources should not output anything as they are used. Reusable sources can be implemented with a lambda.
+	buf << srcworld;
+	buf <<= srcbuf;
 
-	buf.length = 0; 
-	assert(buf == "" && buf.ptr[0..4] == "buf!");
-	
+	assert(buf == ""); // Previous source reads did not output to buf as they were empty.
+}
+
+
+/// Optimization
+unittest
+{
+	// [INTERMEDIATE]
+	// Removing all overhead from fill by using compile-time guarantees by counting increments to slice pointer.  
+
+	import buffer;
+
+	char[] data(size_t characters) pure nothrow @trusted
+	{
+		char[] arr;
+		arr.reserve(characters);
+		arr.length = characters;
+
+		arr[] = ' ';
+		return arr;
+	}
+
+	Buffer!char buf = Buffer!()(); /// There is (max * 2 - 1) of free pops after construction and max after fill.
+
+	// max * 2 - 1 pops left
+
+	buf <<= data(buf.max); // '=' signifies unsafe fill. it is proven safe in this example
+	buf = buf[$ .. $]; // Do work
+
+	assert(buf == "");
+
+	// max - 1 pops left
+
+	assert(buf.avail - 1 == buf.max - 1);
+
+	buf <<= data(buf.avail - 1); // In this case, (avail - 1) == (max - 1)
+	buf = buf[$ .. $]; // We've now used our pops => 0 pops available
+
+	assert(buf == "");
+
+	// Out of free pops after construction. Next pop to an unsafely filled buffer will cause an exception eventually.
+	// From this point on, every safe fill will set max to available pops
+
+	buf << data(0); // Safety is now reinstated by the buffer. => Max pops available
+	assert(buf == ""); // While there are max pops available, there is nothing to pop
+
+	buf <<= "a";
+	buf <<= data(buf.max-1);
+
+	assert(buf[0] == 'a');
+	buf = buf [$..$]; // We've now used our pops => 0 pops available
+
+	// Note: Changing length does not add to the pop count.
+
+	buf << data(buf.max);
+	buf.length = buf.max/2; // Setting length is @nogc in a buffer
+	buf <<= data(buf.max/2); // We still have max pops.
+
+	buf = buf [$..$]; // We've now used our pops => 0 pops available
+
 }
 
 
 
-
-
-
-
-unittest // slices
+/// Properties
+unittest
 {
-	auto buf = buffer([0,1,2,3,4]);
-	int[] a = buf[3..$];
+	// [ADVANCED]
+	// This is a example of how to mirror data to create new array item orders using a mirror.
+	// X will represent max/2 amount of data that is viewed by the buffer and O data that is not viewed, but still owned by it.
+	// | will represent the mirror or page boundary. Left side of | is reality and right side is the mirror image.
+
+	// OO|OO => First O is identical to third O & Second O is identical to fourth O.
+	// XX|OO Length is max.
+	// OX|OO max/2 is popped
+	// OX|XO Length is max => Data order is now reversed, First is the second half of max/2 and then is the first half.
+	// Example on how to do this:
+
+	import buffer;
+
+	Buffer!char buf = Buffer!()(); // OO|OO
+	buf.length = buf.max; // XX|OO
+
+	buf = buf[buf.max/2..$]; // OX|OO
+	buf[] = 'a'; // Set all in X to 'a' => 0a|0a
+	buf.length = buf.max; // OX|XO
+	buf[$/2..$] = 'b'; // Set all X right side of | to 'b' => ba|ba
+
+	// The buffer is in a mirror |, half of the buffer is in the first page and half in second page. OX|XO
+	// It is possible to invert the buffer so, that data starts with 'b' instead of 'a'.
+	// Data is identical left and right side of the mirror, thus inversion can be sought from the mirror.
+
+	// a, OX|XO
+	buf = (buf.ptr - buf.max/2)[0..buf.max]; // XX|OO
+	assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // Opt: In this case $ could be buf.max as well.
+
+	// b, XX|OO
+	buf = (buf.ptr + buf.max)[0..buf.length]; // OO|XX
+	assert(buf[0] == 'b' && buf[$/2+1] == 'a'); // As seen, both sides are identical. Both pages contain a's and b's. 
+
+} 
+
+/// Reusage
+unittest
+{
+	// [EXPERT]
+	// Working with multiple buffers and sharing buffers. 
 	
-	assert(a == [3,4]);
-	static assert(!is(typeof(a) == typeof(buf)));
+	import buffer;
+
+	/* Multiple buffers */
+	{
+		scope buf = Buffer!()();
+		scope bufslice = buf; // Slice of buf.
+
+		buf.length = 1;
+		bufslice.length = 1;
+
+		buf[0] = 'a';
+		assert(bufslice[0] == 'a');
+	} // deallocation occurs here due to scope.
+
+	// Let's say that another buffer is allocated.
+	// If the earlier examples were not scope and not encircled in curly brackets, a new buffer, "bufn", would have seen an error. 
+	
+	Buffer!char bufn = Buffer!()();
+	
+	// The reason is that the earlier buffers would have deallocated during this comment, rather than during the closing squirly brackets.
+
+	// This is fine on all other operating systems except on Windows.
+	// On Windows, there can only be one buffer and all new constructions, Buffer!()(), will be slices of the original.
+	// If bufn fills memory after it is deallocated by buf or bufslice, it breaks on windows. This is why we use scope and squirly brackets to make this work.
+
+	bufn << "Hello world!"; // As said, this would have caused an error if not for scope.
+
+	// NOTE: Had bufslice been passed to a function, it would have deallocated buf in addition to bufslice. Thus you cannot pass buffer slices to functions.
+
+	/* Sharing buffers */
+
+	// Method 1: Normal slices
+	{
+		scope buf = Buffer!()();
+		char[] slice = buf; // While buffer slices deallocate original, normal slices do not.
+
+		buf << slice; // We can pass a normal slice to a function. A simple cast(char[]) would've worked as well.
+
+	} // deallocation occurs here due to scope.
+
+	// Method 2: Public shared buffers
+	{
+		// The idea is that you can define a global in module scope and make it deallocate only when the program exits. 
+		// You can also make it shared so other threads can take advantage of it as well. You can do it like this:
+
+		/* public */ shared Buffer!() bufs = cast(shared) Buffer!()(); 
+		assert(bufs == cast(shared) []);
+	}
+
+}
+
+unittest // issue #3 - minimal example
+{
+	import buffer;
+
+	Buffer!() bufchar = Buffer!()();
+	assert(bufchar == "");
+	bufchar.buf = bufchar.ptr[0..12];
+	assert(bufchar.length == 12);
+	bufchar[] = "Hello world!";
+	assert(bufchar == "Hello world!");
+}
+
+unittest // issue #2 - mutable -> shared
+{
+	import buffer;
+
+	shared Buffer!() bufcharshared = cast(shared) Buffer!()();
+	assert(bufcharshared == cast(shared char[]) "");
+}
+
+unittest // mutable -> const -> immutable
+{
+	import buffer;
+
+	// Buffer must always be mutable. It is however possible to give an immutable slice.
+
+	Buffer!() buf = Buffer!()();
+	immutable string slice = cast(const string) buf; // Internally passes a slice
+	assert(slice == "");
+
+	shared auto sliceshared = slice; // Immutable implicitly converts to shared
 }
 
 unittest // T.sizeof > 1
 {
-	auto buf = buffer((size_t[]).init);
+	Buffer!size_t buf = Buffer!size_t();
 	static assert(buf[0].sizeof > 1); 
 
-	buf ~= [1,2,3];
+	buf << cast(size_t[]) [1,2,3];
 	
 	auto sum = 0;
 	foreach(i; buf) {sum += i;}
 	assert(sum == 6);
 
-	buf ~= [1,2,3];
+	buf << cast(size_t[]) [1,2,3];
 	foreach(i; buf) {sum += i;}
 
 	assert(sum == 6 + 12);
 
 }
 
-
-/+ 
+/* 
 This is a conventional buffer that should not be used in applications.
 It is used purely for internal benchmarking when comparing a
 circular buffer implementation with copying buffers.
-+/ 
+*/ 
 struct StaticCopyBuffer(InternalType = char)
 {
 	alias T = InternalType;
@@ -1007,7 +972,7 @@ struct StaticCopyBuffer(InternalType = char)
 
 	unittest 
 	{
-		import elembuf, source;
+		import buffer, source;
 
 		scope bufchar = StaticCopyBuffer!()(); // Create buffer
 		assert(bufchar == "");
@@ -1150,10 +1115,10 @@ unittest // Test all implementations
 
 	enum fakemax = (char.max+1)*2;
 
-	auto sbuf = buffer("");
+	Buffer!char sbuf = "";
 	StaticCopyBuffer!char cbuf = "";
 
-	sbuf ~= (data(fakemax));
+	sbuf.fill(data(fakemax));
 	cbuf.fill(data(fakemax));
 
 	assert(sbuf[0] == cast(char) 0);
@@ -1182,7 +1147,7 @@ unittest // Test all implementations
 	assert(sbuf == cbuf);
 	assert(sbuf.length == cbuf.length);
 
-	sbuf ~= (data(fakemax/2));
+	sbuf.fill(data(fakemax/2));
 	cbuf.fill(data(fakemax/2));
 
 	assert(sbuf[0] == cast(char) 0);

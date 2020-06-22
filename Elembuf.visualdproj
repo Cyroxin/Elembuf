@@ -34,7 +34,7 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>1</useUnitTests>
+  <useUnitTests>0</useUnitTests>
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
@@ -508,7 +508,7 @@
   <vgc>0</vgc>
   <symdebug>1</symdebug>
   <symdebugref>1</symdebugref>
-  <optimize>1</optimize>
+  <optimize>0</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
   <isLinux>0</isLinux>
@@ -527,7 +527,7 @@
   <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>0</useUnitTests>
-  <useInline>1</useInline>
+  <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
@@ -631,7 +631,7 @@
   <vgc>0</vgc>
   <symdebug>0</symdebug>
   <symdebugref>1</symdebugref>
-  <optimize>0</optimize>
+  <optimize>1</optimize>
   <cpu>0</cpu>
   <isX86_64>0</isX86_64>
   <isLinux>0</isLinux>
@@ -650,7 +650,7 @@
   <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>0</useUnitTests>
-  <useInline>0</useInline>
+  <useInline>1</useInline>
   <release>1</release>
   <preservePaths>0</preservePaths>
   <warnings>0</warnings>
@@ -772,7 +772,7 @@
   <useArrayBounds>0</useArrayBounds>
   <boundscheck>2</boundscheck>
   <useSwitchError>0</useSwitchError>
-  <useUnitTests>1</useUnitTests>
+  <useUnitTests>0</useUnitTests>
   <useInline>0</useInline>
   <release>0</release>
   <preservePaths>0</preservePaths>
@@ -994,6 +994,7 @@
    <File path="docs\buffer.html" />
    <File path="docs\source.html" />
   </Folder>
+  <Folder name="tests" />
   <Folder name="source">
    <File path="source\buffer.d" />
    <File path="source\source.d" />

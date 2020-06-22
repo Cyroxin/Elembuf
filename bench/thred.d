@@ -6,7 +6,7 @@ void thredmain()
 	import std.stdio;
 	import std.datetime.stopwatch;
 	import core.time : dur;
-	import elembuf;
+	import buffer;
 	import source : NetSource;
 	import std.conv : to;
 	import std.string : indexOf;
@@ -26,7 +26,7 @@ void thredmain()
 		return x.length;
 	};
 
-/+
+/*
 	auto src = (char[] x) 
 	{
 		foreach(i; 0 .. x.length)
@@ -34,15 +34,12 @@ void thredmain()
 
 		return cast(ptrdiff_t) x.length;
 	};
-+/
+*/
 
 	// INFO:
 	// The benchmark is for comparing internal threaded and unthreaded performance.
 	// It will take exactly 60 seconds. 
 	// Result analysis: Threaded buffer should perform better when receiving or processing source data takes time.
-
-	//Threaded buffer processed bytes:		108923014	time:	30 secs and 1 Î¼s
-	//Unthreaded buffer processed bytes:	4385951		time:	30 secs, 1 Î¼s, and 9 hnsecs
 
 
 	auto sw = StopWatch();
@@ -53,8 +50,8 @@ void thredmain()
 
 
 	{
-		scope auto threadedbuf = tbuffer("");
-		threadedbuf ~= src;
+		scope Buffer!(char, true) threadedbuf = "";
+		threadedbuf.fill = src;
 
 
 	sw.start;
@@ -63,7 +60,7 @@ void thredmain()
 	{
 
 		// Fill when needed
-		threadedbuf ~= threadedbuf.source;
+		threadedbuf.fill();
 
 		// Pop
 		if(threadedbuf.length > 0)
@@ -75,7 +72,6 @@ void thredmain()
 	}
 
 	sw.stop;
-	threadedbuf.deinit; 
 
 	writeln("Threaded buffer processed bytes:	", poppedThreaded, "	time:	", sw.peek());
 
@@ -85,14 +81,14 @@ void thredmain()
 
 
 	{
-	scope auto buf = buffer("");
+	scope Buffer!(char,false) buf = "";
 	sw.reset;
 
 	while(sw.peek() < dur!"seconds"(30))
 	{
 
 		// Fill when needed.
-		buf ~= src;
+		buf.fill(src);
 		
 		// Pop
 		if(buf.length > 0)
@@ -105,7 +101,6 @@ void thredmain()
 
 	sw.stop;
 
-	buf.deinit;
 	}
 
 	writeln("Unthreaded buffer processed bytes:	", popped, "	time:	", sw.peek());
