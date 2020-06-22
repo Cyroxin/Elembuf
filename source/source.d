@@ -198,14 +198,14 @@ struct ArraySource(InternalType = char)
 		{
 			if (arr.length > x.length)
 			{
-				x[] = arr.ptr[0..x.length];
+				x.ptr[0..x.length] = arr.ptr[0..x.length];
 				arr = arr.ptr[x.length .. arr.length];
 				return x.length;
 			}
 			else
 			{
-				x[0..arr.length] = arr.ptr[0..arr.length];
-				scope(exit) arr = arr.ptr[0..0]; // It is safe to not reset, as it cannot be reused.
+				x.ptr[0..arr.length] = arr.ptr[0..arr.length];
+				scope(success) arr = arr.ptr[0..0];
 				return arr.length;
 			}
 		};

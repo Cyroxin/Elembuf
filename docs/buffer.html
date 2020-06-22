@@ -3,7 +3,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>buffer</title>
+    <title>elembuf</title>
     <style type="text/css" media="screen">
       html, body, div, span, object, iframe, h1, h2, h3, h4, h5, h6, p,
       blockquote, pre, a, abbr, address, cite, code, del, dfn, em, figure,
@@ -508,7 +508,7 @@
   <body id="ddoc_main" class="ddoc dlang">
     <div class="content_wrapper">
       <article class="module">
-        <h1 class="module_name">buffer</h1>
+        <h1 class="module_name">elembuf</h1>
         <section id="module_content"><section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
@@ -516,120 +516,42 @@
 
   </p>
 </div>
-
-</section>
-<section class="section ddoc_module_members_section">
-  <div class="ddoc_module_members">
-    <ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#Buffer" id="Buffer"><code class="code">Buffer</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="Buffer"></span>struct <code class="code">Buffer</code>(InternalType = char, bool Threaded = false);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Dynamic buffer with a maximum length of one memory page which can take up to <a href="#Buffer.max">max</a> elements.
- Takes an advantage of the system's memory mirroring capabillities to
- create a memory loop so that memory copying wont be necessary.
- The buffer may be manipulated normally as if it were a T[].
-
-  </p>
-</div>
-<div class="ddoc_params">
-  <h4>Parameters</h4>
-  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
-    <tbody>
-      <tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">InternalType</em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Element type which the buffer will hold.
-    </p>
-  </div>
-</td>
-</tr>
-<tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">Threaded</em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Create a background thread to fill the buffer. Makes it no longer directly castable to T[].
-    </p>
-  </div>
-</td>
-</tr>
-
-    </tbody>
-  </table>
-</div>
-<div class="ddoc_bugs">
-  <h4>Bugs</h4>
-  <p class="para">
-    
-<ul><li>Setting the buffer to anything else than memory that the buffer owns will cause an exception.</li>
-<li>Copying will cause the original buffer to deallocate when out of scope. Instead pass slices, use a module-level global variable or do not deallocate instances.</li>
-<li><b style="color:blue;">[WINDOWS]</b> Additional instances will become slices of the original buffer.</li>
-</ul>
- <br>
-<hr />
-  </p>
-</div>
 <div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    Construction
+    Dynamic circular array with a maximum length. <br> <br>
+ <p><span class="font_big"> Takes an advantage of the system's memory mirroring capabillities to
+ create a memory loop so that memory copying wont be necessary.
+ The buffer may be manipulated normally as if it were a T[] and can be implicitly converted to it.</span></p>
+<br><br>
+
+<ul><li><span class="font_big">The concat operator cannot be used in @nogc code, but it does not use the GC.</span></li>
+<li><span class="font_big"> <b style="color:blue;">[WINDOWS]</b> Only one instance allowed. Additional will become slices of the original buffer. </span></li>
+</ul>
+ <br>
+<hr />
+
+
+ <br> <span class="font_big"><b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b></span> <br> <br>
 
 <section class="code_listing">
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="keyword">import</span> buffer;
+        <li><code class="code"><span class="comment">// Import
+</span><span class="keyword">import</span> <span class="psymbol">elembuf</span>;
 
-<span class="keyword">scope</span> bufchar = <span class="psymbol">Buffer</span>!()(); <span class="comment">// Create buffer, defaults to char[]
-</span><span class="keyword">assert</span>(bufchar == <span class="string_literal">""</span>);
+<span class="comment">// Instantiate
+</span><span class="keyword">auto</span> buf = buffer(<span class="string_literal">"Hello "</span>);
 
-<span class="keyword">scope</span> <span class="psymbol">Buffer</span>!<span class="keyword">int</span> bufint = <span class="psymbol">Buffer</span>!<span class="keyword">int</span>(); <span class="comment">// Create buffer of int[]
-</span><span class="keyword">assert</span>(bufint == []);
+<span class="comment">// Ensure new data fits
+</span><span class="keyword">assert</span>(buf.max &gt;= <span class="string_literal">"world!"</span>.length + buf.length); 
 
-<span class="comment">// With fill, internally calls constructor and then fill()
-</span>
-<span class="keyword">scope</span> <span class="psymbol">Buffer</span>!<span class="keyword">char</span> fakebufchar = <span class="string_literal">"Hello World!"</span>;
-<span class="keyword">assert</span>(fakebufchar.avail == fakebufchar.max - <span class="string_literal">"Hello World!"</span>.length);
+<span class="comment">// Fill
+</span>buf ~= <span class="string_literal">"world!"</span>;
 
-<span class="keyword">scope</span> <span class="psymbol">Buffer</span>!<span class="keyword">int</span> fakebufint = [1,2,3,4,5];
-<span class="keyword">assert</span>(fakebufint.avail == fakebufint.max - ([1,2,3,4,5]).length);		
-
-<span class="keyword">scope</span> <span class="psymbol">Buffer</span>!<span class="keyword">char</span> fakebufcharlong = <span class="psymbol">Buffer</span>!<span class="keyword">char</span>(<span class="string_literal">"Hello World!"</span>);
-<span class="keyword">assert</span>(fakebufcharlong.avail == fakebufcharlong.max - <span class="string_literal">"Hello World!"</span>.length);
-
-<span class="keyword">scope</span> <span class="psymbol">Buffer</span>!<span class="keyword">int</span> fakebufintlong = <span class="psymbol">Buffer</span>!<span class="keyword">int</span>([1,2,3,4,5]);
-<span class="keyword">assert</span>(fakebufintlong.avail == fakebufintlong.max - ([1,2,3,4,5]).length);
+<span class="comment">// Read
+</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello world!"</span>);
 </code></li>
       </ol>
     </div>
@@ -640,42 +562,32 @@
 </div><div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    Usage
+    <br> <span class="font_big"><b>IO - Fast library integration</b></span>
+<br><br>
+<span class="font_big"> There is no need to create a new container just so outdated push/pop queues and lists can work with socket and file system libraries that require pointers. Just use a lambda! </span> <br> <br>
+
+<hr />
+<br>
 
 <section class="code_listing">
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [BASIC]
-</span><span class="keyword">import</span> buffer,source;
+        <li><code class="code"><span class="comment">// Construct
+</span><span class="keyword">auto</span> buf = buffer([1,2,3]);
 
-<span class="psymbol">Buffer</span>!<span class="keyword">char</span> buf = <span class="psymbol">Buffer</span>!()();
-
-<span class="comment">// Sources could also directly use a delegate lambda =&gt; "(char[] x){return numberOfElementsWrittenToXArray}"
-</span><span class="keyword">auto</span> srcworld = <span class="string_literal">" World"</span>.ArraySource!<span class="keyword">char</span>;
-<span class="keyword">auto</span> srcbuf = <span class="string_literal">"buf"</span>.ArraySource!<span class="keyword">char</span>;
-
-buf.fill(<span class="string_literal">"Hello"</span>); <span class="comment">// Old method of filling without abstraction
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello"</span>);
-
-buf.fill(srcworld); <span class="comment">// Old method of filling with abstraction
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello World"</span>);
-
-buf &lt;&lt; <span class="string_literal">" -Elem"</span>; <span class="comment">// Modern way of filling, equivalent to .fill
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello World -Elem"</span>);
-
-buf &lt;&lt;= srcbuf; <span class="comment">// Modern way of filling, equivalent to .fill!true
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">"Hello World -Elembuf"</span>);
-
-buf.length = 0; <span class="comment">// Remove all items. O(1)
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">""</span> &amp;&amp; buf.ptr[0..5] == <span class="string_literal">"Hello"</span>); <span class="comment">// Elements are not truly gone until overwritten.
+<span class="keyword">auto</span> source = (<span class="keyword">int</span>[] array) { array[0] = 4; <span class="keyword">return</span> 1;}; <span class="comment">//  Give array.ptr to socket.receive if using sockets. Return written.
 </span>
-<span class="comment">// Sources should not output anything as they are used. Reusable sources can be implemented with a lambda.
-</span>buf &lt;&lt; srcworld;
-buf &lt;&lt;= srcbuf;
+<span class="comment">// Fill
+</span>buf ~= source;
+<span class="keyword">assert</span>(buf == [1,2,3,4]);
 
-<span class="keyword">assert</span>(buf == <span class="string_literal">""</span>); <span class="comment">// Previous source reads did not output to buf as they were empty.
-</span></code></li>
+<span class="comment">// Reuse
+</span>buf.length = 0;
+buf ~= source;
+buf ~= 5;
+<span class="keyword">assert</span>(buf == [4,5]);
+</code></li>
       </ol>
     </div>
   </div>
@@ -685,64 +597,73 @@ buf &lt;&lt;= srcbuf;
 </div><div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    Optimization
+    <br> <span class="font_big"><b>Design - Type freedom</b></span>
+<br><br>
+<span class="font_big"> Types should be easy to use by the user, not obscure behind a type deduction declaration.</span> <br> <br>
+
+<hr />
+<br>
 
 <section class="code_listing">
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [INTERMEDIATE]
-</span><span class="comment">// Removing all overhead from fill by using compile-time guarantees by counting increments to slice pointer.  
+        <li><code class="code">buffer!(<span class="keyword">char</span>[], <span class="keyword">false</span>) buf = buffer(<span class="string_literal">""</span>);
+
+buffer!(<span class="keyword">char</span>[], <span class="keyword">true</span>) tbuf = tbuffer(<span class="string_literal">""</span>);
+<span class="keyword">scope</span>(exit) tbuf.deinit;
+
+<span class="keyword">shared</span> buffer!(<span class="keyword">char</span>[], <span class="keyword">false</span>) csbuf = buffer(<span class="string_literal">""</span>);
+<span class="keyword">const</span> buffer!(<span class="keyword">char</span>[], <span class="keyword">false</span>) cibuf = buffer(<span class="string_literal">""</span>);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+  </p>
+</div><div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    <br> <span class="font_big"><b>Concurrency - Built in for your convenience</b></span>
+<br><br>
+<span class="font_big"> Simple solution that works efficiently out of the box. Syncronized in the background without need for fiddling.</span> <br> <br>
+
+<hr />
+<br>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">auto</span> buf = tbuffer((size_t[]).init); <span class="comment">// Producer thread created and syncronized
 </span>
-<span class="keyword">import</span> buffer;
+size_t counter;
 
-<span class="keyword">char</span>[] data(size_t characters) <span class="keyword">pure</span> <span class="keyword">nothrow</span> @trusted
+size_t <span class="keyword">delegate</span>(size_t[]) source = (size_t[] array) 
+{ 
+	<span class="keyword">foreach</span>(<span class="keyword">ref</span> i; array)
+	{
+		i = counter;
+		counter++;
+	}
+
+	<span class="keyword">return</span> array.length;
+};
+
+buf ~= source; <span class="comment">// Give instructions to producer
+</span>
+
+<span class="keyword">for</span>(<span class="keyword">int</span> i; i &lt; buf.max * 5; )
 {
-	<span class="keyword">char</span>[] arr;
-	arr.reserve(characters);
-	arr.length = characters;
-
-	arr[] = ' ';
-	<span class="keyword">return</span> arr;
+	<span class="keyword">while</span>(buf.length == 0) 
+		buf ~= buf.source; <span class="comment">// Aquire data from producer
+</span>
+	i += buf.length;
+	buf = buf[$..$];
 }
 
-<span class="psymbol">Buffer</span>!<span class="keyword">char</span> buf = <span class="psymbol">Buffer</span>!()(); <span class="comment">/// There is (max * 2 - 1) of free pops after construction and max after fill.
-</span>
-<span class="comment">// max * 2 - 1 pops left
-</span>
-buf &lt;&lt;= data(buf.max); <span class="comment">// '=' signifies unsafe fill. it is proven safe in this example
-</span>buf = buf[$ .. $]; <span class="comment">// Do work
-</span>
-<span class="keyword">assert</span>(buf == <span class="string_literal">""</span>);
-
-<span class="comment">// max - 1 pops left
-</span>
-<span class="keyword">assert</span>(buf.avail - 1 == buf.max - 1);
-
-buf &lt;&lt;= data(buf.avail - 1); <span class="comment">// In this case, (avail - 1) == (max - 1)
-</span>buf = buf[$ .. $]; <span class="comment">// We've now used our pops =&gt; 0 pops available
-</span>
-<span class="keyword">assert</span>(buf == <span class="string_literal">""</span>);
-
-<span class="comment">// Out of free pops after construction. Next pop to an unsafely filled buffer will cause an exception eventually.
-</span><span class="comment">// From this point on, every safe fill will set max to available pops
-</span>
-buf &lt;&lt; data(0); <span class="comment">// Safety is now reinstated by the buffer. =&gt; Max pops available
-</span><span class="keyword">assert</span>(buf == <span class="string_literal">""</span>); <span class="comment">// While there are max pops available, there is nothing to pop
-</span>
-buf &lt;&lt;= <span class="string_literal">"a"</span>;
-buf &lt;&lt;= data(buf.max-1);
-
-<span class="keyword">assert</span>(buf[0] == 'a');
-buf = buf [$..$]; <span class="comment">// We've now used our pops =&gt; 0 pops available
-</span>
-<span class="comment">// Note: Changing length does not add to the pop count.
-</span>
-buf &lt;&lt; data(buf.max);
-buf.length = buf.max/2; <span class="comment">// Setting length is @nogc in a buffer
-</span>buf &lt;&lt;= data(buf.max/2); <span class="comment">// We still have max pops.
-</span>
-buf = buf [$..$]; <span class="comment">// We've now used our pops =&gt; 0 pops available
+buf.deinit; <span class="comment">// Unallocates all data, including destroying the thread. Can be used for all buffers.
 </span></code></li>
       </ol>
     </div>
@@ -753,111 +674,38 @@ buf = buf [$..$]; <span class="comment">// We've now used our pops =&gt; 0 pops 
 </div><div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    Properties
+    <br> <span class="font_big"><b>Mirroring - For Compression &amp; Decryption</b></span>
+<br><br>
+<span class="font_big"> New item orders can easily be established without copying using a mirror provided natively by the operating system. </span> <br> <br>
+
+<hr />
+
+<br> <br> <span class="font_big">We can represent memory as blocks of two <span class="font_big"><b>O</b></span>'s, each having a size of <span class="font_big"><code class="code">max/2</code></span>. The buffer only sees memory marked with <span class="font_big"><b>X</b></span>'s. <br>
+The mirror border is marked with <span class="font_big"><b>|</b></span>, right side of which is the mirrored memory. </span>
+<br><br>
 
 <section class="code_listing">
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [ADVANCED]
-</span><span class="comment">// This is a example of how to mirror data to create new array item orders using a mirror.
-</span><span class="comment">// X will represent max/2 amount of data that is viewed by the buffer and O data that is not viewed, but still owned by it.
-</span><span class="comment">// | will represent the mirror or page boundary. Left side of | is reality and right side is the mirror image.
-</span>
-<span class="comment">// OO|OO =&gt; First O is identical to third O &amp; Second O is identical to fourth O.
-</span><span class="comment">// XX|OO Length is max.
-</span><span class="comment">// OX|OO max/2 is popped
-</span><span class="comment">// OX|XO Length is max =&gt; Data order is now reversed, First is the second half of max/2 and then is the first half.
-</span><span class="comment">// Example on how to do this:
-</span>
-<span class="keyword">import</span> buffer;
+        <li><code class="code"><span class="comment">/+ Current view is OO|OO +/</span>
+<span class="keyword">auto</span> buf = buffer(<span class="string_literal">""</span>);
 
-<span class="psymbol">Buffer</span>!<span class="keyword">char</span> buf = <span class="psymbol">Buffer</span>!()(); <span class="comment">// OO|OO
-</span>buf.length = buf.max; <span class="comment">// XX|OO
-</span>
-buf = buf[buf.max/2..$]; <span class="comment">// OX|OO
-</span>buf[] = 'a'; <span class="comment">// Set all in X to 'a' =&gt; 0a|0a
-</span>buf.length = buf.max; <span class="comment">// OX|XO
-</span>buf[$/2..$] = 'b'; <span class="comment">// Set all X right side of | to 'b' =&gt; ba|ba
-</span>
-<span class="comment">// The buffer is in a mirror |, half of the buffer is in the first page and half in second page. OX|XO
-</span><span class="comment">// It is possible to invert the buffer so, that data starts with 'b' instead of 'a'.
-</span><span class="comment">// Data is identical left and right side of the mirror, thus inversion can be sought from the mirror.
-</span>
-<span class="comment">// a, OX|XO
-</span>buf = (buf.ptr - buf.max/2)[0..buf.max]; <span class="comment">// XX|OO
-</span><span class="keyword">assert</span>(buf[0] == 'b' &amp;&amp; buf[$/2+1] == 'a'); <span class="comment">// Opt: In this case $ could be buf.max as well.
-</span>
-<span class="comment">// b, XX|OO
-</span>buf = (buf.ptr + buf.max)[0..buf.length]; <span class="comment">// OO|XX
-</span><span class="keyword">assert</span>(buf[0] == 'b' &amp;&amp; buf[$/2+1] == 'a'); <span class="comment">// As seen, both sides are identical. Both pages contain a's and b's.
-</span></code></li>
-      </ol>
-    </div>
-  </div>
-</section>
+<span class="comment">// aO|aO
+</span>buf.ptr[0..buf.max/2] = 'a';
 
-  </p>
-</div><div class="ddoc_examples">
-  <h4>Examples</h4>
-  <p class="para">
-    Reusage
+<span class="comment">// ab|ab
+</span>buf.ptr[buf.max/2 .. buf.max] = 'b';
 
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="comment">// [EXPERT]
-</span><span class="comment">// Working with multiple buffers and sharing buffers. 
-</span>
-<span class="keyword">import</span> buffer;
+<span class="comment">/+ Expand view from OO|OO +/</span>
 
-<span class="comment">/* Multiple buffers */</span>
-{
-	<span class="keyword">scope</span> buf = <span class="psymbol">Buffer</span>!()();
-	<span class="keyword">scope</span> bufslice = buf; <span class="comment">// Slice of buf.
-</span>
-	buf.length = 1;
-	bufslice.length = 1;
+<span class="comment">// OX|XO
+</span>buf = buf.ptr[buf.max/2..buf.max+buf.max/2];
 
-	buf[0] = 'a';
-	<span class="keyword">assert</span>(bufslice[0] == 'a');
-} <span class="comment">// deallocation occurs here due to scope.
-</span>
-<span class="comment">// Let's say that another buffer is allocated.
-</span><span class="comment">// If the earlier examples were not scope and not encircled in curly brackets, a new buffer, "bufn", would have seen an error. 
-</span>
-<span class="psymbol">Buffer</span>!<span class="keyword">char</span> bufn = <span class="psymbol">Buffer</span>!()();
+<span class="comment">// ab|ab
+</span><span class="keyword">assert</span>(buf[0] == 'b' &amp;&amp; buf[$-1] == 'a');
 
-<span class="comment">// The reason is that the earlier buffers would have deallocated during this comment, rather than during the closing squirly brackets.
-</span>
-<span class="comment">// This is fine on all other operating systems except on Windows.
-</span><span class="comment">// On Windows, there can only be one buffer and all new constructions, Buffer!()(), will be slices of the original.
-</span><span class="comment">// If bufn fills memory after it is deallocated by buf or bufslice, it breaks on windows. This is why we use scope and squirly brackets to make this work.
-</span>
-bufn &lt;&lt; <span class="string_literal">"Hello world!"</span>; <span class="comment">// As said, this would have caused an error if not for scope.
-</span>
-<span class="comment">// NOTE: Had bufslice been passed to a function, it would have deallocated buf in addition to bufslice. Thus you cannot pass buffer slices to functions.
-</span>
-<span class="comment">/* Sharing buffers */</span>
-
-<span class="comment">// Method 1: Normal slices
-</span>{
-	<span class="keyword">scope</span> buf = <span class="psymbol">Buffer</span>!()();
-	<span class="keyword">char</span>[] slice = buf; <span class="comment">// While buffer slices deallocate original, normal slices do not.
-</span>
-	buf &lt;&lt; slice; <span class="comment">// We can pass a normal slice to a function. A simple cast(char[]) would've worked as well.
-</span>
-} <span class="comment">// deallocation occurs here due to scope.
-</span>
-<span class="comment">// Method 2: Public shared buffers
-</span>{
-	<span class="comment">// The idea is that you can define a global in module scope and make it deallocate only when the program exits. 
-</span>	<span class="comment">// You can also make it shared so other threads can take advantage of it as well. You can do it like this:
-</span>
-	<span class="comment">/* public */</span> <span class="keyword">shared</span> <span class="psymbol">Buffer</span>!() bufs = <span class="keyword">cast</span>(<span class="keyword">shared</span>) <span class="psymbol">Buffer</span>!()(); 
-	<span class="keyword">assert</span>(bufs == <span class="keyword">cast</span>(<span class="keyword">shared</span>) []);
-}
+<span class="comment">/+ Order: ab -&gt; ba +/</span>
 </code></li>
       </ol>
     </div>
@@ -866,329 +714,6 @@ bufn &lt;&lt; <span class="string_literal">"Hello world!"</span>; <span class="c
 
   </p>
 </div>
-</section>
-<ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#Buffer.max" id="Buffer.max"><code class="code">max</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="Buffer.max"></span>enum auto <code class="code">max</code>;
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Returns the maximum size of the buffer depending on the size of T.
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#Buffer.fill" id="Buffer.fill"><code class="code">fill</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="Buffer.fill"></span>void <code class="code">fill</code>(bool isSafe = false)(scope const T[] <code class="code">arr</code>) if (!Threaded);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-     Extends the buffer with new data directly from an array or buffer masquerading as an array.
- In this variant of <code class="code">fill</code>, consuming the source is not needed nor is returning lifetime.
- The following must be <code class="code">true</code> on function call:
-
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="keyword">assert</span>(buffer.avail &gt;= <span class="param">arr</span>.length);
-</code></li>
-      </ol>
-    </div>
-  </div>
-</section>
-
-  </p>
-</div>
-<div class="ddoc_params">
-  <h4>Parameters</h4>
-  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
-    <tbody>
-      <tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">isSafe</em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Safety guarantee optimization, set to <code class="code">true</code> if pop count after last unsafe <code class="code">fill</code> is less than max or less than 2 times max after construction.
- Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array.
-    </p>
-  </div>
-</td>
-</tr>
-<tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">T[] <code class="code">arr</code></em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Array source that is slicable and has a length property.
-    </p>
-  </div>
-</td>
-</tr>
-
-    </tbody>
-  </table>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#Buffer.fill" id="Buffer.fill"><code class="code">fill</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="Buffer.fill.2"></span>void <code class="code">fill</code>(bool isSafe = false, Source)(ref Source <code class="code">source</code>) if (!Threaded);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Extends the buffer with new data from an abstacted reference <code class="code">source</code>.
-
-  </p>
-</div>
-<div class="ddoc_params">
-  <h4>Parameters</h4>
-  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
-    <tbody>
-      <tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">isSafe</em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Safety guarantee optimization, set to <code class="code">true</code> if pop count after last unsafe <code class="code">fill</code> is less or equal to max or less than 2 times max after construction.
- Safety guaranteed calls can be stacked, but a singular call is more efficient. Removes all overhead from the buffer compared to a normal array.
-    </p>
-  </div>
-</td>
-</tr>
-<tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">Source <code class="code">source</code></em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Object that implements the <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a> src interface.
- A <code class="code">source</code> is valid if it implements  <code class="code"><span class="color_blue">size_t delegate</span>(T[]) src()</code> function, where T[] is the area to be filled.
- The src function returns the <code class="code">source</code> delegate/function, which returns the amount of elements written to the given T[].
-    </p>
-  </div>
-</td>
-</tr>
-
-    </tbody>
-  </table>
-</div>
-<div class="ddoc_see_also">
-  <h4>See Also</h4>
-  <p class="para">
-    Source examples at <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a>
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#Buffer.fill" id="Buffer.fill"><code class="code">fill</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="Buffer.fill.3"></span>@property void <code class="code">fill</code>()(scope const size_t delegate(T[]) <code class="code">source</code>) if (Threaded);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Sets the <code class="code">source</code> which the buffer uses to <code class="code">fill</code> itself. A subsequent call without params is needed
- to query the background thread for new data.
-
-  </p>
-</div>
-<div class="ddoc_params">
-  <h4>Parameters</h4>
-  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
-    <tbody>
-      <tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">size_t delegate(T[]) <code class="code">source</code></em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Object that implements the <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a> src interface.
- A <code class="code">source</code> is valid if it implements <code class="code"><span class="color_blue">size_t delegate</span>(T[]) src()</code> function, where T[] is the area to be filled.
- The src function returns the <code class="code">source</code> delegate/function, which returns the amount of elements written to the given T[].
-    </p>
-  </div>
-</td>
-</tr>
-
-    </tbody>
-  </table>
-</div>
-<div class="ddoc_see_also">
-  <h4>See Also</h4>
-  <p class="para">
-    Source examples at <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a>
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#Buffer.fill" id="Buffer.fill"><code class="code">fill</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="Buffer.fill.4"></span>nothrow @nogc void <code class="code">fill</code>(bool isSafe = false)() if (Threaded);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Extends buffer by the amount of data read by the buffer and orders buffer to read additional data from the same source.
-
-  </p>
-</div>
-<div class="ddoc_params">
-  <h4>Parameters</h4>
-  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
-    <tbody>
-      <tr class="ddoc_param_row">
-  <td scope="ddoc_param_id">
-  <code class="code">
-    <em class="term">isSafe</em>
-  </code>
-</td>
-<td>
-  <div class="ddoc_param_desc">
-    <p class="para">
-      Safety guarantee optimization, set to <code class="code">true</code> if pop count after last unsafe <code class="code">fill</code> is less or equal to max or less than 2 times max after construction.
- Safety guaranteed calls can be stacked, but a singular call is more efficient.
-    </p>
-  </div>
-</td>
-</tr>
-
-    </tbody>
-  </table>
-</div>
-
-</section>
-
-</div>
-
-</li>
-</ul>
-
-</div>
-
-</li>
-</ul>
-  </div>
 </section>
 </section>
       </article>
