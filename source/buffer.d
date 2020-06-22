@@ -449,7 +449,7 @@ if(isArray!(ArrayType))
 			static assert((cast(ptrdiff_t) 0xFFFFF045 & (membits & (~pagesize))) == 0xFFFFE000);
 
 		//Set the buffer to page start so that the os unmapper will work. TODO: Check if some OS can do this for us.
-		const buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & (membits & (~pagesize))))[0..buf.length];
+		auto buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & (membits & (~pagesize))))[0..buf.length];
 
 
 		version (Windows)
