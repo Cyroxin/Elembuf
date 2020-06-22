@@ -45,7 +45,7 @@ them through your compiler.
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "app"
-dependency "elembuf" version="~>1.1.5"
+dependency "elembuf" version="~>1.2.0"
 +/
 
 module app;
@@ -54,10 +54,10 @@ import buffer;
 import std.stdio;
 
 void main() {
-    Buffer!char bufchar = Buffer!()(); // char[]
+    auto bufchar = buffer(""); // char[]
     assert(bufchar == "");
   
-    bufchar << "Hello world!";
+    bufchar ~= "Hello world!";
     bufchar.writeln;
 }
 
