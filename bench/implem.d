@@ -1,6 +1,6 @@
 module implem;
 
-import std.stdio, buffer;
+import std.stdio, elembuf;
 
 string data(size_t characters)
 {
@@ -26,7 +26,8 @@ void implemmain()
 {
 	import std.datetime.stopwatch;
 
-	auto sbuffer = Buffer!()();
+	auto sbuffer = buffer("Hello world!");
+	assert(sbuffer == "Hello world!");
 	auto cbuffer = StaticCopyBuffer!()();
 
 	// INFO:
@@ -42,7 +43,10 @@ void implemmain()
 
 	sw.start;
 	foreach(i; 0..runs)
-		scope const _temp = Buffer!()();
+	{
+		scope const _temp = buffer("");
+		_temp.deinit;
+	}
 	sw.stop;
 
 	const bufcon = sw.peek/runs;
@@ -53,16 +57,17 @@ void implemmain()
 
 	sw.start;
 
-	sbuffer.fill(data((sbuffer.max-2)/2));
+	sbuffer ~= (data((sbuffer.max-2)/2));
 	foreach(i; 0..runs)
 	{
-		sbuffer.fill(data((sbuffer.max-2)/2));
+		sbuffer ~= (data((sbuffer.max-2)/2));
 		sbuffer = sbuffer[$/2..$]; // Consume half of the data
-		sbuffer.fill("|");
+		sbuffer ~= "|";
 		sbuffer = sbuffer[1..$];
 	}
 	sw.stop;
 
+	sbuffer.deinit;
 	const bufrun = sw.peek/runs;
 	writeln("Bench [circlebuf runtime]:",bufrun);
 
@@ -112,7 +117,7 @@ void implemmain()
 	// AMD A8: Linux implementations were cpu bound on AMD A8. Win mem allocation is 3x slower than lin.
 	// Results can be found below.
 
-	/*
+	/+
 
 	Windows 10 - AMD A8-6410 x64 - 4GB memory - LDC release, 100k runs.
 	
@@ -140,8 +145,9 @@ void implemmain()
 	Bench [copybuf runtime]:19 μs and 4 hnsecs
 
 	Reuses needed: 83
-	*/
+	+/
 
 }
+
 
 
