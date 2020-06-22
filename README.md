@@ -50,7 +50,7 @@ dependency "elembuf" version="~>1.2.0"
 
 module app;
 
-import buffer;
+import elembuf;
 import std.stdio;
 
 void main() {
