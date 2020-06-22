@@ -4,10 +4,10 @@
 # Elembuf
 An efficient and simple to use buffer/array for data manipulation.
 
-[![wiki](https://img.shields.io/badge/wiki-Circular%20buffer-9cf?logo=Wikimedia%20Commons)](https://en.wikipedia.org/wiki/Circular_buffer)
+[![wiki](https://img.shields.io/badge/​-Circular%20buffer-9cf?logo=Wikipedia)](https://en.wikipedia.org/wiki/Circular_buffer)
 [![LICENSE](https://img.shields.io/github/license/Cyroxin/Elembuf)](LICENSE)
 [![dub](https://img.shields.io/dub/v/elembuf?color=light%20green&logoColor=light%20green)](https://code.dlang.org/packages/elembuf)
-[![bench](https://img.shields.io/badge/bench-%20-brightgreen?logo=fastly)](bench)
+[![bench](https://img.shields.io/badge/benchmarks-%20-brightgreen?logo=fastly)](https://github.com/Cyroxin/Elembuf/edit/master/README.md#Benchmarks)
 [![ci](https://travis-ci.com/Cyroxin/Elembuf.svg?branch=master)](https://travis-ci.com/github/Cyroxin/Elembuf)
 [![cov](https://img.shields.io/codecov/c/github/Cyroxin/Elembuf)](https://codecov.io/gh/Cyroxin/Elembuf)
 
@@ -23,10 +23,8 @@ Elembuf currently works for Windows, Linux, Mac and other Posix compatible syste
 
 
 ## Getting Started
-
-For examples  on how to use the library, the documentation is a good place to start: 
-* [buffer](https://cyroxin.github.io/Elembuf/buffer.html) 
-* [source](https://cyroxin.github.io/Elembuf/source.html)
+ 
+[![bench](https://img.shields.io/badge/-documentation-dimgrey?style=for-the-badge&logo=Read%20the%20Docs&logoColor=brown)](https://cyroxin.github.io/Elembuf/buffer.html)
 
 **Windows/Mac**
 
@@ -57,7 +55,7 @@ void main() {
     auto bufchar = buffer(""); // char[]
     assert(bufchar == "");
   
-    bufchar ~= "Hello world!";
+    bufchar ~= "Hello world!"; // Does not use the GC
     bufchar.writeln;
 }
 
@@ -66,6 +64,35 @@ $ dub app.d
 
     Hello world!
 
+## Benchmarks
+
+Comparing an optimized array against elembuf in concating data. 
+
+    Windows 10 - AMD A8-6410 x64 - 4GB memory - LDC release, 100k runs.
+	Bench [buffer construction + destr]:75 ╬╝s and 3 hnsecs
+	Bench [buffer runtime]:167 ╬╝s and 7 hnsecs
+	Bench [array construction + destr]:15 ╬╝s and 7 hnsecs
+	Bench [array runtime]:185 ╬╝s and 3 hnsecs
+	Reuses needed: 3
+    
+	Linux MX-18.3 (Linux) - AMD A8-6410 x64- 4GB memory - DMD release -nobounds, 100k runs.
+	Bench [buffer construction + destr]:24 μs and 4 hnsecs
+	Bench [buffer runtime]:18 μs and 9 hnsecs
+	Bench [array construction + destr]:2 μs and 9 hnsecs
+	Bench [array runtime]:19 μs and 3 hnsecs
+	Reuses needed: 53
+    
+	Linux MX-18.3 (Posix) - AMD A8-6410 x64 - 4GB memory - DMD release -nobounds, 100k runs.
+	Bench [buffer construction + destr]:36 μs and 3 hnsecs
+	Bench [buffer runtime]:19 μs
+	Bench [array construction + destr]:2 μs and 9 hnsecs
+	Bench [array runtime]:19 μs and 4 hnsecs
+	Reuses needed: 83
+    
+
+
+
+[![bench](https://img.shields.io/badge/-lib%20comparison-dimgrey?style=for-the-badge&logo=fastly)](https://github.com/mingwugmail/liblfdsd/blob/master/comparison/README.md)
 
 ## Contributions
 
