@@ -516,155 +516,33 @@
 
   </p>
 </div>
-
-</section>
-<section class="section ddoc_module_members_section">
-  <div class="ddoc_module_members">
-    <ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#NetSource" id="NetSource"><code class="code">NetSource</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="NetSource"></span>struct <code class="code">NetSource</code>;
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Downloads data from a specified ip address or link. Does not properly check for validity of the address.
-
-  </p>
-</div>
 <div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="string_literal">"www.bing.com"</span>.<span class="psymbol">NetSource</span>;
-</code></li>
-      </ol>
-    </div>
-  </div>
-</section>
+    <br> <span class="font_big"><b>Extensions - Source Interface</b></span>
+<br><br>
+<span class="font_big"> It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  </span> <br> <br>
+
 <hr />
-  </p>
-</div>
-</section>
-<ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#NetSource.empty" id="NetSource.empty"><code class="code">empty</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="NetSource.empty"></span>bool <code class="code">empty</code>();
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Checks if the socket has been closed by the sender. Does not check for html based closures.
-  </p>
-</div>
-
-</section>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#NetSource.src" id="NetSource.src"><code class="code">src</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="NetSource.src"></span>@nogc auto <code class="code">src</code>()();
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Read interface implementation example.
-
-  </p>
-</div>
-<div class="ddoc_description">
-  <h4>Discussion</h4>
-  <p class="para">
-    	NetSource depicts a great example on implementing a source.
-<br><br>
-	The first parameter must be a T[] for the Source to work for all buffers. Other parameters must be optional.
-	As seen from the example, NetSource only works when the underlying buffer is a char[].
-<br><br>
-<br><br>
+<br>
 
 <section class="code_listing">
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="keyword">auto</span> <span class="psymbol">src</span>()
+        <li><code class="code"><span class="keyword">struct</span> mystruct(T)
 {
-	<span class="keyword">return</span> (<span class="keyword">char</span>[] x)
+	<span class="keyword">auto</span> src()
 	{
-		<span class="keyword">auto</span> len = sock.receive(x);
+		<span class="keyword">return</span> (T[] x) 
+		{
+			<span class="comment">// Write to x
+</span>			x[] = x.init;
 
-		<span class="keyword">if</span> (len &lt; 0)
-		{
-			<span class="keyword">if</span> (wouldHaveBlocked)
-			{
-				<span class="keyword">return</span> 0;
-			}
-			<span class="keyword">else</span>
-			{
-				_empty = <span class="keyword">true</span>;
-				<span class="keyword">return</span> 0;
-			}
-		}
-		<span class="keyword">else</span>
-		{
-			<span class="keyword">return</span> len;
-		}
-	};
+			<span class="comment">// Return written count
+</span>			<span class="keyword">return</span> x.length;
+		};
+	}	
 }
 </code></li>
       </ol>
@@ -673,124 +551,36 @@
 </section>
 
   </p>
-</div>
-
-</section>
-
-</div>
-
-</li>
-</ul>
-
-</div>
-
-</li><li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#ArraySource" id="ArraySource"><code class="code">ArraySource</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="ArraySource"></span>struct <code class="code">ArraySource</code>(InternalType = char);
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Source that reads from an array as if it were a <code class="code">true</code> source. This is best used for debugging or testing.
-
-  </p>
-</div>
-<div class="ddoc_examples">
+</div><div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code"><span class="string_literal">"World"</span>.<span class="psymbol">ArraySource</span>!<span class="keyword">char</span>;
-([0,1,2,3,4,5]).<span class="psymbol">ArraySource</span>!<span class="keyword">int</span>;
-</code></li>
-      </ol>
-    </div>
-  </div>
-</section>
+    <br> <span class="font_big"><b>Example sources - For testing and learning purposes </b></span>
+<br><br>
+<span class="font_big"> There are currently two example sources, which you may use. They are not for production, but serve well for learning and debugging. Here is an example on how to use them.   </span> <br> <br>
+
 <hr />
-  </p>
-</div>
-</section>
-<ul class="ddoc_members">
-  <li class="ddoc_member">
-  <div class="ddoc_member_header">
-  <div class="ddoc_header_anchor">
-  <a href="#ArraySource.src" id="ArraySource.src"><code class="code">src</code></a>
-</div>
-</div><div class="ddoc_decl">
-  <section class="section">
-    <div class="declaration">
-      <h4>Declaration</h4>
-      <div class="dlang">
-        <p class="para">
-          <code class="code">
-            <span class="ddoc_anchor" id="ArraySource.src"></span>auto <code class="code">src</code>();
-
-          </code>
-        </p>
-      </div>
-    </div>
-  </section>
-</div>
-<div class="ddoc_decl">
-  <section class="section ddoc_sections">
-  <div class="ddoc_summary">
-  <p class="para">
-    Read interface implementation example.
-
-  </p>
-</div>
-<div class="ddoc_description">
-  <h4>Discussion</h4>
-  <p class="para">
-     This is what is currently inside ArraySource. It is a simple example of implementing a source.
- The source has a simple T[] called arr as an internal variable, which it pops whenever the source is read.
-<br><br>
- Array source works for all buffers of type T[].
-<br><br>
+<br>
 
 <section class="code_listing">
   <div class="code_sample">
     <div class="dlang">
       <ol class="code_lines">
-        <li><code class="code"><span class="keyword">auto</span> <span class="psymbol">src</span>()
-{
-	<span class="keyword">return</span> (T[] x)
-	{
-		<span class="keyword">if</span> (arr.length &gt; x.length)
-		{
-			x[] = arr.ptr[0..x.length];
-			arr = arr.ptr[x.length .. arr.length];
-			<span class="keyword">return</span> x.length;
-		}
-		<span class="keyword">else</span>
-		{
-			x[0..arr.length] = arr.ptr[0..arr.length];
-			<span class="keyword">scope</span>(exit) arr = arr.ptr[0..0]; <span class="comment">// It is safe to not reset, as it cannot be reused.
-</span>			<span class="keyword">return</span> arr.length;
-		}
-	};
-}
+        <li><code class="code"><span class="keyword">import</span> <span class="psymbol">source</span>;
+<span class="keyword">import</span> elembuf;
+
+<span class="keyword">auto</span> buf = buffer(<span class="string_literal">""</span>);
+<span class="keyword">auto</span> src = <span class="string_literal">"www.bing.com"</span>.NetSource;
+
+<span class="keyword">while</span>(buf.length == 0)
+	buf ~= src;
+
+ <span class="keyword">bool</span> empty = src.empty; <span class="comment">// Indicates socket closure. Closure can occur in html or http as well, which wont be detected by this.
+</span>
+ <span class="keyword">auto</span> srcarr = <span class="string_literal">"World"</span>.ArraySource!<span class="keyword">char</span>;
+
+ buf.length = 0;
+ buf ~= srcarr;
+ <span class="keyword">assert</span>(buf == <span class="string_literal">"World"</span>);
 </code></li>
       </ol>
     </div>
@@ -799,19 +589,6 @@
 
   </p>
 </div>
-
-</section>
-
-</div>
-
-</li>
-</ul>
-
-</div>
-
-</li>
-</ul>
-  </div>
 </section>
 </section>
       </article>

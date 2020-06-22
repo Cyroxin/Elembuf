@@ -505,7 +505,7 @@ if(isArray!(ArrayType))
 
 		}
 	
-	public void opOpAssign(string op : "~",Source)(Source rhs)
+	public void opOpAssign(string op : "~",Source)(ref Source rhs)
 		if(!threaded && __traits(compiles, { size_t ret = rhs(T[].init);}))
 		{
 
@@ -519,7 +519,7 @@ if(isArray!(ArrayType))
 
 		}
 
-	public void opOpAssign(string op : "~",Source)(Source rhs)
+	public void opOpAssign(string op : "~",Source)(ref Source rhs)
 		if(!threaded && __traits(compiles, { size_t ret = rhs.src()(T[].init);}))
 		{
 

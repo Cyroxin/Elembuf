@@ -8,14 +8,62 @@
 module source;
 
 
-/***********************************
-* Downloads data from a specified ip address or link. Does not properly check for validity of the address.
-* Examples:
-* ---
-* "www.bing.com".NetSource;
-* ---
-* - - - 
-*/
+
+/++ $(BR) $(BIG $(B Extensions - Source Interface))
+
+$(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  ) $(BR) $(BR)
+
+- - -
+$(BR) 
++/
+
+unittest
+{
+	struct mystruct(T)
+	{
+		auto src()
+		{
+			return (T[] x) 
+			{
+				// Write to x
+				x[] = x.init;
+
+				// Return written count
+				return x.length;
+			};
+		}	
+	}
+}
+
+/++ $(BR) $(BIG $(B Example sources - For testing and learning purposes ))
+
+$(BIG  There are currently two example sources, which you may use. They are not for production, but serve well for learning and debugging. Here is an example on how to use them.   ) $(BR) $(BR)
+
+- - -
+$(BR) 
++/
+
+unittest
+{
+	import source;
+	import elembuf;
+
+	auto buf = buffer("");
+	auto src = "www.bing.com".NetSource;
+
+	while(buf.length == 0)
+		buf ~= src;
+
+	 bool empty = src.empty; // Indicates socket closure. Closure can occur in html or http as well, which wont be detected by this.
+
+	 auto srcarr = "World".ArraySource!char;
+
+	 buf.length = 0;
+	 buf ~= srcarr;
+	 assert(buf == "World");
+
+}
+
 struct NetSource
 {
 
@@ -27,7 +75,7 @@ struct NetSource
 	private Socket sock = void;
 	private bool _empty;
 
-	/** Checks if the socket has been closed by the sender. Does not check for html based closures. */
+	// Checks if the socket has been closed by the sender. Does not check for html based closures. 
 	bool empty(){ return _empty || !sock.isAlive;}
 
 	this(this) @disable;
@@ -72,44 +120,9 @@ struct NetSource
 	}
 
 
-	/**
-	Read interface implementation example. 
-
-	NetSource depicts a great example on implementing a source.
-
-	The first parameter must be a T[] for the Source to work for all buffers. Other parameters must be optional.
-	As seen from the example, NetSource only works when the underlying buffer is a char[].
 	
 
-	---
-	auto src()
-	{
-		return (char[] x) 
-		{
-			auto len = sock.receive(x);
-
-			if (len < 0)
-			{
-				if (wouldHaveBlocked)
-				{
-					return 0;
-				}
-				else
-				{
-					_empty = true;
-					return 0;
-				}
-			}
-			else
-			{
-				return len;
-			}
-		};
-	}
-	---
-	*/
-
-	auto src()() @nogc
+	auto src()()
 	{
 		return (char[] x) 
 		{
@@ -140,7 +153,7 @@ struct NetSource
 
 
 
-/** Source that reads from an array as if it were a true source. This is best used for debugging or testing.
+/* Source that reads from an array as if it were a true source. This is best used for debugging or testing.
 * Examples:
 * ---
 * "World".ArraySource!char;
@@ -162,36 +175,7 @@ struct ArraySource(InternalType = char)
 	{
 		arr = cast(T[]) r;
 	}
-
-	/**
-	* Read interface implementation example. 
-	* 
-	* This is what is currently inside ArraySource. It is a simple example of implementing a source.
-	* The source has a simple T[] called arr as an internal variable, which it pops whenever the source is read.
-	* 
-	* Array source works for all buffers of type T[].
-	* 
-	* ---
-	*auto src()
-	{
-		return (T[] x)
-		{
-			if (arr.length > x.length)
-			{
-				x[] = arr.ptr[0..x.length];
-				arr = arr.ptr[x.length .. arr.length];
-				return x.length;
-			}
-			else
-			{
-				x[0..arr.length] = arr.ptr[0..arr.length];
-				scope(exit) arr = arr.ptr[0..0]; // It is safe to not reset, as it cannot be reused.
-				return arr.length;
-			}
-		};
-	}
-	*---
-	*/
+	
 	auto src()
 	{
 		return (T[] x)
@@ -205,7 +189,7 @@ struct ArraySource(InternalType = char)
 			else
 			{
 				x.ptr[0..arr.length] = arr.ptr[0..arr.length];
-				scope(success) arr = arr.ptr[0..0];
+				scope(exit) arr = arr.ptr[0..0];
 				return arr.length;
 			}
 		};
