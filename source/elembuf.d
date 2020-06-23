@@ -896,6 +896,21 @@ unittest // Anonymous linkage test
 	assert(buf != buf2); 
 }
 
+unittest // Concat tests
+{
+	auto buf = buffer("");
+	auto bufptr = buf.ptr;
+
+	buf ~= 'a';
+	assert(buf.ptr == bufptr);
+
+	shared sbuf = buffer("");
+	auto sbufptr = sbuf.ptr;
+
+	sbuf ~= 'a';
+	assert(sbuf.ptr == sbufptr);
+}
+
 
 // Usage
 unittest 
