@@ -532,6 +532,51 @@ if(isArray!(ArrayType))
 			buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
 
 		}
+	public shared void opOpAssign(string op : "~")(inout shared T[] rhs)
+		if(!threaded)
+		{
+			assert(buf.length + rhs.length <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
+
+			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + rhs.length]; 
+			buf[$ - rhs.length .. $] = rhs[];
+		}
+	public shared void opOpAssign(string op : "~")(inout shared T rhs) 
+		if(!threaded)
+		{
+			assert(buf.length + 1 <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
+
+			buf = cast(shared) (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + 1]; 
+			buf[$-1] = rhs;
+
+		}
+
+	public shared void opOpAssign(string op : "~",Source)(ref Source rhs)
+		if(!threaded && __traits(compiles, { size_t ret = rhs(T[].init);}))
+		{
+
+			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
+
+			scope const size_t len = rhs((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..this.max - buf.length]);
+
+			assert(buf.length + len <= this.max);
+
+			buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
+
+		}
+
+	public shared void opOpAssign(string op : "~",Source)(ref Source rhs)
+		if(!threaded && __traits(compiles, { size_t ret = rhs.src()(T[].init);}))
+		{
+
+			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
+
+			scope const size_t len = rhs.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..max - buf.length]);
+
+			assert(buf.length + len <= this.max);
+
+			buf = (cast(T*)(buf.ptr))[0 .. buf.length + len];
+
+		}
 	public void opOpAssign(string op : "~",Source)(Source rhs)
 		if(threaded) // Threaded - change source
 		{
@@ -593,6 +638,12 @@ if(isArray!(ArrayType))
 	{
 		assert((cast(ptrdiff_t)s.ptr & mempos) == (cast(ptrdiff_t)buf.ptr & mempos), "BufErr: Setting the buffer to another memory position is not allowed, you can only slice and set slices. ");
 		buf = s.ptr[0..s.length];
+	}
+
+	shared void opAssign(scope shared T[] s)
+	{
+		assert((cast(ptrdiff_t)s.ptr & mempos) == (cast(ptrdiff_t)buf.ptr & mempos), "BufErr: Setting the buffer to another memory position is not allowed, you can only slice and set slices. ");
+		buf = cast(shared) s.ptr[0..s.length];
 	}
 
 	// FUNCTIONS
