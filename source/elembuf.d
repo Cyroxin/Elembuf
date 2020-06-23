@@ -884,8 +884,8 @@ unittest {
 
 unittest // Anonymous linkage test
 {
-	// It is crucial that the buffers are not create with the same name. Preferably they should be made anonymous, but this is not possible on posix. Only Win & Lin.
-	// On posix, there is a maximum buffer count which really depends on how many similarly named memory files are created. This is usually quite high, usually ubyte.max.
+	// It is crucial that the buffers are not created with the same name. Preferably they should be made anonymous, but this is not possible on posix. Only Win & Lin.
+	// On posix, there is a maximum buffer count which really depends on how many similarly named memory files are created. This is usually quite high.
 
 	auto buf = buffer("");
 	buf ~= 'a';
