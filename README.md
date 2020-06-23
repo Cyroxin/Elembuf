@@ -25,7 +25,7 @@ Elembuf currently works for Windows, Linux, Mac and other Posix compatible syste
 
 ## Getting Started
  
-[![bench](https://img.shields.io/badge/-documentation-dimgrey?style=for-the-badge&logo=Read%20the%20Docs&logoColor=brown)](https://cyroxin.github.io/Elembuf/buffer.html)
+[![bench](https://img.shields.io/badge/-documentation-dimgrey?style=for-the-badge&logo=Read%20the%20Docs&logoColor=brown)](https://cyroxin.github.io/Elembuf/elembuf.html)
 
 **Windows/Mac**
 
@@ -44,7 +44,7 @@ them through your compiler.
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "app"
-dependency "elembuf" version="~>1.2.1"
+dependency "elembuf" version="~>1.2.2"
 +/
 
 module app;
