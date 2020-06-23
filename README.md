@@ -44,7 +44,7 @@ them through your compiler.
 #!/usr/bin/env dub
 /+ dub.sdl:
 name "app"
-dependency "elembuf" version="~>1.2.1"
+dependency "elembuf" version="~>1.2.2"
 +/
 
 module app;
