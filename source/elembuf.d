@@ -2,7 +2,7 @@
 * <a href="https://cyroxin.github.io/Elembuf/source.html"><</a>
 * Macros:
 * SOURCE = <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a>
-* BUFFER = <a href="https://cyroxin.github.io/Elembuf/buffer.html">docs/buffer</a>
+* BUFFER = <a href="https://cyroxin.github.io/Elembuf/elembuf.html">docs/buffer</a>
 */
 
 module elembuf;
