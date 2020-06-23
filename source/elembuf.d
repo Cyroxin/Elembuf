@@ -5,7 +5,7 @@
 * BUFFER = <a href="https://cyroxin.github.io/Elembuf/buffer.html">docs/buffer</a>
 */
 
-module buffer;
+module elembuf;
 
 import std.traits : isArray;
 
@@ -29,7 +29,7 @@ unittest
 {
 
 	// Import
-	import buffer;
+	import elembuf;
 
 	// Instantiate
 	auto buf = buffer("Hello ");
@@ -836,7 +836,7 @@ unittest {
 // Usage
 unittest 
 {
-	import buffer, source;
+	import elembuf, source;
 	import std.stdio;
 
 	// Construct
@@ -1007,7 +1007,7 @@ struct StaticCopyBuffer(InternalType = char)
 
 	unittest 
 	{
-		import buffer, source;
+		import elembuf, source;
 
 		scope bufchar = StaticCopyBuffer!()(); // Create buffer
 		assert(bufchar == "");

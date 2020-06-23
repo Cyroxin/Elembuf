@@ -991,11 +991,11 @@
    <File path="bench\thred.d" />
   </Folder>
   <Folder name="docs">
-   <File path="docs\buffer.html" />
+   <File path="docs\elembuf.html" />
    <File path="docs\source.html" />
   </Folder>
   <Folder name="source">
-   <File path="source\buffer.d" />
+   <File path="source\elembuf.d" />
    <File path="source\source.d" />
   </Folder>
  </Folder>
