@@ -5,7 +5,7 @@
 * BUFFER = <a href="https://cyroxin.github.io/Elembuf/buffer.html">docs/buffer</a>
 */
 
-module elembuf;
+module buffer;
 
 import std.traits : isArray;
 
