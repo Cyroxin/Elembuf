@@ -995,7 +995,7 @@
    <File path="docs\source.html" />
   </Folder>
   <Folder name="source">
-   <File path="source\elembuf.d" />
+   <File path="source\buffer.d" />
    <File path="source\source.d" />
   </Folder>
  </Folder>

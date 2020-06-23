@@ -29,7 +29,7 @@ unittest
 {
 
 	// Import
-	import elembuf;
+	import buffer;
 
 	// Instantiate
 	auto buf = buffer("Hello ");
@@ -836,7 +836,7 @@ unittest {
 // Usage
 unittest 
 {
-	import elembuf,source;
+	import buffer, source;
 	import std.stdio;
 
 	// Construct
@@ -1007,7 +1007,7 @@ struct StaticCopyBuffer(InternalType = char)
 
 	unittest 
 	{
-		import elembuf, source;
+		import buffer, source;
 
 		scope bufchar = StaticCopyBuffer!()(); // Create buffer
 		assert(bufchar == "");
