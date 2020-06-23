@@ -18,7 +18,6 @@ import std.traits : isArray;
 *
 *
 *				- $(BIG The concat operator cannot be used in @nogc code, but it does not use the GC.)
-*				- $(BIG  <b style="color:blue;">[WINDOWS]</b> Only one instance allowed. Additional will become slices of the original buffer. ) 
 * $(BR)
 * - - -
 *
@@ -881,6 +880,20 @@ unittest {
 
 	buf.length = "Hello".length;
 	assert(buf == "Hello");
+}
+
+unittest // Anonymous linkage test
+{
+	// It is crucial that the buffers are not create with the same name. Preferably they should be made anonymous, but this is not possible on posix. Only Win & Lin.
+	// On posix, there is a maximum buffer count which really depends on how many similarly named memory files are created. This is usually quite high, usually ubyte.max.
+
+	auto buf = buffer("");
+	buf ~= 'a';
+
+	auto buf2 = buffer("");
+	buf2.length = 1;
+	
+	assert(buf != buf2); 
 }
 
 
