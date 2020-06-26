@@ -26,9 +26,10 @@ void implemmain()
 {
 	import std.datetime.stopwatch;
 
-	auto sbuffer = buffer("Hello world!");
-	assert(sbuffer == "Hello world!");
+	auto sbuffer = buffer("");
 	auto cbuffer = StaticCopyBuffer!()();
+
+	static assert(sbuffer.max -2 == cbuffer.max); // We will account for this in fills
 
 	// INFO:
 	// The benchmark is for comparing different internal implementations.
@@ -45,7 +46,7 @@ void implemmain()
 	foreach(i; 0..runs)
 	{
 		scope const _temp = buffer("");
-		_temp.deinit;
+		_temp.deinit; // Ensure deconstruction is properly included in benchmark
 	}
 	sw.stop;
 
@@ -62,12 +63,11 @@ void implemmain()
 	{
 		sbuffer ~= (data((sbuffer.max-2)/2));
 		sbuffer = sbuffer[$/2..$]; // Consume half of the data
-		sbuffer ~= "|";
+		sbuffer ~= '|';
 		sbuffer = sbuffer[1..$];
 	}
 	sw.stop;
 
-	sbuffer.deinit;
 	const bufrun = sw.peek/runs;
 	writeln("Bench [circlebuf runtime]:",bufrun);
 
@@ -111,6 +111,7 @@ void implemmain()
 	assert(sbuffer.length == cbuffer.length, "Buffer lengths do not match.");
 
 	assert(sbuffer == cbuffer);
+
 
 	// PERSONAL NOTES:
 	// General: Copy buffer is better when buffer reuse is not possible due to slow circlebuf construction.
