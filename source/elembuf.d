@@ -201,6 +201,8 @@ if(isArray!(ArrayType))
 	T[] buf;
 	alias buf this;
 
+	invariant {assert(buf.length <= max);}
+
 	static if (threaded)
 		align(mail.sizeof) __gshared ptrdiff_t mail = 0; // Thread sync variable, must fit a pointer.
 	else
@@ -211,7 +213,7 @@ if(isArray!(ArrayType))
 	this(Unqual!T[] arr) shared
 	{
 		//debug writeln("1 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
+		T[] tempbuf = initiate.ptr[0..arr.length];
 		tempbuf[] = arr[];
 		buf = cast(shared) tempbuf;
 	}
@@ -219,7 +221,7 @@ if(isArray!(ArrayType))
 	this(Unqual!T[] arr)
 	{
 		//debug writeln("3 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
+		T[] tempbuf = initiate.ptr[0..arr.length];
 		tempbuf[] = arr[];
 		buf = tempbuf;
 
@@ -233,7 +235,7 @@ if(isArray!(ArrayType))
 	this(inout Unqual!T[] arr) shared
 	{
 		//debug writeln("4 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
+		T[] tempbuf = initiate.ptr[0..arr.length];
 		tempbuf[] = arr[];
 		buf = cast(shared) tempbuf;
 	}
@@ -241,7 +243,7 @@ if(isArray!(ArrayType))
 	this(inout Unqual!T[] arr)
 	{
 		//debug writeln("5 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate().ptr[0..arr.length];
+		T[] tempbuf = initiate.ptr[0..arr.length];
 		tempbuf[] = arr[];
 		buf = tempbuf;
 
@@ -252,9 +254,9 @@ if(isArray!(ArrayType))
 		}
 	}
 
-
 	
-	static initiate() @nogc @trusted nothrow
+	pragma(inline, true)
+	static T[] initiate() @nogc @trusted nothrow
 	{
 		T[] ret;
 
@@ -424,6 +426,7 @@ if(isArray!(ArrayType))
 		return ret;
 	}
 
+
 	public inout void deinit() @nogc @trusted nothrow
 	{
 
@@ -488,29 +491,30 @@ if(isArray!(ArrayType))
 
 	public void opOpAssign(string op : "~")(inout T[] rhs)
 		if(!threaded)
+		in(buf.length + rhs.length <= max,"BufErr: Not enough space available to fill the buffer. Buffer must be at most .max(), subtract .length() from this to get available space.")
 		{
-			assert(buf.length + rhs.length <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
+				buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & ~pagesize))[0 .. buf.length + rhs.length]; 
+				buf[$ - rhs.length .. $] = rhs[];
 
-			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + rhs.length]; 
-			buf[$ - rhs.length .. $] = rhs[];
 		}
 	public void opOpAssign(string op : "~")(inout T rhs) 
 		if(!threaded)
+		in(buf.length + 1 <= max,"BufErr: Not enough space available to fill the buffer. Buffer must be at most .max(), subtract .length() from this to get available space.")
 		{
-			assert(buf.length + 1 <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
 
-			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + 1]; 
-			buf[$-1] = rhs;
+			buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & ~pagesize))[0 .. buf.length + 1]; 
+			buf[$ - 1] = rhs;
 
 		}
 	
 	public void opOpAssign(string op : "~",Source)(ref Source rhs)
 		if(!threaded && __traits(compiles, { size_t ret = rhs(T[].init);}))
+		in(rhs != null, "BufErr: new source is null! Cannot insert null source. Did you perhaps mean to use threaded buffer?")
 		{
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..this.max - buf.length]);
+			scope const size_t len = rhs(buf[$.. $ + this.max - $]);
 
 			assert(buf.length + len <= this.max);
 
@@ -520,11 +524,12 @@ if(isArray!(ArrayType))
 
 	public void opOpAssign(string op : "~",Source)(ref Source rhs)
 		if(!threaded && __traits(compiles, { size_t ret = rhs.src()(T[].init);}))
+			in(rhs.src() != cast(typeof(rhs.src())) null, "BufErr: new source is null! Cannot insert null source. Did you perhaps mean to use threaded buffer?")
 		{
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..max - buf.length]);
+			scope const size_t len = rhs.src()(buf[$..$ + this.max - $]);
 
 			assert(buf.length + len <= this.max);
 
@@ -533,29 +538,28 @@ if(isArray!(ArrayType))
 		}
 	public shared void opOpAssign(string op : "~")(inout shared T[] rhs)
 		if(!threaded)
+		in(buf.length + rhs.length <= max,"BufErr: Not enough space available to fill the buffer. Buffer must be at most .max(), subtract .length() from this to get available space.")
 		{
-			assert(buf.length + rhs.length <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
-
-			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + rhs.length]; 
+			buf = (cast(T*)(cast(ptrdiff_t) buf.ptr & ~pagesize))[0 .. buf.length + rhs.length]; 
 			buf[$ - rhs.length .. $] = rhs[];
 		}
 	public shared void opOpAssign(string op : "~")(inout shared T rhs) 
 		if(!threaded)
+		in(buf.length + 1 <= max,"BufErr: Not enough space available to fill the buffer. Buffer must be at most .max(), subtract .length() from this to get available space.")
 		{
-			assert(buf.length + 1 <= max,"BufErr: Not enough space available to fill the buffer. Buf must be at most .max(), available space can be checked using .avail()");
-
-			buf = cast(shared) (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize)) [0 .. buf.length + 1]; 
-			buf[$-1] = rhs;
+			buf = cast(shared) (cast(T*)(cast(ptrdiff_t) buf.ptr & ~pagesize))[0 .. buf.length + 1]; 
+			buf[$ - 1] = rhs;
 
 		}
 
 	public shared void opOpAssign(string op : "~",Source)(ref Source rhs)
 		if(!threaded && __traits(compiles, { size_t ret = rhs(T[].init);}))
+			in(rhs != null, "BufErr: new source is null! Cannot insert null source. Did you perhaps mean to use threaded buffer?")
 		{
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..this.max - buf.length]);
+			scope const size_t len = rhs(buf[$..$ + this.max - $]);
 
 			assert(buf.length + len <= this.max);
 
@@ -565,11 +569,12 @@ if(isArray!(ArrayType))
 
 	public shared void opOpAssign(string op : "~",Source)(ref Source rhs)
 		if(!threaded && __traits(compiles, { size_t ret = rhs.src()(T[].init);}))
+			in(rhs.src() != cast(typeof(rhs.src())) null, "BufErr: new source is null! Cannot insert null source. Did you perhaps mean to use threaded buffer?")
 		{
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs.src()((cast(T*)((cast(ptrdiff_t)buf.ptr)+buf.length*T.sizeof))[0..max - buf.length]);
+			scope const size_t len = rhs.src()(buf[$..$ + this.max - $]);
 
 			assert(buf.length + len <= this.max);
 
@@ -578,6 +583,7 @@ if(isArray!(ArrayType))
 		}
 	public void opOpAssign(string op : "~",Source)(Source rhs)
 		if(threaded) // Threaded - change source
+			in(rhs != null, "ThreadedBufErr: new source is null! Cannot insert null source. You should use .source instead!")
 		{
 			static if(__traits(compiles, rhs((T[]).init)))
 			{
@@ -611,10 +617,9 @@ if(isArray!(ArrayType))
 		}
 	public void opOpAssign(string op : "~", Source : typeof(null))(Source rhs) nothrow @nogc @trusted
 		if(threaded) // Threaded - fill from source
+			in(rhs == null && buf.length <= max, "ThreadedBufErr: Length is more than maximum or did not fill with buffer.source!")
 		{
 			import core.atomic : atomicLoad, atomicStore, cas, MemoryOrder;
-
-			assert(buf.length <= max, "BufErrThreaded: Buffer length exceeds capacity or popped when no length");
 
 			scope const i = atomicLoad!(MemoryOrder.raw)(mail);
 
@@ -634,24 +639,24 @@ if(isArray!(ArrayType))
 
 
 	void opAssign(scope T[] s)
+	in((cast(ptrdiff_t)s.ptr & mempos) == (cast(ptrdiff_t)buf.ptr & mempos), "BufErr: Setting the buffer to another memory position is not allowed, you can only slice and set slices. ")
 	{
-		assert((cast(ptrdiff_t)s.ptr & mempos) == (cast(ptrdiff_t)buf.ptr & mempos), "BufErr: Setting the buffer to another memory position is not allowed, you can only slice and set slices. ");
-		buf = s.ptr[0..s.length];
+		buf = s;
 	}
 
 	shared void opAssign(scope shared T[] s)
+		in((cast(ptrdiff_t)s.ptr & mempos) == (cast(ptrdiff_t)buf.ptr & mempos), "BufErr: Setting the buffer to another memory position is not allowed, you can only slice and set slices. ")
 	{
-		assert((cast(ptrdiff_t)s.ptr & mempos) == (cast(ptrdiff_t)buf.ptr & mempos), "BufErr: Setting the buffer to another memory position is not allowed, you can only slice and set slices. ");
-		buf = cast(shared) s.ptr[0..s.length];
+		buf = cast(shared) s;
 	}
 
 	// FUNCTIONS
 
-	nothrow @nogc @trusted @property void length(inout size_t len) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
-	nothrow @nogc @trusted @property auto length() inout {return buf.length;}
+	nothrow @nogc @trusted @property void length(inout size_t len) in(len <= max) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
+	inout nothrow @nogc @trusted @property auto length() out (ret; ret <= max) {return buf.length;}
 
-	shared nothrow @nogc @trusted @property void length(inout size_t len) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
-	shared nothrow @nogc @trusted @property auto length() inout {return buf.length;}
+	shared nothrow @nogc @trusted @property void length(inout size_t len) in(len <= max) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
+	inout shared nothrow @nogc @trusted @property auto length() out (ret; ret <= max) {return buf.length;}
 	
 
 	// INTERNALS
@@ -976,6 +981,23 @@ unittest // T.sizeof > 1
 	foreach(i; buf) {sum += i;}
 
 	assert(sum == 6 + 12);
+
+}
+
+unittest // Pointer looparound
+{
+	auto buf = buffer(cast(size_t[]) [1,2,3]);
+	auto bufmaxptr = buf[buf.max*2..0].ptr;
+	auto src = (size_t[] x){x[] = 0; return x.length;};
+
+	foreach(i; 0..1000)
+	{
+		buf = buf[1..$];
+		assert(buf.ptr < bufmaxptr);
+		buf ~= src;
+		buf = buf[$/2..$];
+		assert(buf.ptr < bufmaxptr);
+	}
 
 }
 
