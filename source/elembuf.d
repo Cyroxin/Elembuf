@@ -169,7 +169,7 @@ unittest
 
 auto buffer(A)(A arg)
 {
-	import std.traits : isMutable, Unqual, ForeachType, InoutOf;
+	import std.traits : Unqual, ForeachType;
 
 	return buffer!(Unqual!(ForeachType!A)[], false)(arg);
 
@@ -178,7 +178,7 @@ auto buffer(A)(A arg)
 
 auto tbuffer(A)(A arg)
 {
-	import std.traits : isMutable, Unqual, ForeachType, InoutOf;
+	import std.traits : Unqual, ForeachType;
 
 	return buffer!(Unqual!(ForeachType!A)[], true)(arg);
 
@@ -191,7 +191,12 @@ auto tbuffer(A)(A arg)
 private struct buffer(ArrayType, bool threaded)
 if(isArray!(ArrayType))
 {
-	import std.traits : isMutable, Unqual, ForeachType, InoutOf;
+	version(LDC)
+		import ldc.attributes : allocSize;
+	else
+		struct allocSize{this(int _){}} // Needed to remove intrinsic compile-time errors. 
+
+	import std.traits : Unqual, ForeachType;
 	//debug import std.stdio : writeln;
 
 	alias T = Unqual!(ForeachType!ArrayType);
@@ -213,7 +218,7 @@ if(isArray!(ArrayType))
 	this(Unqual!T[] arr) shared
 	{
 		//debug writeln("1 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate.ptr[0..arr.length];
+		T[] tempbuf = initiate[0..arr.length];
 		tempbuf[] = arr[];
 		buf = cast(shared) tempbuf;
 	}
@@ -221,7 +226,7 @@ if(isArray!(ArrayType))
 	this(Unqual!T[] arr)
 	{
 		//debug writeln("3 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate.ptr[0..arr.length];
+		T[] tempbuf = initiate[0..arr.length];
 		tempbuf[] = arr[];
 		buf = tempbuf;
 
@@ -235,7 +240,7 @@ if(isArray!(ArrayType))
 	this(inout Unqual!T[] arr) shared
 	{
 		//debug writeln("4 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate.ptr[0..arr.length];
+		T[] tempbuf = initiate[0..arr.length];
 		tempbuf[] = arr[];
 		buf = cast(shared) tempbuf;
 	}
@@ -243,7 +248,7 @@ if(isArray!(ArrayType))
 	this(inout Unqual!T[] arr)
 	{
 		//debug writeln("5 ",threaded, " - ", ArrayType.stringof, " - ", T.stringof);
-		T[] tempbuf = initiate.ptr[0..arr.length];
+		T[] tempbuf = initiate[0..arr.length];
 		tempbuf[] = arr[];
 		buf = tempbuf;
 
@@ -255,10 +260,9 @@ if(isArray!(ArrayType))
 	}
 
 	
-	pragma(inline, true)
-	static T[] initiate() @nogc @trusted nothrow
+	static T* initiate(typeof(pagesize) _ = max*T.sizeof*2) @nogc @trusted nothrow @allocSize(0)
 	{
-		T[] ret;
+		T* ret = void;
 
 		version (Windows)
 		{
@@ -267,8 +271,7 @@ if(isArray!(ArrayType))
 			import core.sys.windows.winbase : CreateFileMapping, VirtualAlloc,
 				VirtualFree, MapViewOfFileEx, UnmapViewOfFile, CloseHandle,
 				INVALID_HANDLE_VALUE, FILE_MAP_ALL_ACCESS;
-			import core.sys.windows.windef : MEM_RELEASE, MEM_RESERVE,
-				PAGE_READWRITE, NULL;
+			import core.sys.windows.windef : MEM_RELEASE, MEM_RESERVE, PAGE_READWRITE, NULL;
 
 			// Create a file in memory, which we read using two pagesize buffers that are next to each other.
 			scope const void* memfile = CreateFileMapping(INVALID_HANDLE_VALUE,
@@ -281,30 +284,30 @@ if(isArray!(ArrayType))
 				assert(GetLastError != ERROR_ALREADY_EXISTS,"[WINONLYERR] There are multiple type instances that create files to memory. Either destroy existing or use another buffer type.");
 			}
 
-			do
+			while(true)
 			{
 				// Find a suitable large memory location in memory. TODO: Dropping win7 compatab will allow this to be automated by the os.
-				ret = cast(T[]) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE)[0..0];
-				assert(ret.ptr != NULL); // Outofmem
+				ret = cast(T*) VirtualAlloc(NULL, pagesize * 3, MEM_RESERVE, PAGE_READWRITE);
+				assert(ret != NULL); // Outofmem
 
 				// Select a page with a pagebit of 0.
-				if ((cast(ptrdiff_t) ret.ptr & pagesize) == pagesize) // Pagebit 1, next is 0, final 1
+				if ((cast(ptrdiff_t) ret & pagesize) == pagesize) // Pagebit 1, next is 0, final 1
 				{
-					ret = (cast(T*)((cast(ptrdiff_t) ret.ptr) + pagesize))[0..0];
-					VirtualFree(cast(void*)((cast(ptrdiff_t) ret.ptr) - pagesize), 0, MEM_RELEASE);
+					ret = (cast(T*)((cast(ptrdiff_t) ret) + pagesize));
+					VirtualFree(cast(void*)((cast(ptrdiff_t) ret) - pagesize), 0, MEM_RELEASE);
 				}
 				else // Pagebit 0, next 1, third 0
-					VirtualFree(cast(void*)ret.ptr, 0, MEM_RELEASE);
+					VirtualFree(cast(void*)ret, 0, MEM_RELEASE);
 
 
 				// Map two contiguous views to point to the memory file created earlier.
-				if (!MapViewOfFileEx(cast(void*) memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, cast(void*) ret.ptr))
+				if (!MapViewOfFileEx(cast(void*) memfile, FILE_MAP_ALL_ACCESS, 0, 0, 0, cast(void*) ret))
 					continue;
-				else if (!MapViewOfFileEx(cast(void*) memfile,FILE_MAP_ALL_ACCESS, 0, 0, 0, cast(void*)((cast(ptrdiff_t)ret.ptr) + pagesize)))
-					UnmapViewOfFile(cast(void*) ret.ptr);
+				else if (!MapViewOfFileEx(cast(void*) memfile,FILE_MAP_ALL_ACCESS, 0, 0, 0, cast(void*)((cast(ptrdiff_t)ret) + pagesize)))
+					UnmapViewOfFile(cast(void*) ret);
 				else
 					break;
-			} while(true);
+			}
 
 			CloseHandle(cast(void*) memfile); // This will destroy the mapfile once there are no mappings
 
@@ -329,26 +332,26 @@ if(isArray!(ArrayType))
 			ftruncate(memfile, pagesize);
 
 			// Create a two page size memory mapping of the file
-			ret =  cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
-			assert(ret.ptr != MAP_FAILED); // Outofmem
+			ret =  cast(T*) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0);
+			assert(ret != MAP_FAILED); // Outofmem
 
-			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0
+			if ((cast(ptrdiff_t)ret & pagesize) == 0) // First page is 0, second 1, third 0
 			{
 				// Sub map it to two identical consecutive maps
-				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(ret, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
 
-				munmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize * 2), pagesize);
+				munmap(cast(T*)((cast(ptrdiff_t)ret) + pagesize * 2), pagesize);
 			}
 			else // First page is 1, second 0, third 1
 			{
-				ret = (cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize))[0..ret.length];
+				ret = (cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize));
 
 				// Sub map it to two identical consecutive maps
-				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(ret, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
 
-				munmap(cast(T*) ((cast(ptrdiff_t)ret.ptr) - pagesize), pagesize);
+				munmap(cast(T*) ((cast(ptrdiff_t)ret) - pagesize), pagesize);
 			}
 
 			close(memfile); // Will only truly close once maps are closed. Documentation in manpages is lacking in regards to this.
@@ -394,26 +397,26 @@ if(isArray!(ArrayType))
 			ftruncate(memfile, pagesize); // Sets the memory file length
 
 			// Create a two page size memory mapping of the file
-			ret = cast(T[]) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0)[0..0];
-			assert(ret.ptr != MAP_FAILED); // Outofmem
+			ret = cast(T*) mmap(null, 3 * pagesize, PROT_NONE, MAP_PRIVATE | MAP_ANON, -1, 0);
+			assert(ret != MAP_FAILED); // Outofmem
 
-			if ((cast(ptrdiff_t)ret.ptr & pagesize) == 0) // First page is 0, second 1, third 0
+			if ((cast(ptrdiff_t)ret & pagesize) == 0) // First page is 0, second 1, third 0
 			{
 				// Sub map it to two identical consecutive maps
-				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(ret, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
 
-				munmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize * 2), pagesize);
+				munmap(cast(T*)((cast(ptrdiff_t)ret) + pagesize * 2), pagesize);
 			}
 			else // First page is 1, second 0, third 1
 			{
-				ret = (cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize))[0..ret.length];
+				ret = (cast(T*)((cast(ptrdiff_t)ret) + pagesize));
 
 				// Sub map it to two identical consecutive maps
-				mmap(ret.ptr, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
-				mmap(cast(T*)((cast(ptrdiff_t)ret.ptr) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(ret, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
+				mmap(cast(T*)((cast(ptrdiff_t)ret) + pagesize), pagesize, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED, memfile, 0);
 
-				munmap(cast(T*) ((cast(ptrdiff_t)ret.ptr) - pagesize), pagesize);
+				munmap(cast(T*) ((cast(ptrdiff_t)ret) - pagesize), pagesize);
 			}
 
 			close(memfile); // Deallocates memory once all mappings are unmapped
@@ -726,7 +729,7 @@ if(isArray!(ArrayType))
 
 
 				// Got buffer length
-				if(cast(typeof(mail)) i <= 0 && cast(typeof(mail)) i != -max) // New length received!
+				if(cast(typeof(mail)) i <= 0) // New length received!
 				{
 					// Works as i is negative.
 					scope const read = source(localbuf[0..(max+i)]);
@@ -749,7 +752,10 @@ if(isArray!(ArrayType))
 							return; // Order received to terminate.
 					}
 					else
-						localbuf = (cast(T*)((cast(ptrdiff_t)localbuf + read * T.sizeof) & ~pagesize));
+					{
+						localbuf += read;
+						localbuf = cast(T*) (cast(ptrdiff_t) localbuf & ~pagesize);
+					}
 				}
 				else if(i == cast(typeof(mail)) max + 1) // Order received
 				{
