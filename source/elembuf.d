@@ -1006,10 +1006,11 @@ unittest // Pointer looparound
 	buf = buf[$..$];
 	bufptr = buf.ptr;
 	assert(buf.ptr < bufmaxptr);
-	assert(buf.ptr == bufmaxptr - 2);
+	assert(buf.ptr == bufmaxptr - 1); // 0xXXXX FFFF
 
 	buf ~= src;
 	assert(buf.ptr < bufmaxptr - buf.max); // In first page
+	assert(buf.ptr == bufptr - buf.max); // 0xXXXX FFFF
 
 
 
