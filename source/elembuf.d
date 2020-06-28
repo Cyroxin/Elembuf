@@ -510,7 +510,7 @@ if(isArray!(ArrayType))
 
 		}
 	
-	public void opOpAssign(string op : "~",Source)(ref Source rhs) @trusted
+	public void opOpAssign(string op : "~",Source)(ref Source rhs)
 		if(!threaded && __traits(compiles, { size_t ret = rhs(T[].init);}))
 		in(rhs != null, "BufErr: new source is null! Cannot insert null source. Did you perhaps mean to use threaded buffer?")
 		{
