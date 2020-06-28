@@ -510,14 +510,14 @@ if(isArray!(ArrayType))
 
 		}
 	
-	public void opOpAssign(string op : "~",Source)(ref Source rhs)
+	public void opOpAssign(string op : "~",Source)(ref Source rhs) @trusted
 		if(!threaded && __traits(compiles, { size_t ret = rhs(T[].init);}))
 		in(rhs != null, "BufErr: new source is null! Cannot insert null source. Did you perhaps mean to use threaded buffer?")
 		{
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs(buf[$.. $ + this.max - $]);
+			scope const size_t len = rhs(buf.ptr[buf.length .. buf.length + this.max - buf.length]);
 
 			assert(buf.length + len <= this.max);
 
@@ -532,7 +532,7 @@ if(isArray!(ArrayType))
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs.src()(buf[$..$ + this.max - $]);
+			scope const size_t len = rhs.src()(buf.ptr[buf.length.. buf.length + this.max - buf.length]);
 
 			assert(buf.length + len <= this.max);
 
@@ -562,7 +562,7 @@ if(isArray!(ArrayType))
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs(buf[$..$ + this.max - $]);
+			scope const size_t len = rhs(buf.ptr[buf.length..buf.length + this.max - buf.length]);
 
 			assert(buf.length + len <= this.max);
 
@@ -577,7 +577,7 @@ if(isArray!(ArrayType))
 
 			buf = (cast(T*)((cast(ptrdiff_t)buf.ptr) & ~pagesize))[0 .. buf.length];
 
-			scope const size_t len = rhs.src()(buf[$..$ + this.max - $]);
+			scope const size_t len = rhs.src()(buf.ptr[buf.length..buf.length + this.max - buf.length]);
 
 			assert(buf.length + len <= this.max);
 
@@ -992,18 +992,27 @@ unittest // T.sizeof > 1
 
 unittest // Pointer looparound
 {
-	auto buf = buffer(cast(size_t[]) [1,2,3]);
-	auto bufmaxptr = buf[buf.max*2..0].ptr;
-	auto src = (size_t[] x){x[] = 0; return x.length;};
+	auto buf = buffer(cast(ubyte[]) []);
+	auto bufptr = buf.ptr;
+	auto bufmaxptr = buf.ptr[buf.max*2..buf.max*2].ptr;
+	auto src = (ubyte[] x){return x.length;};
 
-	foreach(i; 0..1000)
-	{
-		buf = buf[1..$];
-		assert(buf.ptr < bufmaxptr);
-		buf ~= src;
-		buf = buf[$/2..$];
-		assert(buf.ptr < bufmaxptr);
-	}
+	buf ~= src;
+	buf = buf[$-1..$]; // Does not make buffer loop around
+	bufptr = buf.ptr;
+	assert(buf.ptr < bufmaxptr - buf.max); // In first page
+
+	buf ~= src;
+	buf = buf[$..$];
+	bufptr = buf.ptr;
+	assert(buf.ptr < bufmaxptr);
+	assert(buf.ptr == bufmaxptr - 2);
+
+	buf ~= src;
+	assert(buf.ptr < bufmaxptr - buf.max); // In first page
+
+
+
 
 }
 
