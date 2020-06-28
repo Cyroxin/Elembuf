@@ -41,8 +41,8 @@ void thredmain()
 	// It will take exactly 60 seconds. 
 	// Result analysis: Threaded buffer should perform better when receiving or processing source data takes time.
 
-	//Threaded buffer processed bytes:		108923014	time:	30 secs and 1 Î¼s
-	//Unthreaded buffer processed bytes:	4385951		time:	30 secs, 1 Î¼s, and 9 hnsecs
+	//Threaded buffer processed bytes:		113249637	time:	30 secs and 8 hnsecs
+	//Unthreaded buffer processed bytes:	4530727		time:	30 secs and 6 hnsecs
 
 
 	auto sw = StopWatch();

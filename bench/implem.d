@@ -51,7 +51,7 @@ void implemmain()
 	sw.stop;
 
 	const bufcon = sw.peek/runs;
-	writeln("Bench [circlebuf construction + destr]:",bufcon);
+	writeln("Bench [buffer construction + destr]:",bufcon);
 
 
 	sw.reset;
@@ -69,7 +69,7 @@ void implemmain()
 	sw.stop;
 
 	const bufrun = sw.peek/runs;
-	writeln("Bench [circlebuf runtime]:",bufrun);
+	writeln("Bench [buffer runtime]:",bufrun);
 
 
 
@@ -80,7 +80,7 @@ void implemmain()
 	sw.stop;
 
 	const cbufcon = sw.peek/runs;
-	writeln("Bench [copybuf construction + destr]:",cbufcon);
+	writeln("Bench [array construction + destr]:",cbufcon);
 
 
 	sw.reset;
@@ -100,7 +100,7 @@ void implemmain()
 	sw.stop;
 
 	const cbufrun = sw.peek/runs;
-	writeln("Bench [copybuf runtime]:",cbufrun);
+	writeln("Bench [array runtime]:",cbufrun);
 
 
 
@@ -122,28 +122,28 @@ void implemmain()
 
 	Windows 10 - AMD A8-6410 x64 - 4GB memory - LDC release, 100k runs.
 	
-	Bench [circlebuf construction + destr]:75 ╬╝s and 3 hnsecs
-	Bench [circlebuf runtime]:167 ╬╝s and 7 hnsecs
-	Bench [copybuf construction + destr]:15 ╬╝s and 7 hnsecs
-	Bench [copybuf runtime]:185 ╬╝s and 3 hnsecs
+	Bench [buffer construction + destr]:110 Î¼s and 6 hnsecs
+	Bench [buffer runtime]:111 Î¼s and 9 hnsecs
+	Bench [array construction + destr]:23 Î¼s and 9 hnsecs
+	Bench [array runtime]:141 Î¼s and 4 hnsecs
 
-	Reuses needed: 3
+	Reuses needed: 2
 
 	Linux MX-18.3 (Glibc) - AMD A8-6410 x64- 4GB memory - DMD release -nobounds, 100k runs.
 
-	Bench [circlebuf construction + destr]:24 μs and 4 hnsecs
-	Bench [circlebuf runtime]:18 μs and 9 hnsecs
-	Bench [copybuf construction + destr]:2 μs and 9 hnsecs
-	Bench [copybuf runtime]:19 μs and 3 hnsecs
+	Bench [buffer construction + destr]:24 μs and 4 hnsecs
+	Bench [buffer runtime]:18 μs and 9 hnsecs
+	Bench [array construction + destr]:2 μs and 9 hnsecs
+	Bench [array runtime]:19 μs and 3 hnsecs
 
 	Reuses needed: 53
 
 	Linux MX-18.3 (Posix) - AMD A8-6410 x64 - 4GB memory - DMD release -nobounds, 100k runs.
 
-	Bench [circlebuf construction + destr]:36 μs and 3 hnsecs
-	Bench [circlebuf runtime]:19 μs
-	Bench [copybuf construction + destr]:2 μs and 9 hnsecs
-	Bench [copybuf runtime]:19 μs and 4 hnsecs
+	Bench [buffer construction + destr]:36 μs and 3 hnsecs
+	Bench [buffer runtime]:19 μs
+	Bench [array construction + destr]:2 μs and 9 hnsecs
+	Bench [array runtime]:19 μs and 4 hnsecs
 
 	Reuses needed: 83
 	+/
