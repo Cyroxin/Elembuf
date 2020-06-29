@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>Module elembuf</title>
+		<link rel="stylesheet" href="./css/style.min.css"/>
+		<script type="text/javascript" src="./js/script.min.js"></script>
+	</head>
+	<body onload="setupDdox();">
+		<header></header>
+		<nav id="main-nav">
+			<div>
+				<noscript>
+					<p style="color: red">The search functionality needs JavaScript enabled</p>
+				</noscript>
+				<div id="symbolSearchPane" style="display: none">
+					<form action="#" method="GET">
+						<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
+					</form>
+					<ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="./symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "./";
+document.getElementById('symbolSearchPane').style.display = 'block';</script>
+				</div>
+				<ul class="tree-view">
+					<li>
+						<div class="module selected">
+							<a href="./elembuf.html">elembuf</a>
+						</div>
+					</li>
+					<li>
+						<div class="module ">
+							<a href="./source.html">source</a>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<p id="main-nav-footer">
+				Built with
+				<a href="https://github.com/MartinNowak/scod">scod</a>
+			</p>
+		</nav>
+		<div id="main-contents">
+			<div>
+				<h1>Module elembuf</h1><p>Optimized containers alike to arrays
+</p><section><p><a href="https://cyroxin.github.io/Elembuf/index.html">&lt;</a>
+</p>
+</section>
+
+				<section><section><h2>Example</h2>
+<p> <b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b>  
+</p>
+<pre class="code"><code class="lang-d"><span class="pln">
+</span><span class="com">// Import
+</span><span class="kwd">import </span><span class="pln">elembuf</span><span class="pun">;
+
+</span><span class="com">// Instantiate
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">(</span><span class="str">"Hello "</span><span class="pun">);
+
+</span><span class="com">// Ensure new data fits
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">&gt;= </span><span class="str">"world!"<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">+ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">); 
+
+</span><span class="com">// Fill
+</span><span class="pln">buf </span><span class="pun">~= </span><span class="str">"world!"</span><span class="pun">;
+
+</span><span class="com">// Read
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== </span><span class="str">"Hello world!"</span><span class="pun">);
+</span></code></pre>
+</section>
+<section><h2>Example</h2>
+<p> <b>IO - Fast library integration</b>
+</p>
+
+<p> No outdated push/pop methods so that IO libraries that require pointers work out of the box. Just use a lambda.   
+</p>
+
+
+
+<pre class="code"><code class="lang-d"><span class="com">// Construct
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">]);
+
+</span><span class="kwd">auto <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="typ">int</span><span class="pun">[] </span><span class="pln">array</span><span class="pun">) { </span><span class="pln">array</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] = </span><span class="lit">4</span><span class="pun">; </span><span class="kwd">return </span><span class="lit">1</span><span class="pun">;}; </span><span class="com">//  Give array.ptr to socket.receive if using sockets. Return written.
+
+// Fill
+</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">;
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">]);
+
+</span><span class="com">// Reuse
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">= </span><span class="lit">0</span><span class="pun">;
+</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">;
+</span><span class="pln">buf </span><span class="pun">~= </span><span class="lit">5</span><span class="pun">;
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== [</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);
+</span></code></pre>
+</section>
+<section><h2>Example</h2>
+<p> <b>Concurrency - Built in for your convenience</b>
+</p>
+
+<p> Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.  
+</p>
+
+
+
+<pre class="code"><code class="lang-d"><span class="pln">
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/tbuffer.html"></span><span class="pln">tbuffer</span></a><span class="pun">((</span><span class="pln">size_t</span><span class="pun">[])<wbr/>.</span><span class="pln">init</span><span class="pun">); </span><span class="com">// Producer thread created and syncronized
+
+</span><span class="pln">size_t counter</span><span class="pun">;
+
+</span><span class="pln">size_t </span><span class="kwd">delegate</span><span class="pun">(</span><span class="pln">size_t</span><span class="pun">[]) <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="pln">size_t</span><span class="pun">[] </span><span class="pln">array</span><span class="pun">) 
+{ 
+	</span><span class="kwd">foreach</span><span class="pun">(</span><span class="kwd">ref </span><span class="pln">i</span><span class="pun">; </span><span class="pln">array</span><span class="pun">)
+	{
+		</span><span class="pln">i </span><span class="pun">= </span><span class="pln">counter</span><span class="pun">;
+		</span><span class="pln">counter</span><span class="pun">++;
+	}
+
+	</span><span class="kwd">return </span><span class="pln">array<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
+};
+
+</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">; </span><span class="com">// Give instructions to producer
+
+
+</span><span class="kwd">for</span><span class="pun">(</span><span class="typ">int </span><span class="pln">i</span><span class="pun">; </span><span class="pln">i </span><span class="pun">&lt; </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">* </span><span class="lit">5</span><span class="pun">; )
+{
+	</span><span class="kwd">while</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">) 
+		</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">source</span><span class="pun">; </span><span class="com">// Aquire data from producer
+
+	</span><span class="pln">i </span><span class="pun">+= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
+	</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf</span><span class="pun">[$..$];
+}
+
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">deinit</span><span class="pun">; </span><span class="com">// Unallocates all data, including destroying the thread. Can be used for all buffers.
+</span></code></pre>
+</section>
+<section><h2>Example</h2>
+<p> <b>Mirroring - For Compression &amp; Decryption</b>
+</p>
+
+<p> New item orders can easily be established without copying using a mirror provided by the operating system.   
+</p>
+
+
+
+<p>  Memory can be visualized as blocks of two <b>O</b>'s, each having a size of <code class="lang-d">max/2</code>. The buffer only sees memory marked with <b>X</b>'s.
+The mirror border is marked with <b>|</b>, right side of which is the mirrored memory. 
+</p>
+<pre class="code"><code class="lang-d"><span class="com">/+ Current view is OO|OO +/
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">(</span><span class="str">""</span><span class="pun">);
+
+</span><span class="com">// aO|aO
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[</span><span class="lit">0</span><span class="pun">..</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2</span><span class="pun">] = </span><span class="str">'a'</span><span class="pun">;
+
+</span><span class="com">// ab|ab
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2 </span><span class="pun">.. </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">] = </span><span class="str">'b'</span><span class="pun">;
+
+</span><span class="com">/+ Expand view from OO|OO +/
+
+// OX|XO
+</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2</span><span class="pun">..</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2</span><span class="pun">];
+
+</span><span class="com">// ab|ab
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] == </span><span class="str">'b' </span><span class="pun">&amp;&amp; </span><span class="pln">buf</span><span class="pun">[$-</span><span class="lit">1</span><span class="pun">] == </span><span class="str">'a'</span><span class="pun">);
+
+</span><span class="com">/+ Order: ab -&gt; ba +/
+</span></code></pre>
+</section>
+</section>
+				<section>
+					<h2>Functions</h2>
+					<table>
+						<col class="caption"/>
+						<tr>
+							<th>Name</th><th>Description</th>
+						</tr>
+						<tr>
+							<td>
+								<code>
+									<a id="buffer" class="public" href="./elembuf/buffer.html">buffer</a><span class="tableEntryAnnotation">(arg)</span>
+								</code>
+							</td>
+							<td>Dynamic circular array.  
+</td>
+						</tr>
+						<tr>
+							<td>
+								<code>
+									<a id="tbuffer" class="public" href="./elembuf/tbuffer.html">tbuffer</a><span class="tableEntryAnnotation">(arg)</span>
+								</code>
+							</td>
+							<td>Threaded dynamic circular array.  
+</td>
+						</tr>
+					</table>
+				</section>
+			</div>
+			<footer>
+				<div id="license-info">
+					
+					
+					
+				</div>
+			</footer>
+		</div>
+	</body>
+</html>
