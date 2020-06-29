@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>Struct NetSource</title>
+		<link rel="stylesheet" href="../css/style.min.css"/>
+		<script type="text/javascript" src="../js/script.min.js"></script>
+	</head>
+	<body onload="setupDdox();">
+		<header></header>
+		<nav id="main-nav">
+			<div>
+				<noscript>
+					<p style="color: red">The search functionality needs JavaScript enabled</p>
+				</noscript>
+				<div id="symbolSearchPane" style="display: none">
+					<form action="#" method="GET">
+						<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
+					</form>
+					<ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../";
+document.getElementById('symbolSearchPane').style.display = 'block';</script>
+				</div>
+				<ul class="tree-view">
+					<li>
+						<div class="module ">
+							<a href="../elembuf.html">elembuf</a>
+						</div>
+					</li>
+					<li>
+						<div class="module selected">
+							<a href="../source.html">source</a>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<p id="main-nav-footer">
+				Built with
+				<a href="https://github.com/MartinNowak/scod">scod</a>
+			</p>
+		</nav>
+		<div id="main-contents">
+			<div>
+				<h1>Struct NetSource</h1><p>Source which takes data from a website.
+</p>
+				<div class="prototype">
+					<code class="lang-d">
+						<div class="single-prototype">
+				<span class="kwd">struct</span> <span class="typ">NetSource</span>
+				<span class="pun">;</span>
+						</div>
+					</code>
+				</div>
+				<section><p><a href="https://cyroxin.github.io/Elembuf/source.html">&lt;</a>
+</p>
+</section>
+
+				<section><h2>Constructors</h2>
+					<table>
+						<col class="caption"/>
+						<tr>
+							<th>Name</th><th>Description</th>
+						</tr>
+						<tr>
+							<td>
+								<a href="../source/NetSource.this.html" class="public">
+									<code>this</code>
+								</a>
+								<span class="tableEntryAnnotation">(url)</span>
+							</td>
+							<td>Creates a connection by parsing an url from a string.
+</td>
+						</tr>
+					</table>
+				</section>
+				<section><h2>Methods</h2>
+					<table>
+						<col class="caption"/>
+						<tr>
+							<th>Name</th><th>Description</th>
+						</tr>
+						<tr>
+							<td>
+								<a href="../source/NetSource.empty.html" class="public">
+									<code>empty</code>
+								</a>
+								<span class="tableEntryAnnotation">()</span>
+							</td>
+							<td>Checks if the socket has been closed by the sender. Does not check for data based closures (html or http).
+</td>
+						</tr>
+					</table>
+				</section>
+				<section><h2>Example</h2>
+
+<pre class="code"><code class="lang-d"><span class="kwd">import <a href="../elembuf.html"></span><span class="pln">elembuf</span></a><span class="pun">, <a href="../source.html"></span><span class="pln">source</span></a><span class="pun">;
+
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buffer</span><span class="pun">(</span><span class="str">""</span><span class="pun">);
+</span><span class="kwd">auto </span><span class="pln">src </span><span class="pun">= </span><span class="str">"www.bing.com"<wbr/></span><span class="pun">.</span><span class="typ">NetSource</span><span class="pun">;
+
+</span><span class="kwd">while</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">)
+	</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">src</span><span class="pun">;
+</span></code></pre>
+</section>
+
+			</div>
+			<footer>
+				<div id="license-info">
+					
+					
+					
+				</div>
+			</footer>
+		</div>
+	</body>
+</html>

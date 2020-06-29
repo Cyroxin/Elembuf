@@ -278,7 +278,7 @@
   <useIn>0</useIn>
   <useOut>0</useOut>
   <useArrayBounds>0</useArrayBounds>
-  <boundscheck>2</boundscheck>
+  <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
@@ -444,7 +444,7 @@
   <objdir>$(OutDir)</objdir>
   <objname />
   <libname />
-  <doDocComments>1</doDocComments>
+  <doDocComments>0</doDocComments>
   <docdir>docs</docdir>
   <docname />
   <modules_ddoc />
@@ -770,7 +770,7 @@
   <useIn>0</useIn>
   <useOut>0</useOut>
   <useArrayBounds>0</useArrayBounds>
-  <boundscheck>2</boundscheck>
+  <boundscheck>0</boundscheck>
   <useSwitchError>0</useSwitchError>
   <useUnitTests>1</useUnitTests>
   <useInline>0</useInline>
@@ -991,12 +991,16 @@
    <File path="bench\thred.d" />
   </Folder>
   <Folder name="docs">
-   <File path="docs\elembuf.html" />
-   <File path="docs\source.html" />
+   <Folder name="html">
+    <File path="docs\elembuf.html" />
+    <File path="docs\source.html" />
+   </Folder>
+   <File path="docs.json" />
   </Folder>
   <Folder name="source">
    <File path="source\elembuf.d" />
    <File path="source\source.d" />
   </Folder>
+  <File path="dub.json" />
  </Folder>
 </DProject>

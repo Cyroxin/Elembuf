@@ -512,26 +512,21 @@
         <section id="module_content"><section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    <a href="https://cyroxin.github.io/Elembuf/source.html">&lt;</a>
+    Optimized containers alike to arrays
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+    <a href="https://cyroxin.github.io/Elembuf/index.html">&lt;</a>
 
   </p>
 </div>
 <div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    Dynamic circular array with a maximum length. <br> <br>
- <p><span class="font_big"> Takes an advantage of the system's memory mirroring capabillities to
- create a memory loop so that memory copying wont be necessary.
- The buffer may be manipulated normally as if it were a T[] and can be implicitly converted to it.</span></p>
-<br><br>
-
-<ul><li><span class="font_big">The concat operator cannot be used in @nogc code, but it does not use the GC.</span></li>
-</ul>
- <br>
-<hr />
-
-
- <br> <span class="font_big"><b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b></span> <br> <br>
+    <br> <span class="font_big"><b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b></span> <br> <br>
 
 <section class="code_listing">
   <div class="code_sample">
@@ -563,9 +558,9 @@
   <p class="para">
     <br> <span class="font_big"><b>IO - Fast library integration</b></span>
 <br><br>
-<span class="font_big"> There is no need to create a new container just so outdated push/pop queues and lists can work with socket and file system libraries that require pointers. Just use a lambda! </span> <br> <br>
-
-<hr />
+<span class="font_big"> No outdated push/pop methods so that IO libraries that require pointers work out of the box. Just use a lambda. </span> <br> <br>
+<br><br>
+<br><br>
 <br>
 
 <section class="code_listing">
@@ -596,39 +591,11 @@ buf ~= 5;
 </div><div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    <br> <span class="font_big"><b>Design - Type freedom</b></span>
-<br><br>
-<span class="font_big"> Types should be easy to use by the user, not obscure behind a type deduction declaration.</span> <br> <br>
-
-<hr />
-<br>
-
-<section class="code_listing">
-  <div class="code_sample">
-    <div class="dlang">
-      <ol class="code_lines">
-        <li><code class="code">buffer!(<span class="keyword">char</span>[], <span class="keyword">false</span>) buf = buffer(<span class="string_literal">""</span>);
-
-buffer!(<span class="keyword">char</span>[], <span class="keyword">true</span>) tbuf = tbuffer(<span class="string_literal">""</span>);
-<span class="keyword">scope</span>(exit) tbuf.deinit;
-
-<span class="keyword">shared</span> buffer!(<span class="keyword">char</span>[], <span class="keyword">false</span>) csbuf = buffer(<span class="string_literal">""</span>);
-<span class="keyword">const</span> buffer!(<span class="keyword">char</span>[], <span class="keyword">false</span>) cibuf = buffer(<span class="string_literal">""</span>);
-</code></li>
-      </ol>
-    </div>
-  </div>
-</section>
-
-  </p>
-</div><div class="ddoc_examples">
-  <h4>Examples</h4>
-  <p class="para">
     <br> <span class="font_big"><b>Concurrency - Built in for your convenience</b></span>
 <br><br>
-<span class="font_big"> Simple solution that works efficiently out of the box. Syncronized in the background without need for fiddling.</span> <br> <br>
-
-<hr />
+<span class="font_big"> Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.</span> <br> <br>
+<br><br>
+<br><br>
 <br>
 
 <section class="code_listing">
@@ -675,11 +642,11 @@ buf.deinit; <span class="comment">// Unallocates all data, including destroying 
   <p class="para">
     <br> <span class="font_big"><b>Mirroring - For Compression &amp; Decryption</b></span>
 <br><br>
-<span class="font_big"> New item orders can easily be established without copying using a mirror provided natively by the operating system. </span> <br> <br>
-
-<hr />
-
-<br> <br> <span class="font_big">We can represent memory as blocks of two <span class="font_big"><b>O</b></span>'s, each having a size of <span class="font_big"><code class="code">max/2</code></span>. The buffer only sees memory marked with <span class="font_big"><b>X</b></span>'s. <br>
+<span class="font_big"> New item orders can easily be established without copying using a mirror provided by the operating system. </span> <br> <br>
+<br><br>
+<br><br>
+<br><br>
+<br> <br> <span class="font_big">Memory can be visualized as blocks of two <span class="font_big"><b>O</b></span>'s, each having a size of <span class="font_big"><code class="code">max/2</code></span>. The buffer only sees memory marked with <span class="font_big"><b>X</b></span>'s.
 The mirror border is marked with <span class="font_big"><b>|</b></span>, right side of which is the mirrored memory. </span>
 <br><br>
 
@@ -713,6 +680,312 @@ The mirror border is marked with <span class="font_big"><b>|</b></span>, right s
 
   </p>
 </div>
+</section>
+<section class="section ddoc_module_members_section">
+  <div class="ddoc_module_members">
+    <ul class="ddoc_members">
+  <li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#buffer" id="buffer"><code class="code">buffer</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="buffer"></span>auto <code class="code">buffer</code>(A)(A <code class="code">arg</code>);
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Dynamic circular array. <br> <br>
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+    <p><span class="font_big"> Takes an advantage of the system's memory mirroring capabillities to
+ create a memory loop so that memory copying wont be necessary once new data is concatenated.
+ The <code class="code">buffer</code> may be manipulated normally as if it were a T[] and can be implicitly converted to it.
+ Buffer length after concatenation must be less or equal to the <code class="code">.max</code> size of the array. </span></p>
+<br><br>
+ <br>
+
+
+  </p>
+</div>
+<div class="ddoc_params">
+  <h4>Parameters</h4>
+  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
+    <tbody>
+      <tr class="ddoc_param_row">
+  <td scope="ddoc_param_id">
+  <code class="code">
+    <em class="term">A <code class="code">arg</code></em>
+  </code>
+</td>
+<td>
+  <div class="ddoc_param_desc">
+    <p class="para">
+      The initiating data for the array. If it is immutable, it is copied into a mutable <code class="code">buffer</code>. An empty <code class="code">buffer</code> initiation can be achieved with the <code class="code">.init</code> of any array type.
+    </p>
+  </div>
+</td>
+</tr>
+
+    </tbody>
+  </table>
+</div>
+<div class="ddoc_returns">
+  <h4>Return Value</h4>
+  <p class="para">
+    <code class="code"><code class="code">buffer</code>!(Unqual!(ForeachType!A)[], false)</code>
+
+
+  </p>
+</div>
+<div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">auto</span> buf = <span class="psymbol">buffer</span>(<span class="string_literal">"Hello world!"</span>);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="psymbol">buffer</span>!(<span class="keyword">char</span>[], <span class="keyword">false</span>) buf = <span class="string_literal">"Hello world!"</span>;
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="psymbol">buffer</span>!(<span class="keyword">int</span>[], <span class="keyword">false</span>) buf = <span class="psymbol">buffer</span>([1,2,3,4,5]);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="psymbol">buffer</span>!(<span class="keyword">ulong</span>[], <span class="keyword">false</span>) buf = <span class="psymbol">buffer</span>(<span class="keyword">cast</span>(<span class="keyword">ulong</span>[]) [1,2,3,4,5]);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+
+  </p>
+</div><div class="ddoc_bugs">
+  <h4>Bugs</h4>
+  <p class="para">
+    <ul><li><span class="font_big">The <code class="code">~=</code> -operator cannot be used in <code class="code">@nogc</code> code, but it does not use the GC.</span></li></ul>
+  </p>
+</div>
+
+</section>
+
+</div>
+
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#tbuffer" id="tbuffer"><code class="code">tbuffer</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="tbuffer"></span>auto <code class="code">tbuffer</code>(A)(A <code class="code">arg</code>);
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Threaded dynamic circular array. <br> <br>
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+    <p><span class="font_big"> It is a wait-free single consumer-producer threaded version of the unthreaded circular array. It achieves high throughput as it does not use mutexes or the built-in
+ synchronized keyword. It however loses the ability to directly add elements to the buffer, the producer should instead be taught on how to fill the buffer using function pointers &amp;
+ delegates.</span></p>
+<br><br>
+ <br>
+
+
+  </p>
+</div>
+<div class="ddoc_params">
+  <h4>Parameters</h4>
+  <table cellspacing="0" cellpadding="5" border="0" class="graybox">
+    <tbody>
+      <tr class="ddoc_param_row">
+  <td scope="ddoc_param_id">
+  <code class="code">
+    <em class="term">A <code class="code">arg</code></em>
+  </code>
+</td>
+<td>
+  <div class="ddoc_param_desc">
+    <p class="para">
+      The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the <code class="code">.init</code> of any array type.
+    </p>
+  </div>
+</td>
+</tr>
+
+    </tbody>
+  </table>
+</div>
+<div class="ddoc_returns">
+  <h4>Return Value</h4>
+  <p class="para">
+    <code class="code">buffer!(Unqual!(ForeachType!A)[], true)</code>
+
+
+  </p>
+</div>
+<div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">auto</span> buf = <span class="psymbol">tbuffer</span>(<span class="string_literal">"Hello world!"</span>); <span class="comment">// As a convenience, puts the contents of an immutable string into a mutable buffer.
+</span></code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code">buffer!(<span class="keyword">char</span>[], <span class="keyword">true</span>) buf = <span class="string_literal">"Hello world!"</span>;
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code">buffer!(<span class="keyword">int</span>[], <span class="keyword">true</span>) buf = <span class="psymbol">tbuffer</span>([1,2,3,4,5]);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code">buffer!(<span class="keyword">ulong</span>[], <span class="keyword">true</span>) buf = <span class="psymbol">tbuffer</span>(<span class="keyword">cast</span>(<span class="keyword">ulong</span>[]) [1,2,3,4,5]);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+
+  </p>
+</div><div class="ddoc_bugs">
+  <h4>Bugs</h4>
+  <p class="para">
+    <ul><li><span class="font_big">The <code class="code">~=</code> -operator cannot be used in <code class="code">@nogc</code> code, but it does not use the GC.</span></li></ul>
+
+
+  </p>
+</div>
+<div class="ddoc_section">
+  <p class="para">
+    <span class="ddoc_section_h">Note:</span>
+ The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer:
+
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">alias</span> T = <span class="keyword">char</span>;
+
+<span class="keyword">auto</span> buf = <span class="psymbol">tbuffer</span>(T[].init);
+<span class="keyword">enum</span> source = buf.source;
+
+<span class="keyword">int</span> i = 1;
+buf ~= (T[] arr) <span class="comment">// Teach the producer. This is a delegate as it accesses i, otherwise it would be a function. Both can be used.
+</span>{
+arr[0] = T.init;
+<span class="keyword">return</span> i;
+};
+
+<span class="keyword">assert</span>(buf.length == 0);
+
+<span class="comment">/+ Bring data from the producer. This should be in a loop as it is not guaranteed that the producer is able to return anything yet. +/</span>
+buf ~= source;
+
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+  </p>
+</div>
+
+</section>
+
+</div>
+
+</li>
+</ul>
+  </div>
 </section>
 </section>
       </article>

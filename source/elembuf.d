@@ -1,5 +1,8 @@
-/**
-* <a href="https://cyroxin.github.io/Elembuf/source.html"><</a>
+/***********************************
+* Optimized containers alike to arrays
+*
+*
+* <a href="https://cyroxin.github.io/Elembuf/index.html"><</a>
 * Macros:
 * SOURCE = <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a>
 * BUFFER = <a href="https://cyroxin.github.io/Elembuf/elembuf.html">docs/buffer</a>
@@ -8,20 +11,6 @@
 module elembuf;
 
 import std.traits : isArray;
-
-
-/**
-* Dynamic circular array with a maximum length. $(BR) $(BR)
-* $(P $(BIG  Takes an advantage of the system's memory mirroring capabillities to
-* create a memory loop so that memory copying wont be necessary.
-* The buffer may be manipulated normally as if it were a T[] and can be implicitly converted to it.))
-*
-*
-*				- $(BIG The concat operator cannot be used in @nogc code, but it does not use the GC.)
-* $(BR)
-* - - -
-*
-*/
 
 /++ $(BR) $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.)) $(BR) $(BR) +/
 unittest
@@ -45,9 +34,9 @@ unittest
 
 /++ $(BR) $(BIG $(B IO - Fast library integration))
 
-$(BIG  There is no need to create a new container just so outdated push/pop queues and lists can work with socket and file system libraries that require pointers. Just use a lambda! ) $(BR) $(BR)
+$(BIG  No outdated push/pop methods so that IO libraries that require pointers work out of the box. Just use a lambda. ) $(BR) $(BR)
 
-- - -
+
 $(BR) 
 +/
 unittest
@@ -68,30 +57,12 @@ unittest
 	assert(buf == [4,5]);
 } 
 
-/++ $(BR) $(BIG $(B Design - Type freedom))
-
-$(BIG  Types should be easy to use by the user, not obscure behind a type deduction declaration.) $(BR) $(BR)
-
-- - -
-$(BR) 
-+/
-unittest
-{
-	buffer!(char[], false) buf = buffer("");
-
-	buffer!(char[], true) tbuf = tbuffer("");
-	scope(exit) tbuf.deinit;
-
-	shared buffer!(char[], false) csbuf = buffer("");
-	const buffer!(char[], false) cibuf = buffer("");
-
-} 
 
 /++ $(BR) $(BIG $(B Concurrency - Built in for your convenience))
 
-$(BIG  Simple solution that works efficiently out of the box. Syncronized in the background without need for fiddling.) $(BR) $(BR)
+$(BIG  Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.) $(BR) $(BR)
 
-- - -
+
 $(BR) 
 +/
 unittest
@@ -132,11 +103,11 @@ unittest
 
 $(BR) $(BIG $(B Mirroring - For Compression & Decryption))
 
-$(BIG  New item orders can easily be established without copying using a mirror provided natively by the operating system. ) $(BR) $(BR)
+$(BIG  New item orders can easily be established without copying using a mirror provided by the operating system. ) $(BR) $(BR)
 
-- - -
 
-$(BR) $(BR) $(BIG We can represent memory as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s. $(BR) 
+
+$(BR) $(BR) $(BIG Memory can be visualized as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s. 
 The mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. )
 
 +/
@@ -163,7 +134,39 @@ unittest
 } 
 
 
-
+/**
+* Dynamic circular array. $(BR) $(BR)
+*
+$(P $(BIG  Takes an advantage of the system's memory mirroring capabillities to
+* create a memory loop so that memory copying wont be necessary once new data is concatenated.
+* The buffer may be manipulated normally as if it were a T[] and can be implicitly converted to it.
+* Buffer length after concatenation must be less or equal to the `.max` size of the array. ))
+*
+* $(BR)
+*
+Params:
+*      arg =     The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the `.init` of any array type.
+*
+* Returns:
+* `buffer!(Unqual!(ForeachType!A)[], false)`
+*
+* Examples:
+* ---
+* auto buf = buffer("Hello world!");
+* ---
+* ---
+* buffer!(char[], false) buf = "Hello world!";
+* ---
+* ---
+* buffer!(int[], false) buf = buffer([1,2,3,4,5]);
+* ---
+* ---
+* buffer!(ulong[], false) buf = buffer(cast(ulong[]) [1,2,3,4,5]);
+* ---
+*
+* Bugs: 
+*  $(UL $(LI $(BIG The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))
+*/
 
 
 
@@ -176,11 +179,70 @@ auto buffer(A)(A arg)
 }
 
 
+/*****
+ Threaded dynamic circular array. $(BR) $(BR)
+
+$(P $(BIG  It is a wait-free single consumer-producer threaded version of the unthreaded circular array. It achieves high throughput as it does not use mutexes or the built-in
+ synchronized keyword. It however loses the ability to directly add elements to the buffer, the producer should instead be taught on how to fill the buffer using function pointers & 
+ delegates.))
+
+ $(BR)
+
+ Params:
+      arg =     The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the `.init` of any array type.
+
+ Returns:
+ `buffer!(Unqual!(ForeachType!A)[], true)`
+
+Examples:
+ ---
+ auto buf = tbuffer("Hello world!"); // As a convenience, puts the contents of an immutable string into a mutable buffer.
+ ---
+ ---
+ buffer!(char[], true) buf = "Hello world!";
+ ---
+ ---
+ buffer!(int[], true) buf = tbuffer([1,2,3,4,5]);
+ ---
+ ---
+ buffer!(ulong[], true) buf = tbuffer(cast(ulong[]) [1,2,3,4,5]);
+ ---
+
+ Bugs: 
+  $(UL $(LI $(BIG The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))
+
+ Note:
+ The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer:
+ ---
+ alias T = char;
+
+ auto buf = tbuffer(T[].init);
+ enum source = buf.source; 
+
+ int i = 1;
+ buf ~= (T[] arr) // Teach the producer. This is a delegate as it accesses i, otherwise it would be a function. Both can be used.
+ {
+	arr[0] = T.init;
+	return i;
+ };
+
+assert(buf.length == 0);
+
+/+ Bring data from the producer. This should be in a loop as it is not guaranteed that the producer is able to return anything yet. +/
+ buf ~= source;
+
+ ---
+*/
+
 auto tbuffer(A)(A arg)
 {
 	import std.traits : Unqual, ForeachType;
 
 	return buffer!(Unqual!(ForeachType!A)[], true)(arg);
+
+}
+
+unittest{
 
 }
 
@@ -655,7 +717,9 @@ if(isArray!(ArrayType))
 
 	// FUNCTIONS
 
+	///
 	nothrow @nogc @trusted @property void length(inout size_t len) in(len <= max) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
+	///
 	inout nothrow @nogc @trusted @property auto length() out (ret; ret <= max) {return buf.length;}
 
 	shared nothrow @nogc @trusted @property void length(inout size_t len) in(len <= max) {buf = buf.ptr[0..len];} // Overidden so that it can be @nogc
@@ -690,9 +754,8 @@ if(isArray!(ArrayType))
 	private enum membits = -pagesize; // Returns the bits that signify the page position including page bit.
 	private enum mempos = membits * 2; // Returns the bits that signify the page position excluding page bit.
 
-	/++
-	Maximum amount of items that the buffer can hold. Use this and length to determine how much can be concatenated.
-	+/
+	
+	/// Maximum amount of items that the buffer can hold. Use this and length to determine how much can be concatenated.
 	enum max = pagesize / T.sizeof; 
 
 	static if(threaded)

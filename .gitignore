@@ -285,3 +285,4 @@ __pycache__/
 /.dub
 *.exe
 /tests
+/elembuf.lib

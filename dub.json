@@ -6,5 +6,6 @@
 	"homepage": "https://github.com/Cyroxin/Elembuf",
 	"description": "Simple to use circular buffer/array for efficient IO",
 	"license": "MIT",
-	"name": "elembuf"
+	"name": "elembuf",
+	"-ddoxTool": "scod"
 }

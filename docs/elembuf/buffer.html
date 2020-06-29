@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>Function buffer</title>
+		<link rel="stylesheet" href="../css/style.min.css"/>
+		<script type="text/javascript" src="../js/script.min.js"></script>
+	</head>
+	<body onload="setupDdox();">
+		<header></header>
+		<nav id="main-nav">
+			<div>
+				<noscript>
+					<p style="color: red">The search functionality needs JavaScript enabled</p>
+				</noscript>
+				<div id="symbolSearchPane" style="display: none">
+					<form action="#" method="GET">
+						<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
+					</form>
+					<ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../";
+document.getElementById('symbolSearchPane').style.display = 'block';</script>
+				</div>
+				<ul class="tree-view">
+					<li>
+						<div class="module selected">
+							<a href="../elembuf.html">elembuf</a>
+						</div>
+					</li>
+					<li>
+						<div class="module ">
+							<a href="../source.html">source</a>
+						</div>
+					</li>
+				</ul>
+			</div>
+			<p id="main-nav-footer">
+				Built with
+				<a href="https://github.com/MartinNowak/scod">scod</a>
+			</p>
+		</nav>
+		<div id="main-contents">
+			<div>
+				<h1>Function buffer</h1><p>Dynamic circular array.  
+</p>
+				<div class="prototype">
+					<code class="lang-d">
+						<div class="single-prototype">
+				<span class="kwd">auto</span> <span class="pln">buffer</span>(A)
+				<span class="pun">(</span>
+				<br/>
+				&nbsp;&nbsp;<span class="pln">A</span> <span class="pln">arg</span>
+				<br/>
+				<span class="pun">)</span><span class="pun">;</span>
+						</div>
+					</code>
+				</div>
+				<section><p><p> Takes an advantage of the system's memory mirroring capabillities to
+ create a memory loop so that memory copying wont be necessary once new data is concatenated.
+ The buffer may be manipulated normally as if it were a T[] and can be implicitly converted to it.
+ Buffer length after concatenation must be less or equal to the <code class="lang-d"><wbr/><span class="pun">.</span><span class="pln">max</span></code> size of the array. </p>
+</p>
+
+
+</section>
+
+				<section><h2>Parameters</h2>
+<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="arg">arg</td><td>     The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the <code class="lang-d"><wbr/><span class="pun">.</span><span class="pln">init</span></code> of any array type.</td></tr>
+</table>
+</section>
+<section><h2>Returns</h2>
+<p><code class="lang-d"><span class="pln">buffer</span><span class="pun">!(</span><span class="typ">Unqual</span><span class="pun">!(</span><span class="typ">ForeachType</span><span class="pun">!</span><span class="pln">A</span><span class="pun">)[], </span><span class="kwd">false</span><span class="pun">)</span></code>
+</p>
+</section>
+<section><h2>Examples</h2>
+<pre class="code"><code class="lang-d"><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buffer</span><span class="pun">(</span><span class="str">"Hello world!"</span><span class="pun">);</span></code></pre>
+<pre class="code"><code class="lang-d"><span class="pln">buffer</span><span class="pun">!(</span><span class="typ">char</span><span class="pun">[], </span><span class="kwd">false</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="str">"Hello world!"</span><span class="pun">;</span></code></pre>
+<pre class="code"><code class="lang-d"><span class="pln">buffer</span><span class="pun">!(</span><span class="typ">int</span><span class="pun">[], </span><span class="kwd">false</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buffer</span><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);</span></code></pre>
+<pre class="code"><code class="lang-d"><span class="pln">buffer</span><span class="pun">!(</span><span class="typ">ulong</span><span class="pun">[], </span><span class="kwd">false</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buffer</span><span class="pun">(</span><span class="kwd">cast</span><span class="pun">(</span><span class="typ">ulong</span><span class="pun">[]) [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);</span></code></pre>
+</section>
+<section><h2>Bugs</h2>
+<p><ul><li>The <code class="lang-d"><span class="pun">~=</span></code> -operator cannot be used in <code class="lang-d"><span class="kwd">@nogc</span></code> code, but it does not use the GC.</li></ul>
+</p>
+</section>
+
+			</div>
+			<footer>
+				<div id="license-info">
+					
+					
+					
+				</div>
+			</footer>
+		</div>
+	</body>
+</html>

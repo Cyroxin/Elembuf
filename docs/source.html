@@ -512,18 +512,25 @@
         <section id="module_content"><section class="section ddoc_sections">
   <div class="ddoc_summary">
   <p class="para">
-    <a href="https://cyroxin.github.io/Elembuf/elembuf.html">&lt;</a>
+    Data sources that may be used with buffers instead of directly filling or using lambdas
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+    <a href="https://cyroxin.github.io/Elembuf/index.html">&lt;</a>
 
   </p>
 </div>
 <div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    <br> <span class="font_big"><b>Extensions - Source Interface</b></span>
+    <br> <span class="font_big"><b>Extension Interface</b></span>
 <br><br>
 <span class="font_big"> It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  </span> <br> <br>
-
-<hr />
+<br><br>
+<br><br>
 <br>
 
 <section class="code_listing">
@@ -554,11 +561,11 @@
 </div><div class="ddoc_examples">
   <h4>Examples</h4>
   <p class="para">
-    <br> <span class="font_big"><b>Example sources - For testing and learning purposes </b></span>
+    <br> <span class="font_big"><b>Built-in Sources </b></span>
 <br><br>
-<span class="font_big"> There are currently two example sources, which you may use. They are not for production, but serve well for learning and debugging. Here is an example on how to use them.   </span> <br> <br>
-
-<hr />
+<span class="font_big"> There are built-in example sources, which you may use instead of directly filling using concat or lambdas.   </span> <br> <br>
+<br><br>
+<br><br>
 <br>
 
 <section class="code_listing">
@@ -589,6 +596,259 @@
 
   </p>
 </div>
+</section>
+<section class="section ddoc_module_members_section">
+  <div class="ddoc_module_members">
+    <ul class="ddoc_members">
+  <li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#NetSource" id="NetSource"><code class="code">NetSource</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="NetSource"></span>struct <code class="code">NetSource</code>;
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Source which takes data from a website.
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+    <a href="https://cyroxin.github.io/Elembuf/source.html">&lt;</a>
+  </p>
+</div>
+<div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">import</span> elembuf, source;
+
+<span class="keyword">auto</span> buf = buffer(<span class="string_literal">""</span>);
+<span class="keyword">auto</span> src = <span class="string_literal">"www.bing.com"</span>.<span class="psymbol">NetSource</span>;
+
+<span class="keyword">while</span>(buf.length == 0)
+	buf ~= src;
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+  </p>
+</div>
+</section>
+<ul class="ddoc_members">
+  <li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#NetSource.empty" id="NetSource.empty"><code class="code">empty</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="NetSource.empty"></span>bool <code class="code">empty</code>();
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Checks if the socket has been closed by the sender. Does not check for data based closures (html or http).
+  </p>
+</div>
+
+</section>
+
+</div>
+
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#NetSource.this" id="NetSource.this"><code class="code">this</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="NetSource.this"></span>@trusted this(const char[] <code class="code">url</code>);
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Creates a connection by parsing an <code class="code">url</code> from a string.
+  </p>
+</div>
+
+</section>
+
+</div>
+
+</li>
+</ul>
+
+</div>
+
+</li><li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#ArraySource" id="ArraySource"><code class="code">ArraySource</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="ArraySource"></span>struct <code class="code">ArraySource</code>(InternalType = char);
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Source that reads from an array as if it were a <code class="code">true</code> source.
+
+  </p>
+</div>
+<div class="ddoc_description">
+  <h4>Discussion</h4>
+  <p class="para">
+    <a href="https://cyroxin.github.io/Elembuf/source.html">&lt;</a>
+  </p>
+</div>
+<div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">import</span> elembuf, source;
+
+<span class="keyword">auto</span> buf = buffer(<span class="string_literal">""</span>);
+<span class="keyword">auto</span> src = <span class="string_literal">"World"</span>.<span class="psymbol">ArraySource</span>!<span class="keyword">char</span>;
+
+buf ~= src;
+<span class="keyword">assert</span>(buf == <span class="string_literal">"World"</span>);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+  </p>
+</div><div class="ddoc_examples">
+  <h4>Examples</h4>
+  <p class="para">
+    
+<section class="code_listing">
+  <div class="code_sample">
+    <div class="dlang">
+      <ol class="code_lines">
+        <li><code class="code"><span class="keyword">import</span> elembuf, source;
+
+<span class="keyword">auto</span> buf = buffer([0]);
+<span class="keyword">auto</span> src = ([1,2,3,4,5]).<span class="psymbol">ArraySource</span>!<span class="keyword">int</span>;
+
+buf ~= src;
+<span class="keyword">assert</span>(buf == [0,1,2,3,4,5]);
+</code></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+  </p>
+</div>
+</section>
+<ul class="ddoc_members">
+  <li class="ddoc_member">
+  <div class="ddoc_member_header">
+  <div class="ddoc_header_anchor">
+  <a href="#ArraySource.this" id="ArraySource.this"><code class="code">this</code></a>
+</div>
+</div><div class="ddoc_decl">
+  <section class="section">
+    <div class="declaration">
+      <h4>Declaration</h4>
+      <div class="dlang">
+        <p class="para">
+          <code class="code">
+            <span class="ddoc_anchor" id="ArraySource.this"></span>@nogc this()(T[] <code class="code">array</code>);
+
+          </code>
+        </p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="ddoc_decl">
+  <section class="section ddoc_sections">
+  <div class="ddoc_summary">
+  <p class="para">
+    Takes in the <code class="code">array</code> and stores it.
+  </p>
+</div>
+
+</section>
+
+</div>
+
+</li>
+</ul>
+
+</div>
+
+</li>
+</ul>
+  </div>
 </section>
 </section>
       </article>

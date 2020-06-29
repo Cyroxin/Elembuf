@@ -1,5 +1,7 @@
-/**
-* <a href="https://cyroxin.github.io/Elembuf/elembuf.html"><</a>
+/***********************************
+* Data sources that may be used with buffers instead of directly filling or using lambdas
+*
+* <a href="https://cyroxin.github.io/Elembuf/index.html"><</a>
 * Macros:
 * SOURCE = <a href="https://cyroxin.github.io/Elembuf/source.html">docs/source</a>
 * BUFFER = <a href="https://cyroxin.github.io/Elembuf/elembuf.html">docs/buffer</a>
@@ -9,11 +11,11 @@ module source;
 
 
 
-/++ $(BR) $(BIG $(B Extensions - Source Interface))
+/++ $(BR) $(BIG $(B Extension Interface))
 
 $(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  ) $(BR) $(BR)
 
-- - -
+
 $(BR) 
 +/
 
@@ -35,11 +37,11 @@ unittest
 	}
 }
 
-/++ $(BR) $(BIG $(B Example sources - For testing and learning purposes ))
+/++ $(BR) $(BIG $(B Built-in Sources ))
 
-$(BIG  There are currently two example sources, which you may use. They are not for production, but serve well for learning and debugging. Here is an example on how to use them.   ) $(BR) $(BR)
+$(BIG  There are built-in example sources, which you may use instead of directly filling using concat or lambdas.   ) $(BR) $(BR)
 
-- - -
+
 $(BR) 
 +/
 
@@ -64,6 +66,10 @@ unittest
 
 }
 
+/** Source which takes data from a website.
+* 
+* <a href="https://cyroxin.github.io/Elembuf/source.html"><</a>
+*/
 struct NetSource
 {
 
@@ -75,20 +81,20 @@ struct NetSource
 	private Socket sock = void;
 	private bool _empty;
 
-	// Checks if the socket has been closed by the sender. Does not check for html based closures. 
+	/// Checks if the socket has been closed by the sender. Does not check for data based closures (html or http). 
 	bool empty(){ return _empty || !sock.isAlive;}
 
 	this(this) @disable;
 
-	// Creates a connection by parsing an ip or url from a string.
-	this(const char[] ip) @trusted
+	/// Creates a connection by parsing an url from a string.
+	this(const char[] url) @trusted
 	{
 
-		foreach(i, c; ip)
+		foreach(i, c; url)
 		{
-			if(c == 'w' && ip[i..i+4] == "www.")
+			if(c == 'w' && url[i..i+4] == "www.")
 			{
-				scope const Address addr = getAddress(ip[i..$],80)[0];
+				scope const Address addr = getAddress(url[i..$],80)[0];
 
 				sock = new TcpSocket(cast(Address) addr);
 
@@ -97,7 +103,7 @@ struct NetSource
 				sock.blocking(false);
 
 				scope const a = "GET " ~ '/' ~ " HTTP/1.1\r\n" ~ // TODO: Allow for subfolders instead of '/'
-					"Host: " ~ ip ~ "\r\n" ~
+					"Host: " ~ url ~ "\r\n" ~
 					"Accept: text/html, text/plain" ~ "\r\n\r\n"; 
 
 				sock.send(a);
@@ -151,21 +157,30 @@ struct NetSource
 
 }
 
+///
+unittest
+{
+	import elembuf, source;
+
+	auto buf = buffer("");
+	auto src = "www.bing.com".NetSource;
+
+	while(buf.length == 0)
+		buf ~= src;
+}
 
 
-/* Source that reads from an array as if it were a true source. This is best used for debugging or testing.
-* Examples:
-* ---
-* "World".ArraySource!char;
-* ([0,1,2,3,4,5]).ArraySource!int;
-* ---
-* - - - 
+
+/** Source that reads from an array as if it were a true source. 
+*
+* <a href="https://cyroxin.github.io/Elembuf/source.html"><</a>
 */
 struct ArraySource(InternalType = char) 
 {
 	alias T = InternalType;
 	private T[] arr;
 
+	/// Takes in the array and stores it.
 	this()(T[] array) @nogc
 	{
 		arr = cast(T[]) array;
@@ -195,4 +210,28 @@ struct ArraySource(InternalType = char)
 		};
 	}
 
+}
+
+///
+unittest
+{
+	import elembuf, source;
+
+	auto buf = buffer("");
+	auto src = "World".ArraySource!char;
+
+	buf ~= src;
+	assert(buf == "World");
+}
+
+///
+unittest
+{
+	import elembuf, source;
+
+	auto buf = buffer([0]);
+	auto src = ([1,2,3,4,5]).ArraySource!int;
+
+	buf ~= src;
+	assert(buf == [0,1,2,3,4,5]);
 }

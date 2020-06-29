@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>http://127.0.0.1/index.html</loc></url>
+<url><loc>http://127.0.0.1/elembuf.html</loc></url>
+<url><loc>http://127.0.0.1/elembuf/buffer.html</loc></url>
+<url><loc>http://127.0.0.1/elembuf/tbuffer.html</loc></url>
+<url><loc>http://127.0.0.1/source.html</loc></url>
+<url><loc>http://127.0.0.1/source/ArraySource.html</loc></url>
+<url><loc>http://127.0.0.1/source/ArraySource.this.html</loc></url>
+<url><loc>http://127.0.0.1/source/NetSource.html</loc></url>
+<url><loc>http://127.0.0.1/source/NetSource.empty.html</loc></url>
+<url><loc>http://127.0.0.1/source/NetSource.this.html</loc></url>
+</urlset>
