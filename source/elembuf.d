@@ -44,15 +44,19 @@ unittest
 	// Construct
 	auto buf = buffer([1,2,3]);
 
-	auto source = (int[] array) { array[0] = 4; return 1;};
+	auto src = (int[] arr)
+	{ 
+		arr[0] = 4;
+		return 1;
+	};
 
 	// Fill
-	buf ~= source;
+	buf ~= src;
 	assert(buf == [1,2,3,4]);
 
 	// Reuse
 	buf.length = 0;
-	buf ~= source;
+	buf ~= src;
 	buf ~= 5;
 	assert(buf == [4,5]);
 } 
@@ -67,36 +71,44 @@ $(BR)
 +/
 unittest
 {
+	alias T = size_t; 
 
-	auto buf = tbuffer((size_t[]).init); // Producer thread created and syncronized
+	// Producer thread created and syncronized
+	auto buf = tbuffer((T[]).init); 
 
 	size_t counter;
 
-	size_t delegate(size_t[]) source = (size_t[] array) 
+	size_t delegate(T[]) source = (T[] array)
 	{ 
-		foreach(ref i; array)
-		{
-			i = counter;
-			counter++;
-		}
+			foreach(ref i; array)
+			{
+				i = counter;
+				counter++;
+			}
 
 		return array.length;
 	};
 
-	buf ~= source; // Give instructions to producer
+	// Give instructions to producer
+	buf ~= source; 
 
 
 	for(int i; i < buf.max * 5; )
 	{
 		while(buf.length == 0) 
-			buf ~= buf.source; // Aquire data from producer
+		{
+			// Aquire data from producer
+			buf ~= buf.source; 
+		}
 
 		i += buf.length;
 		buf = buf[$..$];
 	}
 
-	// Unallocate all data, including destroying the thread. 
-	buf.deinit; // Can be used for all buffers.
+	// Unallocate all data &
+	// destroy the thread.
+	// Can be used for all buffers.
+	buf.deinit;
 }
 
 

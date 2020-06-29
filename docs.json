@@ -10,7 +10,7 @@
 						"name": "A"
 					}
 				],
-				"line": 176,
+				"line": 189,
 				"kind": "template",
 				"char": 6,
 				"members": [
@@ -24,13 +24,13 @@
 								"name": "arg"
 							}
 						],
-						"line": 176,
+						"line": 189,
 						"kind": "function",
 						"char": 6,
 						"name": "buffer",
 						"type": "(A arg)",
 						"endchar": 1,
-						"endline": 182
+						"endline": 195
 					}
 				],
 				"name": "buffer",
@@ -43,7 +43,7 @@
 						"name": "A"
 					}
 				],
-				"line": 243,
+				"line": 256,
 				"kind": "template",
 				"char": 6,
 				"members": [
@@ -57,20 +57,20 @@
 								"name": "arg"
 							}
 						],
-						"line": 243,
+						"line": 256,
 						"kind": "function",
 						"char": 6,
 						"name": "tbuffer",
 						"type": "(A arg)",
 						"endchar": 1,
-						"endline": 249
+						"endline": 262
 					}
 				],
 				"name": "tbuffer",
 				"comment": " Threaded dynamic circular array. $(BR) $(BR)\n\n<a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\"><<\/a>\n\n\n$(P $(BIG  It is a wait-free single consumer-producer threaded version of the unthreaded circular array. It achieves high throughput as it does not use mutexes or the built-in\n synchronized keyword. It however loses the ability to directly add elements to the buffer, the producer should instead be taught on how to fill the buffer using function pointers &\n delegates.))\n\n $(BR)\n\n Params:\n      arg =     The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the `.init` of any array type.\n\n Returns:\n `buffer!(Unqual!(ForeachType!A)[], true)`\n\nExamples:\n ---\n auto buf = tbuffer(\"Hello world!\"); // As a convenience, puts the contents of an immutable string into a mutable buffer.\n ---\n ---\n buffer!(char[], true) buf = \"Hello world!\";\n ---\n ---\n buffer!(int[], true) buf = tbuffer([1,2,3,4,5]);\n ---\n ---\n buffer!(ulong[], true) buf = tbuffer(cast(ulong[]) [1,2,3,4,5]);\n ---\n\n Bugs:\n  $(UL $(LI $(BIG The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))\n\n Note:\n The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer:\n ---\n alias T = char;\n\n auto buf = tbuffer(T[].init);\n enum source = buf.source;\n\n int i = 1;\n buf ~= (T[] arr) // Teach the producer. This is a delegate as it accesses i, otherwise it would be a function. Both can be used.\n {\n\tarr[0] = T.init;\n\treturn i;\n };\n\nassert(buf.length == 0);\n\n/+ Bring data from the producer. This should be in a loop as it is not guaranteed that the producer is able to return anything yet. +/\n buf ~= source;\n\n ---\n"
 			}
 		],
-		"comment": " Optimized containers alike to arrays\n\n\n <a href=\"https://cyroxin.github.io/Elembuf/index.html\"><<\/a>\n Macros:\n SOURCE = <a href=\"https://cyroxin.github.io/Elembuf/source.html\">docs/source<\/a>\n BUFFER = <a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\">docs/buffer<\/a>\nExample:\n$(BR) $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.)) $(BR) $(BR)$(DDOX_UNITTEST_HEADER __unittest_L16_C1)\n---\n\n\t// Import\n\timport elembuf;\n\n\t// Instantiate\n\tauto buf = buffer(\"Hello \");\n\n\t// Ensure new data fits\n\tassert(buf.max >= \"world!\".length + buf.length); \n\n\t// Fill\n\tbuf ~= \"world!\";\n\n\t// Read\n\tassert(buf == \"Hello world!\");\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L16_C1)\nExample:\n$(BR) $(BIG $(B IO - Fast library integration))\n\n$(BIG  No outdated push/pop methods so that IO libraries that require pointers work out of the box. Just use a lambda. ) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L42_C1)\n---\n// Construct\nauto buf = buffer([1,2,3]);\n\nauto source = (int[] array) { array[0] = 4; return 1;}; //  Give array.ptr to socket.receive if using sockets. Return written.\n\n// Fill\nbuf ~= source;\nassert(buf == [1,2,3,4]);\n\n// Reuse\nbuf.length = 0;\nbuf ~= source;\nbuf ~= 5;\nassert(buf == [4,5]);\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L42_C1)\nExample:\n$(BR) $(BIG $(B Concurrency - Built in for your convenience))\n\n$(BIG  Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L68_C1)\n---\n\n\tauto buf = tbuffer((size_t[]).init); // Producer thread created and syncronized\n\n\tsize_t counter;\n\n\tsize_t delegate(size_t[]) source = (size_t[] array) \n\t{ \n\t\tforeach(ref i; array)\n\t\t{\n\t\t\ti = counter;\n\t\t\tcounter++;\n\t\t}\n\n\t\treturn array.length;\n\t};\n\n\tbuf ~= source; // Give instructions to producer\n\n\n\tfor(int i; i < buf.max * 5; )\n\t{\n\t\twhile(buf.length == 0) \n\t\t\tbuf ~= buf.source; // Aquire data from producer\n\n\t\ti += buf.length;\n\t\tbuf = buf[$..$];\n\t}\n\n\tbuf.deinit; // Unallocates all data, including destroying the thread. Can be used for all buffers.\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L68_C1)\nExample:\n$(BR) $(BIG $(B Mirroring - For Compression & Decryption))\n\n$(BIG  New item orders can easily be established without copying using a mirror provided by the operating system. ) $(BR) $(BR)\n\n\n\n$(BR) $(BR) $(BIG Memory can be visualized as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s.\nThe mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. )$(DDOX_UNITTEST_HEADER __unittest_L114_C1)\n---\n/+ Current view is OO|OO +/\nauto buf = buffer(\"\");\n\n// aO|aO\nbuf.ptr[0..buf.max/2] = 'a';\n\n// ab|ab\nbuf.ptr[buf.max/2 .. buf.max] = 'b';\n\n/+ Expand view from OO|OO +/\n\n// OX|XO\nbuf = buf.ptr[buf.max/2..buf.max+buf.max/2];\n\n// ab|ab\nassert(buf[0] == 'b' && buf[$-1] == 'a');\n\n/+ Order: ab -> ba +/\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L114_C1)\n",
+		"comment": " $(P Optimized containers alike to arrays)\n\n\n <a href=\"https://cyroxin.github.io/Elembuf/index.html\"><<\/a>\n Macros:\n SOURCE = <a href=\"https://cyroxin.github.io/Elembuf/source.html\">docs/source<\/a>\n BUFFER = <a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\">docs/buffer<\/a>\nExample:\n$(BR) $(P $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.))) $(BR) $(BR)$(DDOX_UNITTEST_HEADER __unittest_L16_C1)\n---\n\n\t// Import\n\timport elembuf;\n\n\t// Instantiate\n\tauto buf = buffer(\"Hello \");\n\n\t// Ensure new data fits\n\tassert(buf.max >= \"world!\".length + buf.length); \n\n\t// Fill\n\tbuf ~= \"world!\";\n\n\t// Read\n\tassert(buf == \"Hello world!\");\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L16_C1)\nExample:\n$(BR) $(BIG $(B IO - Fast library integration))\n\n$(P $(BIG  No outdated push/pop methods. IO libraries that require pointers work out of the box. Just use a lambda. )) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L42_C1)\n---\n// Construct\nauto buf = buffer([1,2,3]);\n\nauto src = (int[] arr)\n{ \n\tarr[0] = 4;\n\treturn 1;\n};\n\n// Fill\nbuf ~= src;\nassert(buf == [1,2,3,4]);\n\n// Reuse\nbuf.length = 0;\nbuf ~= src;\nbuf ~= 5;\nassert(buf == [4,5]);\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L42_C1)\nExample:\n$(BR) $(BIG $(B Concurrency - Built in for your convenience))\n\n$(P $(BIG  Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.)) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L72_C1)\n---\nalias T = size_t; \n\n// Producer thread created and syncronized\nauto buf = tbuffer((T[]).init); \n\nsize_t counter;\n\nsize_t delegate(T[]) source = (T[] array)\n{ \n\t\tforeach(ref i; array)\n\t\t{\n\t\t\ti = counter;\n\t\t\tcounter++;\n\t\t}\n\n\treturn array.length;\n};\n\n// Give instructions to producer\nbuf ~= source; \n\n\nfor(int i; i < buf.max * 5; )\n{\n\twhile(buf.length == 0) \n\t{\n\t\t// Aquire data from producer\n\t\tbuf ~= buf.source; \n\t}\n\n\ti += buf.length;\n\tbuf = buf[$..$];\n}\n\n// Unallocate all data &\n// destroy the thread.\n// Can be used for all buffers.\nbuf.deinit;\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L72_C1)\nExample:\n$(BR) $(BIG $(B Mirroring - For Compression & Decryption))\n\n$(P $(BIG  New item orders can easily be established without copying using a mirror provided by the operating system. )) $(BR) $(BR)\n\n\n\n$(BR) $(BR) $(P $(BIG Memory can be visualized as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s.\nThe mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. ))$(DDOX_UNITTEST_HEADER __unittest_L127_C1)\n---\n/+ Current view is OO|OO +/\nauto buf = buffer(\"\");\n\n// aO|aO\nbuf.ptr[0..buf.max/2] = 'a';\n\n// ab|ab\nbuf.ptr[buf.max/2 .. buf.max] = 'b';\n\n/+ Expand view from OO|OO +/\n\n// OX|XO\nbuf = buf.ptr[buf.max/2..buf.max+buf.max/2];\n\n// ab|ab\nassert(buf[0] == 'b' && buf[$-1] == 'a');\n\n/+ Order: ab -> ba +/\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L127_C1)\n",
 		"name": "elembuf"
 	},
 	{
@@ -79,17 +79,17 @@
 		"members": [
 			{
 				"kind": "struct",
-				"line": 73,
+				"line": 74,
 				"char": 1,
 				"members": [
 					{
-						"line": 85,
+						"line": 86,
 						"kind": "function",
 						"char": 7,
 						"name": "empty",
 						"deco": "FZb",
 						"endchar": 47,
-						"endline": 85,
+						"endline": 86,
 						"comment": "Checks if the socket has been closed by the sender. Does not check for data based closures (html or http).\n"
 					},
 					{
@@ -99,18 +99,18 @@
 								"name": "url"
 							}
 						],
-						"line": 90,
+						"line": 91,
 						"kind": "constructor",
 						"originalType": "ref @trusted (const char[] url)",
 						"char": 2,
 						"name": "this",
 						"deco": "FNcNexAaZS6source9NetSource",
 						"endchar": 2,
-						"endline": 119,
+						"endline": 120,
 						"comment": "Creates a connection by parsing an url from a string.\n"
 					}
 				],
-				"comment": " Source which takes data from a website.\n\n <a href=\"https://cyroxin.github.io/Elembuf/source.html\"><<\/a>\nExample:\n$(DDOX_UNITTEST_HEADER __unittest_L161_C1)\n---\nimport elembuf, source;\n\nauto buf = buffer(\"\");\nauto src = \"www.bing.com\".NetSource;\n\nwhile(buf.length == 0)\n\tbuf ~= src;\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L161_C1)\n",
+				"comment": " Source which takes data from a website.\n\n <a href=\"https://cyroxin.github.io/Elembuf/source.html\"><<\/a>\nExample:\n$(DDOX_UNITTEST_HEADER __unittest_L162_C1)\n---\nimport elembuf, source;\n\nauto buf = buffer(\"\");\nauto src = \"www.bing.com\".NetSource;\n\nwhile(buf.length == 0)\n\tbuf ~= src;\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L162_C1)\n",
 				"name": "NetSource"
 			},
 			{
@@ -121,7 +121,7 @@
 						"name": "InternalType"
 					}
 				],
-				"line": 178,
+				"line": 179,
 				"kind": "template",
 				"char": 1,
 				"members": [
@@ -131,7 +131,7 @@
 						"members": [
 							{
 								"parameters": [],
-								"line": 184,
+								"line": 185,
 								"kind": "template",
 								"char": 2,
 								"members": [
@@ -142,28 +142,28 @@
 												"name": "array"
 											}
 										],
-										"line": 184,
+										"line": 185,
 										"kind": "constructor",
 										"char": 2,
 										"name": "this",
 										"type": "@nogc (T[] array)",
 										"endchar": 2,
-										"endline": 187
+										"endline": 188
 									}
 								],
 								"name": "this",
 								"comment": "Takes in the array and stores it.\n"
 							}
 						],
-						"line": 178,
+						"line": 179,
 						"name": "ArraySource"
 					}
 				],
 				"name": "ArraySource",
-				"comment": " Source that reads from an array as if it were a true source.\n\n <a href=\"https://cyroxin.github.io/Elembuf/source.html\"><<\/a>\nExample:\n$(DDOX_UNITTEST_HEADER __unittest_L216_C1)\n---\nimport elembuf, source;\n\nauto buf = buffer(\"\");\nauto src = \"World\".ArraySource!char;\n\nbuf ~= src;\nassert(buf == \"World\");\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L216_C1)\nExample:\n$(DDOX_UNITTEST_HEADER __unittest_L228_C1)\n---\nimport elembuf, source;\n\nauto buf = buffer([0]);\nauto src = ([1,2,3,4,5]).ArraySource!int;\n\nbuf ~= src;\nassert(buf == [0,1,2,3,4,5]);\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L228_C1)\n"
+				"comment": " Source that reads from an array as if it were a true source.\n\n <a href=\"https://cyroxin.github.io/Elembuf/source.html\"><<\/a>\nExample:\n$(DDOX_UNITTEST_HEADER __unittest_L217_C1)\n---\nimport elembuf, source;\n\nauto buf = buffer(\"\");\nauto src = \"World\".ArraySource!char;\n\nbuf ~= src;\nassert(buf == \"World\");\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L217_C1)\nExample:\n$(DDOX_UNITTEST_HEADER __unittest_L229_C1)\n---\nimport elembuf, source;\n\nauto buf = buffer([0]);\nauto src = ([1,2,3,4,5]).ArraySource!int;\n\nbuf ~= src;\nassert(buf == [0,1,2,3,4,5]);\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L229_C1)\n"
 			}
 		],
-		"comment": " Data sources that may be used with buffers instead of directly filling or using lambdas\n\n <a href=\"https://cyroxin.github.io/Elembuf/index.html\"><<\/a>\n Macros:\n SOURCE = <a href=\"https://cyroxin.github.io/Elembuf/source.html\">docs/source<\/a>\n BUFFER = <a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\">docs/buffer<\/a>\nExample:\n$(BR) $(BIG $(B Extension Interface))\n\n$(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  ) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L22_C1)\n---\nstruct mystruct(T)\n{\n\tauto src()\n\t{\n\t\treturn (T[] x) \n\t\t{\n\t\t\t// Write to x\n\t\t\tx[] = x.init;\n\n\t\t\t// Return written count\n\t\t\treturn x.length;\n\t\t};\n\t}\t\n}\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L22_C1)\nExample:\n$(BR) $(BIG $(B Built-in Sources ))\n\n$(BIG  There are built-in example sources, which you may use instead of directly filling using concat or lambdas.   ) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L48_C1)\n---\nimport source;\nimport elembuf;\n\nauto buf = buffer(\"\");\nauto src = \"www.bing.com\".NetSource;\n\nwhile(buf.length == 0)\n\tbuf ~= src;\n\n bool empty = src.empty; // Indicates socket closure. Closure can occur in html or http as well, which wont be detected by this.\n\n auto srcarr = \"World\".ArraySource!char;\n\n buf.length = 0;\n buf ~= srcarr;\n assert(buf == \"World\");\n\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L48_C1)\n",
+		"comment": " $(P Data sources that may be used with buffers instead of directly filling or using lambdas)\n\n <a href=\"https://cyroxin.github.io/Elembuf/index.html\"><<\/a>\n Macros:\n SOURCE = <a href=\"https://cyroxin.github.io/Elembuf/source.html\">docs/source<\/a>\n BUFFER = <a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\">docs/buffer<\/a>\nExample:\n$(BR) $(BIG $(B Extension Interface))\n\n$P( $(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  )) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L22_C1)\n---\n \nstruct mystruct(T)\n{\n auto src()\n {\n  return (T[] x) \n  {\n   // Write to x\n   x[] = x.init;\n\t\t\n   // Return written count\n   return x.length;\n  };\n }\t\n}\n\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L22_C1)\nExample:\n$(BR) $(BIG $(B Built-in Sources ))\n\n$(P $(BIG  There are built-in example sources, which you may use instead of directly filling using concat or lambdas.   )) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L51_C1)\n---\nimport source;\nimport elembuf;\n\nauto buf = buffer(\"\");\nauto src = \"www.bing.com\".NetSource;\n\nwhile(buf.length == 0)\n\tbuf ~= src;\n\n auto srcarr = \"World\".ArraySource!char;\n\n buf.length = 0;\n buf ~= srcarr;\n assert(buf == \"World\");\n\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L51_C1)\n",
 		"name": "source"
 	}
 ]

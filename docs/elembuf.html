@@ -78,15 +78,19 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <pre class="code"><code class="lang-d"><span class="com">// Construct
 </span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">]);
 
-</span><span class="kwd">auto <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="typ">int</span><span class="pun">[] </span><span class="pln">array</span><span class="pun">) { </span><span class="pln">array</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] = </span><span class="lit">4</span><span class="pun">; </span><span class="kwd">return </span><span class="lit">1</span><span class="pun">;};
+</span><span class="kwd">auto </span><span class="pln">src </span><span class="pun">= (</span><span class="typ">int</span><span class="pun">[] </span><span class="pln">arr</span><span class="pun">)
+{ 
+	</span><span class="pln">arr</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] = </span><span class="lit">4</span><span class="pun">;
+	</span><span class="kwd">return </span><span class="lit">1</span><span class="pun">;
+};
 
 </span><span class="com">// Fill
-</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">;
+</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">src</span><span class="pun">;
 </span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">]);
 
 </span><span class="com">// Reuse
 </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">= </span><span class="lit">0</span><span class="pun">;
-</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">;
+</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">src</span><span class="pun">;
 </span><span class="pln">buf </span><span class="pun">~= </span><span class="lit">5</span><span class="pun">;
 </span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== [</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);
 </span></code></pre>
@@ -100,36 +104,44 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 
 
 
-<pre class="code"><code class="lang-d"><span class="pln">
-</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/tbuffer.html"></span><span class="pln">tbuffer</span></a><span class="pun">((</span><span class="pln">size_t</span><span class="pun">[])<wbr/>.</span><span class="pln">init</span><span class="pun">); </span><span class="com">// Producer thread created and syncronized
+<pre class="code"><code class="lang-d"><span class="kwd">alias </span><span class="pln">T </span><span class="pun">= </span><span class="pln">size_t</span><span class="pun">; 
+
+</span><span class="com">// Producer thread created and syncronized
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/tbuffer.html"></span><span class="pln">tbuffer</span></a><span class="pun">((</span><span class="pln">T</span><span class="pun">[])<wbr/>.</span><span class="pln">init</span><span class="pun">); 
 
 </span><span class="pln">size_t counter</span><span class="pun">;
 
-</span><span class="pln">size_t </span><span class="kwd">delegate</span><span class="pun">(</span><span class="pln">size_t</span><span class="pun">[]) <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="pln">size_t</span><span class="pun">[] </span><span class="pln">array</span><span class="pun">) 
+</span><span class="pln">size_t </span><span class="kwd">delegate</span><span class="pun">(</span><span class="pln">T</span><span class="pun">[]) <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="pln">T</span><span class="pun">[] </span><span class="pln">array</span><span class="pun">)
 { 
-	</span><span class="kwd">foreach</span><span class="pun">(</span><span class="kwd">ref </span><span class="pln">i</span><span class="pun">; </span><span class="pln">array</span><span class="pun">)
-	{
-		</span><span class="pln">i </span><span class="pun">= </span><span class="pln">counter</span><span class="pun">;
-		</span><span class="pln">counter</span><span class="pun">++;
-	}
+		</span><span class="kwd">foreach</span><span class="pun">(</span><span class="kwd">ref </span><span class="pln">i</span><span class="pun">; </span><span class="pln">array</span><span class="pun">)
+		{
+			</span><span class="pln">i </span><span class="pun">= </span><span class="pln">counter</span><span class="pun">;
+			</span><span class="pln">counter</span><span class="pun">++;
+		}
 
 	</span><span class="kwd">return </span><span class="pln">array<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
 };
 
-</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">; </span><span class="com">// Give instructions to producer
+</span><span class="com">// Give instructions to producer
+</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">; 
 
 
 </span><span class="kwd">for</span><span class="pun">(</span><span class="typ">int </span><span class="pln">i</span><span class="pun">; </span><span class="pln">i </span><span class="pun">&lt; </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">* </span><span class="lit">5</span><span class="pun">; )
 {
 	</span><span class="kwd">while</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">) 
-		</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">source</span><span class="pun">; </span><span class="com">// Aquire data from producer
+	{
+		</span><span class="com">// Aquire data from producer
+		</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">source</span><span class="pun">; 
+	}
 
 	</span><span class="pln">i </span><span class="pun">+= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
 	</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf</span><span class="pun">[$..$];
 }
 
-</span><span class="com">// Unallocate all data, including destroying the thread. 
-</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">deinit</span><span class="pun">; </span><span class="com">// Can be used for all buffers.
+</span><span class="com">// Unallocate all data &amp;
+// destroy the thread.
+// Can be used for all buffers.
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">deinit</span><span class="pun">;
 </span></code></pre>
 </section>
 <section><h2>Example</h2>
