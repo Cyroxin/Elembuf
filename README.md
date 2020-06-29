@@ -25,7 +25,7 @@ Elembuf currently works for Windows, Linux, Mac and other Posix compatible syste
 
 ## Getting Started
  
-[![bench](https://img.shields.io/badge/-documentation-dimgrey?style=for-the-badge&logo=Read%20the%20Docs&logoColor=brown)](https://cyroxin.github.io/Elembuf/elembuf.html)
+[![bench](https://img.shields.io/badge/-documentation-dimgrey?style=for-the-badge&logo=Read%20the%20Docs&logoColor=brown)](https://cyroxin.github.io/Elembuf/index.html)
 
 **Windows/Mac**
 
@@ -91,9 +91,6 @@ Comparing an optimized array against elembuf in concating data.
 	Reuses needed: 83
     
 
-
-
-[![bench](https://img.shields.io/badge/-lib%20comparison-dimgrey?style=for-the-badge&logo=fastly)](https://github.com/mingwugmail/liblfdsd/blob/master/comparison/README.md)
 
 ## Contributions
 
