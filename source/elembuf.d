@@ -73,20 +73,20 @@ unittest
 {
 	alias T = size_t; 
 
-	// Producer thread created and syncronized
+	// Producer thread created
 	auto buf = tbuffer((T[]).init); 
 
 	size_t counter;
 
-	size_t delegate(T[]) source = (T[] array)
+	size_t delegate(T[]) source = (T[] arr)
 	{ 
-			foreach(ref i; array)
+			foreach(ref i; arr)
 			{
 				i = counter;
 				counter++;
 			}
 
-		return array.length;
+		return arr.length;
 	};
 
 	// Give instructions to producer
@@ -95,9 +95,9 @@ unittest
 
 	for(int i; i < buf.max * 5; )
 	{
-		while(buf.length == 0) 
+		while(buf.length == 0)
 		{
-			// Aquire data from producer
+			// Aquire producer data
 			buf ~= buf.source; 
 		}
 
@@ -138,7 +138,7 @@ unittest
 	/+ Expand view from OO|OO +/
 
 	// OX|XO
-	buf = buf.ptr[buf.max/2..buf.max+buf.max/2];
+	buf = buf.ptr[ buf.max/2 .. buf.max + buf.max / 2 ];
 
 	// ab|ab
 	assert(buf[0] == 'b' && buf[$-1] == 'a');

@@ -13,7 +13,7 @@ module source;
 
 /++ $(BR) $(BIG $(B Extension Interface))
 
-$P( $(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  )) $(BR) $(BR)
+$(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  ) $(BR) $(BR)
 
 
 $(BR) 
