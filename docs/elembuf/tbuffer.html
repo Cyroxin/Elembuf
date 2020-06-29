@@ -41,7 +41,7 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 		</nav>
 		<div id="main-contents">
 			<div>
-				<h1>Function tbuffer</h1><p>Threaded dynamic circular array.  
+				<h1>Function tbuffer</h1><p><p>Threaded dynamic circular array.</p>
 </p>
 				<div class="prototype">
 					<code class="lang-d">
@@ -55,7 +55,9 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 						</div>
 					</code>
 				</div>
-				<section><p><a href="https://cyroxin.github.io/Elembuf/elembuf.html">&lt;</a>
+				<section>
+
+<p><a href="https://cyroxin.github.io/Elembuf/elembuf.html">&lt;</a>
 </p>
 
 
@@ -83,7 +85,7 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <pre class="code"><code class="lang-d"><a href="../elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">ulong</span><span class="pun">[], </span><span class="kwd">true</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">(</span><span class="kwd">cast</span><span class="pun">(</span><span class="typ">ulong</span><span class="pun">[]) [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);</span></code></pre>
 </section>
 <section><h2>Bugs</h2>
-<p><ul><li>The <code class="lang-d"><span class="pun">~=</span></code> -operator cannot be used in <code class="lang-d"><span class="kwd">@nogc</span></code> code, but it does not use the GC.</li></ul>
+<p><ul><li><p>The <code class="lang-d"><span class="pun">~=</span></code> -operator cannot be used in <code class="lang-d"><span class="kwd">@nogc</span></code> code, but it does not use the GC.</p></li></ul>
 </p>
 </section>
 <section><h2>Note</h2>

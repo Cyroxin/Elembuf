@@ -149,7 +149,9 @@ unittest
 
 
 /**
-* Dynamic circular array. $(BR) $(BR)
+* $(P Dynamic circular array.) 
+*
+* $(BR) $(BR)
 *
 * <a href="https://cyroxin.github.io/Elembuf/elembuf.html"><</a>
 *
@@ -197,7 +199,9 @@ auto buffer(A)(A arg)
 
 
 /*****
- Threaded dynamic circular array. $(BR) $(BR) 
+$(P Threaded dynamic circular array.)
+
+$(BR) $(BR) 
 
 <a href="https://cyroxin.github.io/Elembuf/elembuf.html"><</a>
 
@@ -229,7 +233,7 @@ Examples:
  ---
 
  Bugs: 
-  $(UL $(LI $(BIG The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))
+  $(UL $(LI $(P The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))
 
  Note:
  The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer:
