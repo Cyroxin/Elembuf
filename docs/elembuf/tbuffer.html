@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="UTF-8"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<!-- saved from url=(0078)file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/tbuffer.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
 		<title>Function tbuffer</title>
-		<link rel="stylesheet" href="../css/style.min.css"/>
-		<script type="text/javascript" src="../js/script.min.js"></script>
+		<link rel="stylesheet" href="./tbuffer_files/style.min.css">
+		<script type="text/javascript" src="./tbuffer_files/script.min.js.lataa"></script>
 	</head>
 	<body onload="setupDdox();">
 		<header></header>
@@ -14,22 +14,22 @@
 				<noscript>
 					<p style="color: red">The search functionality needs JavaScript enabled</p>
 				</noscript>
-				<div id="symbolSearchPane" style="display: none">
-					<form action="#" method="GET">
-						<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
+				<div id="symbolSearchPane" style="display: block;">
+					<form action="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/tbuffer.html#" method="GET">
+						<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus="" tabindex="1000">
 					</form>
-					<ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="../symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "../";
+					<ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="./tbuffer_files/symbols.js.lataa"></script><script type="application/javascript">var symbolSearchRootDir = "../";
 document.getElementById('symbolSearchPane').style.display = 'block';</script>
 				</div>
 				<ul class="tree-view">
 					<li>
 						<div class="module selected">
-							<a href="../elembuf.html">elembuf</a>
+							<a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf.html">elembuf</a>
 						</div>
 					</li>
 					<li>
 						<div class="module ">
-							<a href="../source.html">source</a>
+							<a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html">source</a>
 						</div>
 					</li>
 				</ul>
@@ -41,16 +41,16 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 		</nav>
 		<div id="main-contents">
 			<div>
-				<h1>Function tbuffer</h1><p><p>Threaded dynamic circular array.</p>
-</p>
+				<h1>Function tbuffer</h1><p></p><p>Threaded dynamic circular array.</p>
+<p></p>
 				<div class="prototype">
 					<code class="lang-d">
 						<div class="single-prototype">
 				<span class="kwd">auto</span> <span class="pln">tbuffer</span>(A)
 				<span class="pun">(</span>
-				<br/>
+				<br>
 				&nbsp;&nbsp;<span class="pln">A</span> <span class="pln">arg</span>
-				<br/>
+				<br>
 				<span class="pun">)</span><span class="pun">;</span>
 						</div>
 					</code>
@@ -61,52 +61,56 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 </p>
 
 
-<p><p> It is a wait-free single consumer-producer threaded version of the unthreaded circular array. It achieves high throughput as it does not use mutexes or the built-in
+<p></p><p> It is a wait-free single consumer-producer threaded version of the unthreaded circular array. It achieves high throughput as it does not use mutexes or the built-in
  synchronized keyword. It however loses the ability to directly add elements to the buffer, the producer should instead be taught on how to fill the buffer using function pointers &amp;
  delegates.</p>
-</p>
+<p></p>
 
 
 </section>
 
 				<section><h2>Parameters</h2>
-<table><col class="caption"><tr><th>Name</th><th>Description</th></tr>
-<tr><td id="arg">arg</td><td>     The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the <code class="lang-d"><wbr/><span class="pun">.</span><span class="pln">init</span></code> of any array type.</td></tr>
-</table>
+<table><colgroup><col class="caption"></colgroup><tbody><tr><th>Name</th><th>Description</th></tr>
+<tr><td id="arg">arg</td><td>     The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the <code class="lang-d"><wbr><span class="pun">.</span><span class="pln">init</span></code> of any array type.</td></tr>
+</tbody></table>
 </section>
 <section><h2>Returns</h2>
-<p><code class="lang-d"><a href="../elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">Unqual</span><span class="pun">!(</span><span class="typ">ForeachType</span><span class="pun">!</span><span class="pln">A</span><span class="pun">)[], </span><span class="kwd">true</span><span class="pun">)</span></code>
+<p><code class="lang-d"><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">Unqual</span><span class="pun">!(</span><span class="typ">ForeachType</span><span class="pun">!</span><span class="pln">A</span><span class="pun">)[], </span><span class="kwd">true</span><span class="pun">)</span></code>
 </p>
 </section>
 <section><h2>Examples</h2>
-<pre class="code"><code class="lang-d"><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">(</span><span class="str">"Hello world!"</span><span class="pun">); </span><span class="com">// As a convenience, puts the contents of an immutable string into a mutable buffer.</span></code></pre>
-<pre class="code"><code class="lang-d"><a href="../elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">char</span><span class="pun">[], </span><span class="kwd">true</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="str">"Hello world!"</span><span class="pun">;</span></code></pre>
-<pre class="code"><code class="lang-d"><a href="../elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">int</span><span class="pun">[], </span><span class="kwd">true</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);</span></code></pre>
-<pre class="code"><code class="lang-d"><a href="../elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">ulong</span><span class="pun">[], </span><span class="kwd">true</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">(</span><span class="kwd">cast</span><span class="pun">(</span><span class="typ">ulong</span><span class="pun">[]) [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);</span></code></pre>
+<pre class="code"><code class="lang-d"><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">(</span><span class="str">"Hello world!"</span><span class="pun">);</span></code></pre>
+<pre class="code"><code class="lang-d"><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">char</span><span class="pun">[], </span><span class="kwd">true</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="str">"Hello world!"</span><span class="pun">;</span></code></pre>
+<pre class="code"><code class="lang-d"><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">int</span><span class="pun">[], </span><span class="kwd">true</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);</span></code></pre>
+<pre class="code"><code class="lang-d"><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">!(</span><span class="typ">ulong</span><span class="pun">[], </span><span class="kwd">true</span><span class="pun">) </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">(</span><span class="kwd">cast</span><span class="pun">(</span><span class="typ">ulong</span><span class="pun">[]) [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);</span></code></pre>
 </section>
 <section><h2>Bugs</h2>
-<p><ul><li><p>The <code class="lang-d"><span class="pun">~=</span></code> -operator cannot be used in <code class="lang-d"><span class="kwd">@nogc</span></code> code, but it does not use the GC.</p></li></ul>
-</p>
+<p></p><ul><li>The <code class="lang-d"><span class="pun">~=</span></code> -operator cannot be used in <code class="lang-d"><span class="kwd">@nogc</span></code> code, but it does not use the GC.</li></ul>
+<p></p>
 </section>
 <section><h2>Note</h2>
-<p>The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer:
-</p>
+<p></p><p>The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer: </p>
+<p></p>
+
 <pre class="code"><code class="lang-d"><span class="pln"> </span><span class="kwd">alias </span><span class="pln">T </span><span class="pun">= </span><span class="typ">char</span><span class="pun">;
 
- </span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">(</span><span class="pln">T</span><span class="pun">[]<wbr/>.</span><span class="pln">init</span><span class="pun">);
- </span><span class="kwd">enum <a href="../source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">source</span><span class="pun">;
+ </span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= </span><span class="pln">tbuffer</span><span class="pun">(</span><span class="pln">T</span><span class="pun">[]<wbr>.</span><span class="pln">init</span><span class="pun">);
+ </span><span class="kwd">enum <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">source</span><span class="pun">;
 
  </span><span class="typ">int </span><span class="pln">i </span><span class="pun">= </span><span class="lit">1</span><span class="pun">;
- </span><span class="pln">buf </span><span class="pun">~= (</span><span class="pln">T</span><span class="pun">[] </span><span class="pln">arr</span><span class="pun">) </span><span class="com">// Teach the producer. This is a delegate as it accesses i, otherwise it would be a function. Both can be used.
- </span><span class="pun">{
-	</span><span class="pln">arr</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] = </span><span class="pln">T<wbr/></span><span class="pun">.</span><span class="pln">init</span><span class="pun">;
+
+</span><span class="com">// Teach the producer.
+// This is a delegate as it accesses i.
+ </span><span class="pln">buf </span><span class="pun">~= (</span><span class="pln">T</span><span class="pun">[] </span><span class="pln">arr</span><span class="pun">)
+ {
+	</span><span class="pln">arr</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] = </span><span class="pln">T<wbr></span><span class="pun">.</span><span class="pln">init</span><span class="pun">;
 	</span><span class="kwd">return </span><span class="pln">i</span><span class="pun">;
  };
 
-</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">);
 
-</span><span class="com">/+ Bring data from the producer. This should be in a loop as it is not guaranteed that the producer is able to return anything yet. +/
- </span><span class="pln">buf </span><span class="pun">~= <a href="../source.html"></span><span class="pln">source</span></a><span class="pun">;
+</span><span class="com">// Request data if available
+ </span><span class="pln">buf </span><span class="pun">~= <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"><span class="pln">source</span></a><span class="pun">;
 </span></code></pre>
 </section>
 
@@ -119,5 +123,5 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 				</div>
 			</footer>
 		</div>
-	</body>
-</html>
+	
+</body></html>

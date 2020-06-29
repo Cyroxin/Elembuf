@@ -220,7 +220,7 @@ $(P $(BIG  It is a wait-free single consumer-producer threaded version of the un
 
 Examples:
  ---
- auto buf = tbuffer("Hello world!"); // As a convenience, puts the contents of an immutable string into a mutable buffer.
+ auto buf = tbuffer("Hello world!"); 
  ---
  ---
  buffer!(char[], true) buf = "Hello world!";
@@ -233,10 +233,11 @@ Examples:
  ---
 
  Bugs: 
-  $(UL $(LI $(P The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))
+  $(UL $(LI $(BIG The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))
 
  Note:
- The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer:
+ $(P The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer: )
+
  ---
  alias T = char;
 
@@ -244,7 +245,10 @@ Examples:
  enum source = buf.source; 
 
  int i = 1;
- buf ~= (T[] arr) // Teach the producer. This is a delegate as it accesses i, otherwise it would be a function. Both can be used.
+
+// Teach the producer. 
+// This is a delegate as it accesses i.
+ buf ~= (T[] arr) 
  {
 	arr[0] = T.init;
 	return i;
@@ -252,7 +256,7 @@ Examples:
 
 assert(buf.length == 0);
 
-/+ Bring data from the producer. This should be in a loop as it is not guaranteed that the producer is able to return anything yet. +/
+// Request data if available
  buf ~= source;
 
  ---
