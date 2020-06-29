@@ -138,10 +138,11 @@ unittest
 	/+ Expand view from OO|OO +/
 
 	// OX|XO
-	buf = buf.ptr[ buf.max/2 .. buf.max + buf.max / 2 ];
+	buf = buf.ptr[ buf.max / 2 .. buf.max + buf.max / 2 ];
 
 	// ab|ab
-	assert(buf[0] == 'b' && buf[$-1] == 'a');
+	assert(buf[0] == 'b');
+	assert(buf[$-1] == 'a');
 
 	/+ Order: ab -> ba +/
 } 

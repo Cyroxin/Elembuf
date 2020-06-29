@@ -10,7 +10,7 @@
 						"name": "A"
 					}
 				],
-				"line": 189,
+				"line": 190,
 				"kind": "template",
 				"char": 6,
 				"members": [
@@ -24,13 +24,13 @@
 								"name": "arg"
 							}
 						],
-						"line": 189,
+						"line": 190,
 						"kind": "function",
 						"char": 6,
 						"name": "buffer",
 						"type": "(A arg)",
 						"endchar": 1,
-						"endline": 195
+						"endline": 196
 					}
 				],
 				"name": "buffer",
@@ -43,7 +43,7 @@
 						"name": "A"
 					}
 				],
-				"line": 256,
+				"line": 257,
 				"kind": "template",
 				"char": 6,
 				"members": [
@@ -57,20 +57,20 @@
 								"name": "arg"
 							}
 						],
-						"line": 256,
+						"line": 257,
 						"kind": "function",
 						"char": 6,
 						"name": "tbuffer",
 						"type": "(A arg)",
 						"endchar": 1,
-						"endline": 262
+						"endline": 263
 					}
 				],
 				"name": "tbuffer",
 				"comment": " Threaded dynamic circular array. $(BR) $(BR)\n\n<a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\"><<\/a>\n\n\n$(P $(BIG  It is a wait-free single consumer-producer threaded version of the unthreaded circular array. It achieves high throughput as it does not use mutexes or the built-in\n synchronized keyword. It however loses the ability to directly add elements to the buffer, the producer should instead be taught on how to fill the buffer using function pointers &\n delegates.))\n\n $(BR)\n\n Params:\n      arg =     The initiating data for the array. If it is immutable, it is copied into a mutable buffer. An empty buffer initiation can be achieved with the `.init` of any array type.\n\n Returns:\n `buffer!(Unqual!(ForeachType!A)[], true)`\n\nExamples:\n ---\n auto buf = tbuffer(\"Hello world!\"); // As a convenience, puts the contents of an immutable string into a mutable buffer.\n ---\n ---\n buffer!(char[], true) buf = \"Hello world!\";\n ---\n ---\n buffer!(int[], true) buf = tbuffer([1,2,3,4,5]);\n ---\n ---\n buffer!(ulong[], true) buf = tbuffer(cast(ulong[]) [1,2,3,4,5]);\n ---\n\n Bugs:\n  $(UL $(LI $(BIG The `~=` -operator cannot be used in `@nogc` code, but it does not use the GC.)))\n\n Note:\n The threaded version of the buffer loses the ability to concat directly to the buffer. Instead you should teach the producer how to fill the buffer:\n ---\n alias T = char;\n\n auto buf = tbuffer(T[].init);\n enum source = buf.source;\n\n int i = 1;\n buf ~= (T[] arr) // Teach the producer. This is a delegate as it accesses i, otherwise it would be a function. Both can be used.\n {\n\tarr[0] = T.init;\n\treturn i;\n };\n\nassert(buf.length == 0);\n\n/+ Bring data from the producer. This should be in a loop as it is not guaranteed that the producer is able to return anything yet. +/\n buf ~= source;\n\n ---\n"
 			}
 		],
-		"comment": " $(P Optimized containers alike to arrays)\n\n\n <a href=\"https://cyroxin.github.io/Elembuf/index.html\"><<\/a>\n Macros:\n SOURCE = <a href=\"https://cyroxin.github.io/Elembuf/source.html\">docs/source<\/a>\n BUFFER = <a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\">docs/buffer<\/a>\nExample:\n$(BR) $(P $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.))) $(BR) $(BR)$(DDOX_UNITTEST_HEADER __unittest_L16_C1)\n---\n\n\t// Import\n\timport elembuf;\n\n\t// Instantiate\n\tauto buf = buffer(\"Hello \");\n\n\t// Ensure new data fits\n\tassert(buf.max >= \"world!\".length + buf.length); \n\n\t// Fill\n\tbuf ~= \"world!\";\n\n\t// Read\n\tassert(buf == \"Hello world!\");\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L16_C1)\nExample:\n$(BR) $(BIG $(B IO - Fast library integration))\n\n$(P $(BIG  No outdated push/pop methods. IO libraries that require pointers work out of the box. Just use a lambda. )) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L42_C1)\n---\n// Construct\nauto buf = buffer([1,2,3]);\n\nauto src = (int[] arr)\n{ \n\tarr[0] = 4;\n\treturn 1;\n};\n\n// Fill\nbuf ~= src;\nassert(buf == [1,2,3,4]);\n\n// Reuse\nbuf.length = 0;\nbuf ~= src;\nbuf ~= 5;\nassert(buf == [4,5]);\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L42_C1)\nExample:\n$(BR) $(BIG $(B Concurrency - Built in for your convenience))\n\n$(P $(BIG  Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.)) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L72_C1)\n---\nalias T = size_t; \n\n// Producer thread created\nauto buf = tbuffer((T[]).init); \n\nsize_t counter;\n\nsize_t delegate(T[]) source = (T[] arr)\n{ \n\t\tforeach(ref i; arr)\n\t\t{\n\t\t\ti = counter;\n\t\t\tcounter++;\n\t\t}\n\n\treturn arr.length;\n};\n\n// Give instructions to producer\nbuf ~= source; \n\n\nfor(int i; i < buf.max * 5; )\n{\n\twhile(buf.length == 0)\n\t{\n\t\t// Aquire producer data\n\t\tbuf ~= buf.source; \n\t}\n\n\ti += buf.length;\n\tbuf = buf[$..$];\n}\n\n// Unallocate all data &\n// destroy the thread.\n// Can be used for all buffers.\nbuf.deinit;\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L72_C1)\nExample:\n$(BR) $(BIG $(B Mirroring - For Compression & Decryption))\n\n$(P $(BIG  New item orders can easily be established without copying using a mirror provided by the operating system. )) $(BR) $(BR)\n\n\n\n$(BR) $(BR) $(P $(BIG Memory can be visualized as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s.\nThe mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. ))$(DDOX_UNITTEST_HEADER __unittest_L127_C1)\n---\n/+ Current view is OO|OO +/\nauto buf = buffer(\"\");\n\n// aO|aO\nbuf.ptr[0..buf.max/2] = 'a';\n\n// ab|ab\nbuf.ptr[buf.max/2 .. buf.max] = 'b';\n\n/+ Expand view from OO|OO +/\n\n// OX|XO\nbuf = buf.ptr[ buf.max/2 .. buf.max + buf.max / 2 ];\n\n// ab|ab\nassert(buf[0] == 'b' && buf[$-1] == 'a');\n\n/+ Order: ab -> ba +/\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L127_C1)\n",
+		"comment": " $(P Optimized containers alike to arrays)\n\n\n <a href=\"https://cyroxin.github.io/Elembuf/index.html\"><<\/a>\n Macros:\n SOURCE = <a href=\"https://cyroxin.github.io/Elembuf/source.html\">docs/source<\/a>\n BUFFER = <a href=\"https://cyroxin.github.io/Elembuf/elembuf.html\">docs/buffer<\/a>\nExample:\n$(BR) $(P $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.))) $(BR) $(BR)$(DDOX_UNITTEST_HEADER __unittest_L16_C1)\n---\n\n\t// Import\n\timport elembuf;\n\n\t// Instantiate\n\tauto buf = buffer(\"Hello \");\n\n\t// Ensure new data fits\n\tassert(buf.max >= \"world!\".length + buf.length); \n\n\t// Fill\n\tbuf ~= \"world!\";\n\n\t// Read\n\tassert(buf == \"Hello world!\");\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L16_C1)\nExample:\n$(BR) $(BIG $(B IO - Fast library integration))\n\n$(P $(BIG  No outdated push/pop methods. IO libraries that require pointers work out of the box. Just use a lambda. )) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L42_C1)\n---\n// Construct\nauto buf = buffer([1,2,3]);\n\nauto src = (int[] arr)\n{ \n\tarr[0] = 4;\n\treturn 1;\n};\n\n// Fill\nbuf ~= src;\nassert(buf == [1,2,3,4]);\n\n// Reuse\nbuf.length = 0;\nbuf ~= src;\nbuf ~= 5;\nassert(buf == [4,5]);\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L42_C1)\nExample:\n$(BR) $(BIG $(B Concurrency - Built in for your convenience))\n\n$(P $(BIG  Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.)) $(BR) $(BR)\n\n\n$(BR)$(DDOX_UNITTEST_HEADER __unittest_L72_C1)\n---\nalias T = size_t; \n\n// Producer thread created\nauto buf = tbuffer((T[]).init); \n\nsize_t counter;\n\nsize_t delegate(T[]) source = (T[] arr)\n{ \n\t\tforeach(ref i; arr)\n\t\t{\n\t\t\ti = counter;\n\t\t\tcounter++;\n\t\t}\n\n\treturn arr.length;\n};\n\n// Give instructions to producer\nbuf ~= source; \n\n\nfor(int i; i < buf.max * 5; )\n{\n\twhile(buf.length == 0)\n\t{\n\t\t// Aquire producer data\n\t\tbuf ~= buf.source; \n\t}\n\n\ti += buf.length;\n\tbuf = buf[$..$];\n}\n\n// Unallocate all data &\n// destroy the thread.\n// Can be used for all buffers.\nbuf.deinit;\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L72_C1)\nExample:\n$(BR) $(BIG $(B Mirroring - For Compression & Decryption))\n\n$(P $(BIG  New item orders can easily be established without copying using a mirror provided by the operating system. )) $(BR) $(BR)\n\n\n\n$(BR) $(BR) $(P $(BIG Memory can be visualized as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s.\nThe mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. ))$(DDOX_UNITTEST_HEADER __unittest_L127_C1)\n---\n/+ Current view is OO|OO +/\nauto buf = buffer(\"\");\n\n// aO|aO\nbuf.ptr[0..buf.max/2] = 'a';\n\n// ab|ab\nbuf.ptr[buf.max/2 .. buf.max] = 'b';\n\n/+ Expand view from OO|OO +/\n\n// OX|XO\nbuf = buf.ptr[ buf.max / 2 .. buf.max + buf.max / 2 ];\n\n// ab|ab\nassert(buf[0] == 'b');\nassert(buf[$-1] == 'a');\n\n/+ Order: ab -> ba +/\n\n---\n$(DDOX_UNITTEST_FOOTER __unittest_L127_C1)\n",
 		"name": "elembuf"
 	},
 	{

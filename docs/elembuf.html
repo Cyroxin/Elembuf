@@ -168,10 +168,11 @@ The mirror border is marked with <b>|</b>, right side of which is the mirrored m
 </span><span class="com">/+ Expand view from OO|OO +/
 
 // OX|XO
-</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2 </span><span class="pun">.. </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">+ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">/ </span><span class="lit">2 </span><span class="pun">];
+</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">/ </span><span class="lit">2 </span><span class="pun">.. </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">+ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">/ </span><span class="lit">2 </span><span class="pun">];
 
 </span><span class="com">// ab|ab
-</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] == </span><span class="str">'b' </span><span class="pun">&amp;&amp; </span><span class="pln">buf</span><span class="pun">[$-</span><span class="lit">1</span><span class="pun">] == </span><span class="str">'a'</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] == </span><span class="str">'b'</span><span class="pun">);
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf</span><span class="pun">[$-</span><span class="lit">1</span><span class="pun">] == </span><span class="str">'a'</span><span class="pun">);
 
 </span><span class="com">/+ Order: ab -&gt; ba +/
 </span></code></pre>

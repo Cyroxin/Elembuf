@@ -991,10 +991,6 @@
    <File path="bench\thred.d" />
   </Folder>
   <Folder name="docs">
-   <Folder name="html">
-    <File path="docs\elembuf.html" />
-    <File path="docs\source.html" />
-   </Folder>
    <File path="docs.json" />
   </Folder>
   <Folder name="source">
