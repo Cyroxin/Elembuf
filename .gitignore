@@ -286,3 +286,5 @@ __pycache__/
 *.exe
 /tests
 /elembuf.lib
+/docs/elembuf/buffer_files
+/docs/elembuf/tbuffer_files

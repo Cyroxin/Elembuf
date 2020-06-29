@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- saved from url=(0070)file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf.html -->
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0">
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
 		<title>Module elembuf</title>
-		<link rel="stylesheet" href="./elembuf_files/style.min.css">
-		<script type="text/javascript" src="./elembuf_files/script.min.js.lataa"></script>
+		<link rel="stylesheet" href="./css/style.min.css"/>
+		<script type="text/javascript" src="./js/script.min.js"></script>
 	</head>
 	<body onload="setupDdox();">
 		<header></header>
@@ -14,22 +14,22 @@
 				<noscript>
 					<p style="color: red">The search functionality needs JavaScript enabled</p>
 				</noscript>
-				<div id="symbolSearchPane" style="display: block;">
-					<form action="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf.html#" method="GET">
-						<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus="" tabindex="1000">
+				<div id="symbolSearchPane" style="display: none">
+					<form action="#" method="GET">
+						<input id="symbolSearch" type="text" name="q" placeholder="Search for symbols" autocomplete="off" onchange="performSymbolSearch(24);" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" autofocus/>
 					</form>
-					<ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="./elembuf_files/symbols.js.lataa"></script><script type="application/javascript">var symbolSearchRootDir = "./";
+					<ul id="symbolSearchResults" class="symbolList" style="display: none"></ul><script type="application/javascript" src="./symbols.js"></script><script type="application/javascript">var symbolSearchRootDir = "./";
 document.getElementById('symbolSearchPane').style.display = 'block';</script>
 				</div>
 				<ul class="tree-view">
 					<li>
 						<div class="module selected">
-							<a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf.html">elembuf</a>
+							<a href="./elembuf.html">elembuf</a>
 						</div>
 					</li>
 					<li>
 						<div class="module ">
-							<a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html">source</a>
+							<a href="./source.html">source</a>
 						</div>
 					</li>
 				</ul>
@@ -41,23 +41,23 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 		</nav>
 		<div id="main-contents">
 			<div>
-				<h1>Module elembuf</h1><p></p><p>Optimized containers alike to arrays</p>
-<p></p><section><p><a href="https://cyroxin.github.io/Elembuf/index.html">&lt;</a>
+				<h1>Module elembuf</h1><p><p>Optimized containers alike to arrays</p>
+</p><section><p><a href="https://cyroxin.github.io/Elembuf/index.html">&lt;</a>
 </p>
 </section>
 
 				<section><section><h2>Example</h2>
-<p> </p><p><b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b></p>  
-<p></p>
+<p> <p><b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b></p>  
+</p>
 <pre class="code"><code class="lang-d"><span class="pln">
 </span><span class="com">// Import
 </span><span class="kwd">import </span><span class="pln">elembuf</span><span class="pun">;
 
 </span><span class="com">// Instantiate
-</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">(</span><span class="str">"Hello "</span><span class="pun">);
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">(</span><span class="str">"Hello "</span><span class="pun">);
 
 </span><span class="com">// Ensure new data fits
-</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max </span><span class="pun">&gt;= </span><span class="str">"world!"<wbr></span><span class="pun">.</span><span class="pln">length </span><span class="pun">+ </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">length</span><span class="pun">); 
+</span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">&gt;= </span><span class="str">"world!"<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">+ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">); 
 
 </span><span class="com">// Fill
 </span><span class="pln">buf </span><span class="pun">~= </span><span class="str">"world!"</span><span class="pun">;
@@ -70,13 +70,13 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <p> <b>IO - Fast library integration</b>
 </p>
 
-<p></p><p> No outdated push/pop methods. IO libraries that require pointers work out of the box. Just use a lambda. </p>  
-<p></p>
+<p><p> No outdated push/pop methods. IO libraries that require pointers work out of the box. Just use a lambda. </p>  
+</p>
 
 
 
 <pre class="code"><code class="lang-d"><span class="com">// Construct
-</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">]);
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">]);
 
 </span><span class="kwd">auto </span><span class="pln">src </span><span class="pun">= (</span><span class="typ">int</span><span class="pun">[] </span><span class="pln">arr</span><span class="pun">)
 { 
@@ -89,7 +89,7 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 </span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">]);
 
 </span><span class="com">// Reuse
-</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">length </span><span class="pun">= </span><span class="lit">0</span><span class="pun">;
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">= </span><span class="lit">0</span><span class="pun">;
 </span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">src</span><span class="pun">;
 </span><span class="pln">buf </span><span class="pun">~= </span><span class="lit">5</span><span class="pun">;
 </span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== [</span><span class="lit">4</span><span class="pun">,</span><span class="lit">5</span><span class="pun">]);
@@ -99,19 +99,19 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <p> <b>Concurrency - Built in for your convenience</b>
 </p>
 
-<p></p><p> Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.</p>  
-<p></p>
+<p><p> Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.</p>  
+</p>
 
 
 
 <pre class="code"><code class="lang-d"><span class="kwd">alias </span><span class="pln">T </span><span class="pun">= </span><span class="pln">size_t</span><span class="pun">; 
 
 </span><span class="com">// Producer thread created
-</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/tbuffer.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/tbuffer.html"><span class="pln">tbuffer</span></a><span class="pun">((</span><span class="pln">T</span><span class="pun">[])<wbr>.</span><span class="pln">init</span><span class="pun">); 
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/tbuffer.html"></span><span class="pln">tbuffer</span></a><span class="pun">((</span><span class="pln">T</span><span class="pun">[])<wbr/>.</span><span class="pln">init</span><span class="pun">); 
 
 </span><span class="pln">size_t counter</span><span class="pun">;
 
-</span><span class="pln">size_t </span><span class="kwd">delegate</span><span class="pun">(</span><span class="pln">T</span><span class="pun">[]) <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="pln">T</span><span class="pun">[] </span><span class="pln">arr</span><span class="pun">)
+</span><span class="pln">size_t </span><span class="kwd">delegate</span><span class="pun">(</span><span class="pln">T</span><span class="pun">[]) <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="pln">T</span><span class="pun">[] </span><span class="pln">arr</span><span class="pun">)
 { 
 		</span><span class="kwd">foreach</span><span class="pun">(</span><span class="kwd">ref </span><span class="pln">i</span><span class="pun">; </span><span class="pln">arr</span><span class="pun">)
 		{
@@ -119,56 +119,56 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 			</span><span class="pln">counter</span><span class="pun">++;
 		}
 
-	</span><span class="kwd">return </span><span class="pln">arr<wbr></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
+	</span><span class="kwd">return </span><span class="pln">arr<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
 };
 
 </span><span class="com">// Give instructions to producer
-</span><span class="pln">buf </span><span class="pun">~= <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/source.html"><span class="pln">source</span></a><span class="pun">; 
+</span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">; 
 
 
-</span><span class="kwd">for</span><span class="pun">(</span><span class="typ">int </span><span class="pln">i</span><span class="pun">; </span><span class="pln">i </span><span class="pun">&lt; </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max </span><span class="pun">* </span><span class="lit">5</span><span class="pun">; )
+</span><span class="kwd">for</span><span class="pun">(</span><span class="typ">int </span><span class="pln">i</span><span class="pun">; </span><span class="pln">i </span><span class="pun">&lt; </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">* </span><span class="lit">5</span><span class="pun">; )
 {
-	</span><span class="kwd">while</span><span class="pun">(</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">)
+	</span><span class="kwd">while</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">)
 	{
 		</span><span class="com">// Aquire data
-		</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">source</span><span class="pun">; 
+		</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">source</span><span class="pun">; 
 	}
 
-	</span><span class="pln">i </span><span class="pun">+= </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
+	</span><span class="pln">i </span><span class="pun">+= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
 	</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf</span><span class="pun">[$..$];
 }
 
 </span><span class="com">// Unallocate all data &amp;
 // destroy the thread.
 // Can be used for all buffers.
-</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">deinit</span><span class="pun">;
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">deinit</span><span class="pun">;
 </span></code></pre>
 </section>
 <section><h2>Example</h2>
 <p> <b>Mirroring - For Compression &amp; Decryption</b>
 </p>
 
-<p></p><p> New item orders can easily be established without copying using a mirror provided by the operating system. </p>  
-<p></p>
+<p><p> New item orders can easily be established without copying using a mirror provided by the operating system. </p>  
+</p>
 
 
 
-<p>  </p><p>Memory can be visualized as blocks of two <b>O</b>'s, each having a size of <code class="lang-d">max/2</code>. The buffer only sees memory marked with <b>X</b>'s.
+<p>  <p>Memory can be visualized as blocks of two <b>O</b>'s, each having a size of <code class="lang-d">max/2</code>. The buffer only sees memory marked with <b>X</b>'s.
 The mirror border is marked with <b>|</b>, right side of which is the mirrored memory. </p>
-<p></p>
+</p>
 <pre class="code"><code class="lang-d"><span class="com">/+ Current view is OO|OO +/
-</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"></a></span><a href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html"><span class="pln">buffer</span></a><span class="pun">(</span><span class="str">""</span><span class="pun">);
+</span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">(</span><span class="str">""</span><span class="pun">);
 
 </span><span class="com">// aO|aO
-</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[</span><span class="lit">0</span><span class="pun">..</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2</span><span class="pun">] = </span><span class="str">'a'</span><span class="pun">;
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[</span><span class="lit">0</span><span class="pun">..</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2</span><span class="pun">] = </span><span class="str">'a'</span><span class="pun">;
 
 </span><span class="com">// ab|ab
-</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[</span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2 </span><span class="pun">.. </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max</span><span class="pun">] = </span><span class="str">'b'</span><span class="pun">;
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">/</span><span class="lit">2 </span><span class="pun">.. </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max</span><span class="pun">] = </span><span class="str">'b'</span><span class="pun">;
 
 </span><span class="com">/+ Expand view from OO|OO +/
 
 // OX|XO
-</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[ </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max </span><span class="pun">/ </span><span class="lit">2 </span><span class="pun">.. </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max </span><span class="pun">+ </span><span class="pln">buf<wbr></span><span class="pun">.</span><span class="pln">max </span><span class="pun">/ </span><span class="lit">2 </span><span class="pun">];
+</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">ptr</span><span class="pun">[ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">/ </span><span class="lit">2 </span><span class="pun">.. </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">+ </span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">max </span><span class="pun">/ </span><span class="lit">2 </span><span class="pun">];
 
 </span><span class="com">// ab|ab
 </span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] == </span><span class="str">'b'</span><span class="pun">);
@@ -181,14 +181,14 @@ The mirror border is marked with <b>|</b>, right side of which is the mirrored m
 				<section>
 					<h2>Functions</h2>
 					<table>
-						<colgroup><col class="caption">
-						</colgroup><tbody><tr>
+						<col class="caption"/>
+						<tr>
 							<th>Name</th><th>Description</th>
 						</tr>
 						<tr>
 							<td>
 								<code>
-									<a id="buffer" class="public" href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/buffer.html">buffer</a><span class="tableEntryAnnotation">(arg)</span>
+									<a id="buffer" class="public" href="./elembuf/buffer.html">buffer</a><span class="tableEntryAnnotation">(arg)</span>
 								</code>
 							</td>
 							<td><p>Dynamic circular array.</p>
@@ -197,13 +197,13 @@ The mirror border is marked with <b>|</b>, right side of which is the mirrored m
 						<tr>
 							<td>
 								<code>
-									<a id="tbuffer" class="public" href="file:///C:/Users/Smarty/source/repos/Cyroxin/Elembuf/docs/elembuf/tbuffer.html">tbuffer</a><span class="tableEntryAnnotation">(arg)</span>
+									<a id="tbuffer" class="public" href="./elembuf/tbuffer.html">tbuffer</a><span class="tableEntryAnnotation">(arg)</span>
 								</code>
 							</td>
 							<td><p>Threaded dynamic circular array.</p>
 </td>
 						</tr>
-					</tbody></table>
+					</table>
 				</section>
 			</div>
 			<footer>
@@ -214,5 +214,5 @@ The mirror border is marked with <b>|</b>, right side of which is the mirrored m
 				</div>
 			</footer>
 		</div>
-	
-</body></html>
+	</body>
+</html>
