@@ -41,7 +41,7 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 		</nav>
 		<div id="main-contents">
 			<div>
-				<h1>Module source</h1><p>Data sources that may be used with buffers instead of directly filling or using lambdas
+				<h1>Module source</h1><p><p>Data sources that may be used with buffers instead of directly filling or using lambdas</p>
 </p><section><p><a href="https://cyroxin.github.io/Elembuf/index.html">&lt;</a>
 </p>
 </section>
@@ -50,32 +50,34 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <p> <b>Extension Interface</b>
 </p>
 
-<p> It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.    
+<p>$P(  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  )  
 </p>
 
 
 
-<pre class="code"><code class="lang-d"><span class="kwd">struct </span><span class="pln">mystruct</span><span class="pun">(</span><span class="pln">T</span><span class="pun">)
+<pre class="code"><code class="lang-d"><span class="pln"> 
+</span><span class="kwd">struct </span><span class="pln">mystruct</span><span class="pun">(</span><span class="pln">T</span><span class="pun">)
 {
-	</span><span class="kwd">auto </span><span class="pln">src</span><span class="pun">()
-	{
-		</span><span class="kwd">return </span><span class="pun">(</span><span class="pln">T</span><span class="pun">[] </span><span class="pln">x</span><span class="pun">) 
-		{
-			</span><span class="com">// Write to x
-			</span><span class="pln">x</span><span class="pun">[] = </span><span class="pln">x<wbr/></span><span class="pun">.</span><span class="pln">init</span><span class="pun">;
-
-			</span><span class="com">// Return written count
-			</span><span class="kwd">return </span><span class="pln">x<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
-		};
-	}	
+ </span><span class="kwd">auto </span><span class="pln">src</span><span class="pun">()
+ {
+  </span><span class="kwd">return </span><span class="pun">(</span><span class="pln">T</span><span class="pun">[] </span><span class="pln">x</span><span class="pun">) 
+  {
+   </span><span class="com">// Write to x
+   </span><span class="pln">x</span><span class="pun">[] = </span><span class="pln">x<wbr/></span><span class="pun">.</span><span class="pln">init</span><span class="pun">;
+		
+   </span><span class="com">// Return written count
+   </span><span class="kwd">return </span><span class="pln">x<wbr/></span><span class="pun">.</span><span class="pln">length</span><span class="pun">;
+  };
+ }	
 }
+
 </span></code></pre>
 </section>
 <section><h2>Example</h2>
 <p> <b>Built-in Sources </b>
 </p>
 
-<p> There are built-in example sources, which you may use instead of directly filling using concat or lambdas.     
+<p><p> There are built-in example sources, which you may use instead of directly filling using concat or lambdas.   </p>  
 </p>
 
 
@@ -88,8 +90,6 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 
 </span><span class="kwd">while</span><span class="pun">(</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">length </span><span class="pun">== </span><span class="lit">0</span><span class="pun">)
 	</span><span class="pln">buf </span><span class="pun">~= </span><span class="pln">src</span><span class="pun">;
-
- </span><span class="typ">bool </span><span class="pln">empty </span><span class="pun">= </span><span class="pln">src<wbr/></span><span class="pun">.</span><span class="pln">empty</span><span class="pun">; </span><span class="com">// Indicates socket closure. Closure can occur in html or http as well, which wont be detected by this.
 
  </span><span class="kwd">auto </span><span class="pln">srcarr </span><span class="pun">= </span><span class="str">"World"<a href="./source/ArraySource.html"></span><wbr/><span class="pun">.</span><span class="typ">ArraySource</span></a><span class="pun">!</span><span class="typ">char</span><span class="pun">;
 

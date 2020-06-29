@@ -41,13 +41,13 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 		</nav>
 		<div id="main-contents">
 			<div>
-				<h1>Module elembuf</h1><p>Optimized containers alike to arrays
+				<h1>Module elembuf</h1><p><p>Optimized containers alike to arrays</p>
 </p><section><p><a href="https://cyroxin.github.io/Elembuf/index.html">&lt;</a>
 </p>
 </section>
 
 				<section><section><h2>Example</h2>
-<p> <b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b>  
+<p> <p><b>Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.</b></p>  
 </p>
 <pre class="code"><code class="lang-d"><span class="pln">
 </span><span class="com">// Import
@@ -70,7 +70,7 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <p> <b>IO - Fast library integration</b>
 </p>
 
-<p> No outdated push/pop methods so that IO libraries that require pointers work out of the box. Just use a lambda.   
+<p><p> No outdated push/pop methods. IO libraries that require pointers work out of the box. Just use a lambda. </p>  
 </p>
 
 
@@ -78,9 +78,9 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <pre class="code"><code class="lang-d"><span class="com">// Construct
 </span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">([</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">]);
 
-</span><span class="kwd">auto <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="typ">int</span><span class="pun">[] </span><span class="pln">array</span><span class="pun">) { </span><span class="pln">array</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] = </span><span class="lit">4</span><span class="pun">; </span><span class="kwd">return </span><span class="lit">1</span><span class="pun">;}; </span><span class="com">//  Give array.ptr to socket.receive if using sockets. Return written.
+</span><span class="kwd">auto <a href="./source.html"></span><span class="pln">source</span></a><span class="pln"> </span><span class="pun">= (</span><span class="typ">int</span><span class="pun">[] </span><span class="pln">array</span><span class="pun">) { </span><span class="pln">array</span><span class="pun">[</span><span class="lit">0</span><span class="pun">] = </span><span class="lit">4</span><span class="pun">; </span><span class="kwd">return </span><span class="lit">1</span><span class="pun">;};
 
-// Fill
+</span><span class="com">// Fill
 </span><span class="pln">buf </span><span class="pun">~= <a href="./source.html"></span><span class="pln">source</span></a><span class="pun">;
 </span><span class="kwd">assert</span><span class="pun">(</span><span class="pln">buf </span><span class="pun">== [</span><span class="lit">1</span><span class="pun">,</span><span class="lit">2</span><span class="pun">,</span><span class="lit">3</span><span class="pun">,</span><span class="lit">4</span><span class="pun">]);
 
@@ -95,7 +95,7 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 <p> <b>Concurrency - Built in for your convenience</b>
 </p>
 
-<p> Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.  
+<p><p> Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.</p>  
 </p>
 
 
@@ -128,20 +128,21 @@ document.getElementById('symbolSearchPane').style.display = 'block';</script>
 	</span><span class="pln">buf </span><span class="pun">= </span><span class="pln">buf</span><span class="pun">[$..$];
 }
 
-</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">deinit</span><span class="pun">; </span><span class="com">// Unallocates all data, including destroying the thread. Can be used for all buffers.
+</span><span class="com">// Unallocate all data, including destroying the thread. 
+</span><span class="pln">buf<wbr/></span><span class="pun">.</span><span class="pln">deinit</span><span class="pun">; </span><span class="com">// Can be used for all buffers.
 </span></code></pre>
 </section>
 <section><h2>Example</h2>
 <p> <b>Mirroring - For Compression &amp; Decryption</b>
 </p>
 
-<p> New item orders can easily be established without copying using a mirror provided by the operating system.   
+<p><p> New item orders can easily be established without copying using a mirror provided by the operating system. </p>  
 </p>
 
 
 
-<p>  Memory can be visualized as blocks of two <b>O</b>'s, each having a size of <code class="lang-d">max/2</code>. The buffer only sees memory marked with <b>X</b>'s.
-The mirror border is marked with <b>|</b>, right side of which is the mirrored memory. 
+<p>  <p>Memory can be visualized as blocks of two <b>O</b>'s, each having a size of <code class="lang-d">max/2</code>. The buffer only sees memory marked with <b>X</b>'s.
+The mirror border is marked with <b>|</b>, right side of which is the mirrored memory. </p>
 </p>
 <pre class="code"><code class="lang-d"><span class="com">/+ Current view is OO|OO +/
 </span><span class="kwd">auto </span><span class="pln">buf </span><span class="pun">= <a href="./elembuf/buffer.html"></span><span class="pln">buffer</span></a><span class="pun">(</span><span class="str">""</span><span class="pun">);

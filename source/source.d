@@ -1,5 +1,5 @@
 /***********************************
-* Data sources that may be used with buffers instead of directly filling or using lambdas
+* $(P Data sources that may be used with buffers instead of directly filling or using lambdas)
 *
 * <a href="https://cyroxin.github.io/Elembuf/index.html"><</a>
 * Macros:
@@ -13,7 +13,7 @@ module source;
 
 /++ $(BR) $(BIG $(B Extension Interface))
 
-$(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  ) $(BR) $(BR)
+$P( $(BIG  It is possible to have objects act as sources by inserting a lamda returning function in a struct or class.  )) $(BR) $(BR)
 
 
 $(BR) 
@@ -21,29 +21,32 @@ $(BR)
 
 unittest
 {
-	struct mystruct(T)
-	{
-		auto src()
-		{
-			return (T[] x) 
-			{
-				// Write to x
-				x[] = x.init;
+ 
+struct mystruct(T)
+{
+ auto src()
+ {
+  return (T[] x) 
+  {
+   // Write to x
+   x[] = x.init;
+		
+   // Return written count
+   return x.length;
+  };
+ }	
+}
 
-				// Return written count
-				return x.length;
-			};
-		}	
-	}
 }
 
 /++ $(BR) $(BIG $(B Built-in Sources ))
 
-$(BIG  There are built-in example sources, which you may use instead of directly filling using concat or lambdas.   ) $(BR) $(BR)
+$(P $(BIG  There are built-in example sources, which you may use instead of directly filling using concat or lambdas.   )) $(BR) $(BR)
 
 
 $(BR) 
 +/
+
 
 unittest
 {
@@ -55,8 +58,6 @@ unittest
 
 	while(buf.length == 0)
 		buf ~= src;
-
-	 bool empty = src.empty; // Indicates socket closure. Closure can occur in html or http as well, which wont be detected by this.
 
 	 auto srcarr = "World".ArraySource!char;
 

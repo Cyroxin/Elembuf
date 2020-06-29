@@ -1,5 +1,5 @@
 /***********************************
-* Optimized containers alike to arrays
+* $(P Optimized containers alike to arrays)
 *
 *
 * <a href="https://cyroxin.github.io/Elembuf/index.html"><</a>
@@ -12,7 +12,7 @@ module elembuf;
 
 import std.traits : isArray;
 
-/++ $(BR) $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.)) $(BR) $(BR) +/
+/++ $(BR) $(P $(BIG $(B Whole library can be used in 5 lines. No new methods to remember while beating the efficiency of arrays and queues.))) $(BR) $(BR) +/
 unittest
 {
 
@@ -34,7 +34,7 @@ unittest
 
 /++ $(BR) $(BIG $(B IO - Fast library integration))
 
-$(BIG  No outdated push/pop methods so that IO libraries that require pointers work out of the box. Just use a lambda. ) $(BR) $(BR)
+$(P $(BIG  No outdated push/pop methods. IO libraries that require pointers work out of the box. Just use a lambda. )) $(BR) $(BR)
 
 
 $(BR) 
@@ -44,7 +44,7 @@ unittest
 	// Construct
 	auto buf = buffer([1,2,3]);
 
-	auto source = (int[] array) { array[0] = 4; return 1;}; //  Give array.ptr to socket.receive if using sockets. Return written.
+	auto source = (int[] array) { array[0] = 4; return 1;};
 
 	// Fill
 	buf ~= source;
@@ -60,7 +60,7 @@ unittest
 
 /++ $(BR) $(BIG $(B Concurrency - Built in for your convenience))
 
-$(BIG  Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.) $(BR) $(BR)
+$(P $(BIG  Simple solution for single consumer-producer synchronization that works efficiently in the background without mutexes or slow synchronization keywords.)) $(BR) $(BR)
 
 
 $(BR) 
@@ -95,7 +95,8 @@ unittest
 		buf = buf[$..$];
 	}
 
-	buf.deinit; // Unallocates all data, including destroying the thread. Can be used for all buffers.
+	// Unallocate all data, including destroying the thread. 
+	buf.deinit; // Can be used for all buffers.
 }
 
 
@@ -103,12 +104,12 @@ unittest
 
 $(BR) $(BIG $(B Mirroring - For Compression & Decryption))
 
-$(BIG  New item orders can easily be established without copying using a mirror provided by the operating system. ) $(BR) $(BR)
+$(P $(BIG  New item orders can easily be established without copying using a mirror provided by the operating system. )) $(BR) $(BR)
 
 
 
-$(BR) $(BR) $(BIG Memory can be visualized as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s. 
-The mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. )
+$(BR) $(BR) $(P $(BIG Memory can be visualized as blocks of two $(BIG $(B O))'s, each having a size of $(BIG $(D_INLINECODE max/2)). The buffer only sees memory marked with $(BIG $(B X))'s. 
+The mirror border is marked with $(BIG $(B |)), right side of which is the mirrored memory. ))
 
 +/
 unittest
