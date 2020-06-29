@@ -137,6 +137,9 @@ unittest
 /**
 * Dynamic circular array. $(BR) $(BR)
 *
+* <a href="https://cyroxin.github.io/Elembuf/elembuf.html"><</a>
+*
+*
 $(P $(BIG  Takes an advantage of the system's memory mirroring capabillities to
 * create a memory loop so that memory copying wont be necessary once new data is concatenated.
 * The buffer may be manipulated normally as if it were a T[] and can be implicitly converted to it.
@@ -180,7 +183,10 @@ auto buffer(A)(A arg)
 
 
 /*****
- Threaded dynamic circular array. $(BR) $(BR)
+ Threaded dynamic circular array. $(BR) $(BR) 
+
+<a href="https://cyroxin.github.io/Elembuf/elembuf.html"><</a>
+
 
 $(P $(BIG  It is a wait-free single consumer-producer threaded version of the unthreaded circular array. It achieves high throughput as it does not use mutexes or the built-in
  synchronized keyword. It however loses the ability to directly add elements to the buffer, the producer should instead be taught on how to fill the buffer using function pointers & 
