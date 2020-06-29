@@ -97,7 +97,7 @@ unittest
 	{
 		while(buf.length == 0)
 		{
-			// Aquire producer data
+			// Aquire data
 			buf ~= buf.source; 
 		}
 
