@@ -2,13 +2,40 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Benchmarks",
+            "name": "Debug LDC",
             "type": "gdb",
             "target": "${workspaceRoot}/app",
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "valuesFormatting": "parseText",
-            "preLaunchTask": "Build Benchmarks"
+            "preLaunchTask": "Build Debug Benchmarks LDC"
+        },
+        {
+            "name": "Debug DMD",
+            "type": "gdb",
+            "target": "${workspaceRoot}/app",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Debug Benchmarks DMD"
+        },
+        {
+            "name": "Release LDC",
+            "type": "gdb",
+            "target": "${workspaceRoot}/app",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Release Benchmarks LDC"
+        },
+        {
+            "name": "Release DMD",
+            "type": "gdb",
+            "target": "${workspaceRoot}/app",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Release Benchmarks DMD"
         }
     ]
 }
