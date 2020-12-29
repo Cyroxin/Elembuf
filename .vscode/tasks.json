@@ -1,0 +1,23 @@
+{
+    "tasks": [
+        {
+            "label": "build benchmarks",
+            "type": "shell",
+            "command": "dub",
+            "run": false,
+            "compiler": "dmd",
+            "archType": "x86_64",
+            "buildType": "build",
+            "configuration": "",
+            "args": [
+                "build",
+                "--compiler=dmd",
+                "-a=x86_64",
+                "-b=debug",
+                "./bench/select.d"
+            ],
+            "_generated": true,
+            "problemMatcher": []
+        }
+    ]
+}
