@@ -1,12 +1,14 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-      {
-        "name": "Run Elembuf Benchmarks",
-        "type": "gdb",
-        "target": "${workspaceRoot}/bench/select",
-        "request": "launch",
-        "preLaunchTask": "build benchmarks"
-      }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Benchmarks",
+            "type": "gdb",
+            "target": "${workspaceRoot}/app",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Benchmarks"
+        }
+    ]
 }
