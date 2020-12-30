@@ -17,7 +17,12 @@ string data(size_t characters)
 		return cast(string) data;						
 }
 
-enum runs = 100_000; // Keep runs at least this high for accurate results
+// Keep runs at least this high for accurate results
+// Run count is highly dependant on your own machine.
+// Increasing it will help in determining benchmark results.
+debug enum runs = 100_000;
+else enum runs = 1_000_000;
+
 
 // Construction timings can vary drastically due to changes in memory availabillity.
 // Using a high run count mitigates the variance as average construction can be calculated.
@@ -25,6 +30,7 @@ enum runs = 100_000; // Keep runs at least this high for accurate results
 void implemmain()
 {
 	import std.datetime.stopwatch;
+    writeln("runs: ",runs);
 
 	auto sbuffer = buffer("");
 	auto cbuffer = StaticCopyBuffer!()();
@@ -49,9 +55,10 @@ void implemmain()
 		_temp.deinit; // Ensure deconstruction is properly included in benchmark
 	}
 	sw.stop;
-
-	const bufcon = sw.peek/runs;
-	writeln("Bench [buffer construction + destr]:",bufcon);
+    
+    
+	const bufcon = sw.peek;
+	writeln("Bench [buffer construction + destr]:",bufcon/runs);
 
 
 	sw.reset;
@@ -68,8 +75,8 @@ void implemmain()
 	}
 	sw.stop;
 
-	const bufrun = sw.peek/runs;
-	writeln("Bench [buffer runtime]:",bufrun);
+	const bufrun = sw.peek;
+	writeln("Bench [buffer runtime]:",bufrun/runs);
 
 
 
@@ -79,8 +86,9 @@ void implemmain()
 		scope const _temp = StaticCopyBuffer!()();
 	sw.stop;
 
-	const cbufcon = sw.peek/runs;
-	writeln("Bench [array construction + destr]:",cbufcon);
+	const cbufcon = sw.peek;
+
+	writeln("Bench [array construction + destr]:",cbufcon/runs);
 
 
 	sw.reset;
@@ -99,12 +107,13 @@ void implemmain()
 
 	sw.stop;
 
-	const cbufrun = sw.peek/runs;
-	writeln("Bench [array runtime]:",cbufrun);
+	const cbufrun = sw.peek;
+
+	writeln("Bench [array runtime]:",cbufrun/runs);
 
 
 
-	writeln("\nReuses needed: ",(bufcon-cbufcon)/(cbufrun-bufrun)); // To make usage worth it
+	writeln("\nReuses needed: ",((bufcon-cbufcon)/(cbufrun-bufrun))); // To make usage worth it
 
 	static assert((sbuffer.max - 2) == cbuffer.max);
 

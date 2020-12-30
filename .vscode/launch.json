@@ -1,15 +1,41 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug",
+            "name": "Debug LDC",
             "type": "gdb",
+            "target": "${workspaceRoot}/app",
             "request": "launch",
-            "target": "./parse",
-            "cwd": "${workspaceRoot}"
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Debug Benchmarks LDC"
+        },
+        {
+            "name": "Debug DMD",
+            "type": "gdb",
+            "target": "${workspaceRoot}/app",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Debug Benchmarks DMD"
+        },
+        {
+            "name": "Release LDC",
+            "type": "gdb",
+            "target": "${workspaceRoot}/app",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Release Benchmarks LDC"
+        },
+        {
+            "name": "Release DMD",
+            "type": "gdb",
+            "target": "${workspaceRoot}/app",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "preLaunchTask": "Build Release Benchmarks DMD"
         }
     ]
 }

@@ -1,0 +1,61 @@
+{
+    "tasks": [
+        {
+            "label": "Build Debug Benchmarks DMD",
+            "type": "shell",
+            "run": false,
+            "compiler": "dmd",
+            "archType": "x86_64",
+            "buildType": "build",
+            "configuration": "",
+            "command": "dmd -debug -g -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
+            "dependsOn": ["Install Dlang"],
+            "_generated": false,
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Debug Benchmarks LDC",
+            "type": "shell",
+            "run": false,
+            "compiler": "ldc2",
+            "archType": "x86_64",
+            "buildType": "build",
+            "configuration": "",
+            "command": "ldc2 -debug -g -of=app ./bench/* ./source/* && rm -rf *.o",
+            "dependsOn": ["Install Dlang"],
+            "_generated": false,
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Release Benchmarks DMD",
+            "type": "shell",
+            "run": false,
+            "compiler": "dmd",
+            "archType": "x86_64",
+            "buildType": "build",
+            "configuration": "",
+            "command": "dmd -release -O -boundscheck=off -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
+            "dependsOn": ["Install Dlang"],
+            "_generated": false,
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Release Benchmarks LDC",
+            "type": "shell",
+            "run": false,
+            "compiler": "ldc2",
+            "archType": "x86_64",
+            "buildType": "build",
+            "configuration": "",
+            "command": "ldc2 -release -O -boundscheck=off -of=app ./bench/* ./source/* && rm -rf *.o",
+            "dependsOn": ["Install Dlang"],
+            "_generated": false,
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Dlang",
+            "type": "shell",
+            "command": "brew install dub && brew install dmd && brew install ldc"
+        }
+    ]
+}
