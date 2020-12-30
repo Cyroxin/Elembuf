@@ -33,12 +33,13 @@ You can download the repo and open the solution file in the repository called "E
 
 **Linux**
 
-Manual linking must be done using the instructions of your own compiler. 
+Linux users may use vscode! Although not as good of an experience as visual studio, it does come with basic functionality out of the box. It is as simple as opening the project folder in vscode and installing two extensions ([code-d](https://open-vsx.org/extension/webfreak/code-d) & [native debug](https://open-vsx.org/extension/webfreak/debug)).
 
-You may use the source files as is, regardless of what os, editor or IDE you use, as long as you know how to link
-them through your compiler. 
+Note that you are not restricted to the use of a specific IDE or editor. The source files can be used as is, regardless of what environment is used, as long as they are linked properly.
 
 **Dub**
+
+You can use elembuf as a project dependency by creating a file called app.d with the following contents and running it using dub:
 
 ```` D
 #!/usr/bin/env dub
@@ -64,6 +65,7 @@ void main() {
 $ dub app.d
 
     Hello world!
+    
 
 ## Benchmarks
 
@@ -91,10 +93,11 @@ Comparing an optimized array against elembuf in concating data.
 	Reuses needed: 83
     
 
+[![Gitpod runbenchmarks](https://img.shields.io/badge/Gitpod-run%20in%20browser-blue?logo=gitpod)](https://gitpod.io/#https://github.com/Cyroxin/Elembuf)
 
 ## Contributions
 
-Feel free to contribute by sending a pull request or sending in bug reports through issues. If you wish to help, you can look at what still needs to be done from [projects](https://github.com/Cyroxin/Elembuf/projects). Remember to include tests in your pull requests!
+Feel free to contribute by sending a pull request or sending in bug reports through issues. If you are unsure on what to help with, you can gather ideas from [projects](https://github.com/Cyroxin/Elembuf/projects). Remember to include tests in your pull requests!
 
 ## Maintainers
 
