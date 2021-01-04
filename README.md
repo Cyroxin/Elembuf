@@ -33,7 +33,7 @@ You can download the repo and open the solution file in the repository called "E
 
 **Linux**
 
-Linux users may use vscode! Although not as good of an experience as visual studio, it does come with basic functionality out of the box. It is as simple as opening the project folder in vscode and installing two extensions ([code-d](https://open-vsx.org/extension/webfreak/code-d) & [native debug](https://open-vsx.org/extension/webfreak/debug)).
+Linux users may use vscode! Although not as good of an experience as visual studio, it does come with most functionality out of the box. It is as simple as opening the project folder in vscode and installing two extensions ([code-d](https://marketplace.visualstudio.com/items?itemName=webfreak.code-d) & [C/C++ for Visual Studio Code](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools)).
 
 Note that you are not restricted to the use of a specific IDE or editor. The source files can be used as is, regardless of what environment is used, as long as they are linked properly.
 

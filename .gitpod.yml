@@ -1,4 +1,5 @@
 vscode:
   extensions:
     - webfreak.code-d@0.22.0:K65wBqeoqTvGoea7XwBc+A==
-    - webfreak.debug@0.25.0:F9uLpAOde6r0l7rgMC8LTQ==
+    - ms-vscode.cpptools@1.2.0-preview:kzpReLhWsmZZ9l8nwYw/cw==
+    - pflannery.vscode-versionlens@1.0.9:MpYGqWwv0MK05mglx5q2Jg==

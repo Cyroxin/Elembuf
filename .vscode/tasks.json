@@ -9,7 +9,7 @@
             "buildType": "build",
             "configuration": "",
             "command": "dmd -debug -g -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
-            "dependsOn": ["Install Dlang"],
+            "dependsOn": ["Install dmd"],
             "_generated": false,
             "problemMatcher": []
         },
@@ -21,8 +21,8 @@
             "archType": "x86_64",
             "buildType": "build",
             "configuration": "",
-            "command": "ldc2 -debug -g -of=app ./bench/* ./source/* && rm -rf *.o",
-            "dependsOn": ["Install Dlang"],
+            "command": "ldc2 --d-debug -g -of=app ./bench/* ./source/* && rm -rf *.o",
+            "dependsOn": ["Install ldc"],
             "_generated": false,
             "problemMatcher": []
         },
@@ -34,8 +34,8 @@
             "archType": "x86_64",
             "buildType": "build",
             "configuration": "",
-            "command": "dmd -release -O -boundscheck=off -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
-            "dependsOn": ["Install Dlang"],
+            "command": "dmd -release -O -inline -boundscheck=off -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
+            "dependsOn": ["Install dmd"],
             "_generated": false,
             "problemMatcher": []
         },
@@ -47,15 +47,20 @@
             "archType": "x86_64",
             "buildType": "build",
             "configuration": "",
-            "command": "ldc2 -release -O -boundscheck=off -of=app ./bench/* ./source/* && rm -rf *.o",
-            "dependsOn": ["Install Dlang"],
+            "command": "ldc2 -release -O -enable-inlining=true -boundscheck=off -of=app ./bench/* ./source/* && rm -rf *.o",
+            "dependsOn": ["Install ldc"],
             "_generated": false,
             "problemMatcher": []
         },
         {
-            "label": "Install Dlang",
+            "label": "Install dmd",
             "type": "shell",
-            "command": "brew install dub && brew install dmd && brew install ldc"
+            "command": "brew install dub && brew install dmd"
+        },
+        {
+            "label": "Install ldc",
+            "type": "shell",
+            "command": "brew install dub && brew install ldc"
         }
     ]
 }
