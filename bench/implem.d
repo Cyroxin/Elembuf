@@ -391,3 +391,72 @@ struct StaticCopyBuffer(InternalType = char)
 
 	}
 }
+
+unittest // Test all implementations
+{
+	string data(size_t characters)
+	{
+		char character = cast(char) 0;
+
+		char[] data;
+		data.reserve(characters);
+		data.length = characters;
+
+		foreach(i; 0 .. characters)
+		{
+			data[i] = character;
+			character++;
+		}
+
+		return cast(string) data;						
+	}
+
+
+	enum fakemax = (char.max+1)*2;
+
+	auto sbuf = buffer("");
+	StaticCopyBuffer!char cbuf = "";
+
+	sbuf ~= (data(fakemax));
+	cbuf.fill(data(fakemax));
+
+	assert(sbuf[0] == cast(char) 0);
+	assert(cbuf[0] == cast(char) 0);
+	assert(sbuf[1] == cast(char) 1);
+	assert(cbuf[1] == cast(char) 1);
+	assert(sbuf[(fakemax) - 2] == cast(char) 254);
+	assert(cbuf[(fakemax) - 2] == cast(char) 254);
+	assert(sbuf[(fakemax) - 1] == cast(char) 255);
+	assert(cbuf[(fakemax) - 1] == cast(char) 255);
+	assert(sbuf == cbuf);
+
+	sbuf = sbuf[$/2..$];
+	cbuf = cbuf[$/2..$];
+
+
+	assert(sbuf[0] == cast(char) 0);
+	assert(cbuf[0] == cast(char) 0);
+	assert(sbuf[1] == cast(char) 1);
+	assert(cbuf[1] == cast(char) 1);
+	assert(sbuf[(fakemax/2) - 2] == cast(char) 254);
+	assert(cbuf[(fakemax/2) - 2] == cast(char) 254);
+	assert(sbuf[(fakemax/2) - 1] == cast(char) 255);
+	assert(cbuf[(fakemax/2) - 1] == cast(char) 255);
+
+	assert(sbuf == cbuf);
+	assert(sbuf.length == cbuf.length);
+
+	sbuf ~= (data(fakemax/2));
+	cbuf.fill(data(fakemax/2));
+
+	assert(sbuf[0] == cast(char) 0);
+	assert(cbuf[0] == cast(char) 0);
+	assert(sbuf[1] == cast(char) 1);
+	assert(cbuf[1] == cast(char) 1);
+	assert(sbuf[(fakemax) - 2] == cast(char) 254);
+	assert(cbuf[(fakemax) - 2] == cast(char) 254);
+	assert(sbuf[(fakemax) - 1] == cast(char) 255);
+	assert(cbuf[(fakemax) - 1] == cast(char) 255);
+	assert(sbuf == cbuf);
+
+}
