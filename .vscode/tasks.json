@@ -3,64 +3,73 @@
         {
             "label": "Build Debug Benchmarks DMD",
             "type": "shell",
-            "run": false,
-            "compiler": "dmd",
-            "archType": "x86_64",
-            "buildType": "build",
-            "configuration": "",
             "command": "dmd -debug -g -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
             "dependsOn": ["Install dmd"],
-            "_generated": false,
             "problemMatcher": []
         },
         {
             "label": "Build Debug Benchmarks LDC",
             "type": "shell",
-            "run": false,
-            "compiler": "ldc2",
-            "archType": "x86_64",
-            "buildType": "build",
-            "configuration": "",
             "command": "ldc2 --d-debug -g -of=app ./bench/* ./source/* && rm -rf *.o",
             "dependsOn": ["Install ldc"],
-            "_generated": false,
             "problemMatcher": []
         },
         {
             "label": "Build Release Benchmarks DMD",
             "type": "shell",
-            "run": false,
-            "compiler": "dmd",
-            "archType": "x86_64",
-            "buildType": "build",
-            "configuration": "",
             "command": "dmd -release -O -inline -boundscheck=off -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
             "dependsOn": ["Install dmd"],
-            "_generated": false,
             "problemMatcher": []
         },
         {
             "label": "Build Release Benchmarks LDC",
             "type": "shell",
-            "run": false,
-            "compiler": "ldc2",
-            "archType": "x86_64",
-            "buildType": "build",
-            "configuration": "",
             "command": "ldc2 -release -O -enable-inlining=true -boundscheck=off -of=app ./bench/* ./source/* && rm -rf *.o",
             "dependsOn": ["Install ldc"],
-            "_generated": false,
             "problemMatcher": []
         },
         {
             "label": "Install dmd",
             "type": "shell",
-            "command": "brew install dub && brew install dmd"
+            "command": "command -v gdb >/dev/null || echo 'You do not have gdb installed, please install it manually to enable debugging.';
+
+            if command -v dmd >/dev/null; then echo 'Compiler dmd already installed'; exit 0; fi;
+            
+            command -v pacman >/dev/null && pacman -S dlang && exit 0; 
+            command -v layman >/dev/null && layman -f -a dlang && exit 0;
+            command -v brew >/dev/null && brew install dmd && exit 0;
+            command -v nix-env >/dev/null && nix-env -i dmd && exit 0; 
+            command -v apt-get >/dev/null && sudo apt-get install dmd-compiler && exit 0; 
+            command -v docker >/dev/null && docker run --rm -ti -v $(pwd):/src dlang2/dmd-ubuntu dmd && exit 0; 
+            command -v zypper >/dev/null && sudo zypper install dmd && exit 0; 
+            command -v snap >/dev/null && sudo snap install --classic dmd && exit 0; 
+            
+            
+            echo 'dmd was not found and automatic install was not supported. Please manually install dmd.'"
         },
         {
             "label": "Install ldc",
             "type": "shell",
-            "command": "brew install dub && brew install ldc"
+            "command": "command -v gdb >/dev/null || echo 'You do not have gdb installed, please install it manually to enable debugging.';
+
+            if command -v ldc >/dev/null; then echo 'Compiler ldc already installed'; exit 0; fi;
+            
+            command -v pacman >/dev/null && pacman -S ldc && exit 0; 
+            command -v layman >/dev/null && layman -a ldc && exit 0;
+            command -v brew >/dev/null && brew install ldc && exit 0;
+            command -v nix-env >/dev/null && nix-env -i ldc && exit 0; 
+            command -v apt-get >/dev/null && sudo apt-get install ldc && exit 0; 
+            command -v docker >/dev/null && docker pull dlang2/ldc-ubuntu && exit 0; 
+            command -v zypper >/dev/null && sudo zypper install ldc && exit 0; 
+            command -v snap >/dev/null && sudo snap install --classic ldc2 && exit 0; 
+            
+            ## Packages that lack a dmd variant
+            
+            command -v pkg >/dev/null && pkg install ldc && exit 0; 
+            command -v dnf >/dev/null && dnf install ldc && exit 0; 
+            command -v choco >/dev/null && choco install ldc && exit 0; 
+            
+            echo 'ldc was not found and automatic install was not supported. Please manually install ldc.'"
         }
     ]
 }
