@@ -1,4 +1,5 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
             "label": "Build Debug Benchmarks DMD",
@@ -31,45 +32,12 @@
         {
             "label": "Install dmd",
             "type": "shell",
-            "command": "command -v gdb >/dev/null || echo 'You do not have gdb installed, please install it manually to enable debugging.';
-
-            if command -v dmd >/dev/null; then echo 'Compiler dmd already installed'; exit 0; fi;
-            
-            command -v pacman >/dev/null && pacman -S dlang && exit 0; 
-            command -v layman >/dev/null && layman -f -a dlang && exit 0;
-            command -v brew >/dev/null && brew install dmd && exit 0;
-            command -v nix-env >/dev/null && nix-env -i dmd && exit 0; 
-            command -v apt-get >/dev/null && sudo apt-get install dmd-compiler && exit 0; 
-            command -v docker >/dev/null && docker run --rm -ti -v $(pwd):/src dlang2/dmd-ubuntu dmd && exit 0; 
-            command -v zypper >/dev/null && sudo zypper install dmd && exit 0; 
-            command -v snap >/dev/null && sudo snap install --classic dmd && exit 0; 
-            
-            
-            echo 'dmd was not found and automatic install was not supported. Please manually install dmd.'"
+            "command": "command -v gdb>/dev/null||echo 'You do not have gdb installed, please install it manually to enable debugging.';if command -v dmd>/dev/null;then echo 'Compiler dmd already installed';exit 0;fi;command -v pacman>/dev/null&&pacman -S dlang&&exit 0;command -v layman>/dev/null&&layman -f -a dlang&&exit 0;command -v brew>/dev/null&&brew install dmd&&exit 0;command -v nix-env>/dev/null&&nix-env -i dmd&&exit 0;command -v apt-get>/dev/null&&sudo apt-get install dmd-compiler&&exit 0;command -v docker>/dev/null&&docker run --rm -ti -v $(pwd):/src dlang2/dmd-ubuntu dmd&&exit 0;command -v zypper>/dev/null&&sudo zypper install dmd&&exit 0;command -v snap>/dev/null&&sudo snap install --classic dmd&&exit 0;echo 'dmd was not found and automatic install was not supported. Please manually install dmd.'"
         },
         {
             "label": "Install ldc",
             "type": "shell",
-            "command": "command -v gdb >/dev/null || echo 'You do not have gdb installed, please install it manually to enable debugging.';
-
-            if command -v ldc >/dev/null; then echo 'Compiler ldc already installed'; exit 0; fi;
-            
-            command -v pacman >/dev/null && pacman -S ldc && exit 0; 
-            command -v layman >/dev/null && layman -a ldc && exit 0;
-            command -v brew >/dev/null && brew install ldc && exit 0;
-            command -v nix-env >/dev/null && nix-env -i ldc && exit 0; 
-            command -v apt-get >/dev/null && sudo apt-get install ldc && exit 0; 
-            command -v docker >/dev/null && docker pull dlang2/ldc-ubuntu && exit 0; 
-            command -v zypper >/dev/null && sudo zypper install ldc && exit 0; 
-            command -v snap >/dev/null && sudo snap install --classic ldc2 && exit 0; 
-            
-            ## Packages that lack a dmd variant
-            
-            command -v pkg >/dev/null && pkg install ldc && exit 0; 
-            command -v dnf >/dev/null && dnf install ldc && exit 0; 
-            command -v choco >/dev/null && choco install ldc && exit 0; 
-            
-            echo 'ldc was not found and automatic install was not supported. Please manually install ldc.'"
+            "command": "command -v gdb>/dev/null||echo 'You do not have gdb installed, please install it manually to enable debugging.';if command -v ldc2>/dev/null;then echo 'Compiler ldc already installed';exit 0;fi;command -v pacman>/dev/null&&pacman -S ldc&&exit 0;command -v layman>/dev/null&&layman -a ldc&&exit 0;command -v brew>/dev/null&&brew install ldc&&exit 0;command -v nix-env>/dev/null&&nix-env -i ldc&&exit 0;command -v apt-get>/dev/null&&sudo apt-get install ldc&&exit 0;command -v docker>/dev/null&&docker pull dlang2/ldc-ubuntu&&exit 0;command -v zypper>/dev/null&&sudo zypper install ldc&&exit 0;command -v snap>/dev/null&&sudo snap install --classic ldc2&&exit 0;command -v pkg>/dev/null&&pkg install ldc&&exit 0;command -v dnf>/dev/null&&dnf install ldc&&exit 0;command -v choco>/dev/null&&choco install ldc&&exit 0;echo 'ldc was not found and automatic install was not supported. Please manually install ldc.'"
         }
     ]
 }
