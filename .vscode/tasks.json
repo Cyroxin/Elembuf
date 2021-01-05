@@ -18,14 +18,14 @@
         {
             "label": "Build Release Benchmarks DMD",
             "type": "shell",
-            "command": "dmd -release -O -inline -boundscheck=off -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
+            "command": "dmd -release -O -boundscheck=off -of=app -fPIC ./bench/* ./source/* && rm -rf *.o",
             "dependsOn": ["Install dmd"],
             "problemMatcher": []
         },
         {
             "label": "Build Release Benchmarks LDC",
             "type": "shell",
-            "command": "ldc2 -release -O -enable-inlining=true -boundscheck=off -of=app ./bench/* ./source/* && rm -rf *.o",
+            "command": "ldc2 -release -O -boundscheck=off -of=app ./bench/* ./source/* && rm -rf *.o",
             "dependsOn": ["Install ldc"],
             "problemMatcher": []
         },
